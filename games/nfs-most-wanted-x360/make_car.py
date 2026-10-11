@@ -6,8 +6,8 @@ python make_car.py --iso <your 360 disc image> --kn5 <mazda_mx5_rf.kn5> --zip mx
 
 The zip holds a game_root/ folder to copy over sdmc:/switch/nfsmw-nx/game_root/ and a LISEZMOI.txt.
 Everything is made from the player's own disc image and Assetto Corsa model: nothing of the game
-or of the model is in this repository. The web page (index.html at the root of the repository)
-runs this same code in the browser.
+or of the model is in this repository. The web page (nfs-most-wanted/index.html) runs this same
+code in the browser.
 """
 import argparse
 import io

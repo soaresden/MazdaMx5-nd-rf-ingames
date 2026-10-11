@@ -1,15 +1,20 @@
 # Mazda MX-5 RF (ND) dans les jeux de voitures
 
-Mettre **ma** voiture, une Mazda MX-5 RF (ND2) **Deep Crystal Blue** à toit noir, jantes sombres
-et étriers Brembo rouges, dans les jeux auxquels je joue.
+J'adore cette voiture. Le projet : la **convertir dans les jeux de voitures que j'aime** pour
+pouvoir la conduire, sur **plusieurs générations de consoles**, de la PS1 à la Xbox 360.
+
+La voiture, c'est la mienne : une Mazda MX-5 RF (ND2) 2.0 de 184 ch **Deep Crystal Blue**, toit
+noir brillant, jantes sombres et étriers Brembo rouges.
 
 ![La MX-5 RF décapotée dans le garage de Need for Speed Most Wanted](docs/mx5_en_jeu.jpg)
 
 ## Fabriquer la voiture en un clic
 
-**➜ [soaresden.github.io/MazdaMx5-nd-rf-ingames](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/)**
+**➜ [soaresden.github.io/MazdaMx5-nd-rf-ingames](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/)**,
+le hub du projet, avec une page par jeu (pour l'instant :
+[Need for Speed Most Wanted](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/nfs-most-wanted/)).
 
-La page fabrique la voiture **dans ton navigateur**, à partir de **tes** fichiers. Rien n'est
+Chaque page fabrique la voiture **dans ton navigateur**, à partir de **tes** fichiers. Rien n'est
 envoyé sur internet, et ce dépôt ne contient **aucun fichier du jeu ni du modèle 3D**.
 
 1. Choisis ton image disque du jeu et le modèle Assetto Corsa (voir plus bas).
@@ -23,7 +28,7 @@ envoyé sur internet, et ce dépôt ne contient **aucun fichier du jeu ni du mod
 | Jeu | Plateforme | Voiture remplacée | État |
 |---|---|---|---|
 | [Need for Speed: Most Wanted (2005)](games/nfs-most-wanted-x360/) | Xbox 360, sur Switch via [nfsmw-nx](https://github.com/StevensND/nfsmw-nx) | au choix (testé : Lexus IS 300) | **fonctionne** |
-| Gran Turismo | PS1 | Mazda Eunos Roadster | prochain |
+| Gran Turismo | PS1 | Mazda Eunos Roadster | en cours |
 | Need for Speed: Underground | Xbox | à définir | prévu |
 | Need for Speed: Underground 2 | Xbox | à définir | prévu |
 | Need for Speed: Carbon | à définir | — | prévu |
@@ -67,7 +72,8 @@ Le détail technique (formats, limites du moteur, ce qui a été appris sur Swit
 
 | Dossier | Contenu |
 |---|---|
-| `index.html`, `web/` | la page, qui fait tourner les outils Python dans le navigateur ([Pyodide](https://pyodide.org)) |
+| `index.html` | le hub : le projet et la liste des jeux |
+| `nfs-most-wanted/`, `web/` | la page de chaque jeu, et le worker qui fait tourner les outils Python dans le navigateur ([Pyodide](https://pyodide.org)) |
 | `common/` | ce qui sert à tous les jeux : lecteur KN5 d'Assetto Corsa, chargement du modèle, simplification de maillage (QEM), petit moteur de rendu pour les aperçus |
 | `games/<jeu>/` | les outils et la documentation propres à chaque jeu |
 | `docs/` | images du README |

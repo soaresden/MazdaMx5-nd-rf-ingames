@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MX-5 RF · Most Wanted</title>
+<meta name="description" content="Fabrique la Mazda MX-5 RF (ND) pour Need for Speed Most Wanted (Xbox 360 / Switch nfsmw-nx), dans ton navigateur, à partir de ta copie du jeu.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Saira+Extra+Condensed:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #090a07; --panel: rgba(8, 9, 6, .82); --line: #2c2e24; --text: #f1f1ea; --muted: #a9ab98;
+    --yellow: #f2c316; --yellow-dim: #8f7a1d; --ok: #9fd36b; --err: #ff6b5a; --code: #131510;
+    --stripe: repeating-linear-gradient(135deg, #2b2c26 0 7px, #1b1c17 7px 14px);
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; color: var(--text); font: 500 17px/1.5 "Barlow Condensed", "Arial Narrow", sans-serif;
+         background:
+           radial-gradient(1200px 600px at 75% -10%, rgba(196, 180, 70, .22), transparent 60%),
+           radial-gradient(900px 500px at 0% 30%, rgba(120, 140, 60, .14), transparent 60%),
+           var(--bg);
+         min-height: 100vh; }
+  a { color: var(--yellow); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 16px 64px; }
+  nav { padding: 14px 0; font: 700 15px/1 "Barlow Condensed"; text-transform: uppercase; letter-spacing: .08em; }
+  nav a { color: var(--muted); text-decoration: none; }
+  nav a:hover { color: var(--yellow); }
+
+  /* hero: the garage screenshot with the game's yellow-green grade and a car-select title bar */
+  .hero { position: relative; border: 1px solid var(--line); overflow: hidden; margin-bottom: 22px; }
+  .hero img { display: block; width: 100%; filter: sepia(.35) saturate(1.1) contrast(1.05); }
+  .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+                 box-shadow: inset 0 0 120px rgba(0, 0, 0, .85);
+                 background: linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,.75)); }
+  .title { position: absolute; left: 0; right: 0; bottom: 18px; z-index: 1; display: flex; align-items: center;
+           justify-content: center; gap: 14px; padding: 0 12px; }
+  .chev { color: var(--yellow); font: 800 clamp(26px, 5vw, 46px)/1 "Saira Extra Condensed"; letter-spacing: -.12em;
+          text-shadow: 0 2px 0 #000; }
+  .title h1 { margin: 0; font: 800 clamp(30px, 6.2vw, 64px)/1 "Saira Extra Condensed", sans-serif; text-transform: uppercase;
+              letter-spacing: .02em; text-shadow: 0 3px 0 #000, 0 0 24px rgba(0, 0, 0, .8); text-align: center; }
+  .title h1 small { display: block; font-size: .36em; letter-spacing: .22em; color: var(--muted); margin-top: 6px; }
+
+  .lead { color: var(--muted); font-size: 18px; margin: 0 0 22px; }
+  .lead strong { color: var(--text); }
+
+  /* menu panels */
+  .panel { background: var(--panel); border: 1px solid var(--line); margin: 0 0 16px; position: relative; }
+  .panel > h2 { margin: 0; padding: 10px 16px; background: var(--stripe); border-bottom: 1px solid var(--line);
+                font: 700 20px/1.2 "Saira Extra Condensed"; text-transform: uppercase; letter-spacing: .08em;
+                display: flex; align-items: center; gap: 12px; }
+  .panel > h2 b { color: #111; background: var(--yellow); font-size: 15px; padding: 1px 8px; letter-spacing: 0; }
+  .body { padding: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  label { display: block; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin: 0 0 6px; }
+  .hint { color: var(--muted); text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 15px; }
+  select, input[type=file] { width: 100%; font: 600 16px "Barlow Condensed", sans-serif; color: var(--text);
+         background: #000; border: 1px solid var(--line); border-left: 3px solid var(--yellow-dim); padding: 9px 10px; }
+  select:focus, input[type=file]:focus { outline: none; border-left-color: var(--yellow); }
+  input[type=file]::file-selector-button { font: 700 14px "Barlow Condensed"; text-transform: uppercase; letter-spacing: .06em;
+         background: var(--yellow); color: #111; border: 0; padding: 5px 10px; margin-right: 10px; cursor: pointer; }
+  .check { display: flex; gap: 10px; align-items: flex-start; text-transform: none; letter-spacing: 0; font-weight: 600; }
+  .check input { accent-color: var(--yellow); margin-top: 5px; width: 17px; height: 17px; }
+
+  /* the big button: a striped menu bar with the yellow chevrons */
+  .go { display: inline-flex; align-items: center; gap: 12px; font: 800 24px/1 "Saira Extra Condensed"; text-transform: uppercase;
+        letter-spacing: .08em; color: var(--text); background: var(--stripe); border: 1px solid #4a4c40;
+        padding: 14px 26px; cursor: pointer; }
+  .go::before, .go::after { content: "››"; color: var(--yellow); letter-spacing: -.1em; }
+  .go::before { content: "‹‹"; }
+  .go:hover:not(:disabled) { border-color: var(--yellow); box-shadow: 0 0 0 1px var(--yellow) inset; }
+  .go:disabled { opacity: .45; cursor: default; }
+  #log { background: var(--code); border: 1px solid var(--line); padding: 10px 12px; margin-top: 14px; max-height: 260px; overflow: auto;
+         font: 13px/1.45 ui-monospace, Consolas, monospace; color: #c9cbb5; white-space: pre-wrap; }
+  #log:empty { display: none; }
+  .status { margin-top: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .status.ok { color: var(--ok); } .status.err { color: var(--err); }
+  .download { display: inline-block; margin-top: 12px; font: 800 20px "Saira Extra Condensed"; text-transform: uppercase;
+              letter-spacing: .08em; color: #111; background: var(--yellow); padding: 10px 18px; text-decoration: none; }
+  ol { margin: 0; padding-left: 22px; } li { margin-bottom: 6px; }
+  code { background: #000; border: 1px solid var(--line); padding: 0 5px; font-size: .9em; }
+  footer { color: var(--muted); font-size: 15px; margin-top: 26px; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav><a href="../">‹ Tous les jeux</a></nav>
+
+  <div class="hero">
+    <img src="../docs/mx5_en_jeu.jpg" alt="La MX-5 RF décapotée, en bleu, dans le garage de Most Wanted">
+    <div class="title"><span class="chev">‹‹</span>
+      <h1>Mazda MX-5 RF<small>Need for Speed · Most Wanted</small></h1>
+      <span class="chev">››</span></div>
+  </div>
+
+  <p class="lead">Version <strong>Xbox 360</strong>, jouée sur <strong>Nintendo Switch</strong> avec le portage
+    <a href="https://github.com/StevensND/nfsmw-nx">nfsmw-nx</a>. La voiture est fabriquée <strong>dans ton navigateur</strong>
+    à partir de <strong>ta</strong> copie du jeu et du modèle : rien n'est envoyé sur internet, aucun fichier du jeu n'est fourni ici.</p>
+
+  <section class="panel">
+    <h2><b>01</b> Tes fichiers</h2>
+    <div class="body grid">
+      <div>
+        <label for="iso">Image disque du jeu <span class="hint">· Xbox 360, .iso, ~7 Go</span></label>
+        <input id="iso" type="file" accept=".iso">
+      </div>
+      <div>
+        <label for="kn5">Modèle Assetto Corsa <span class="hint">· <code>mazda_mx5_rf.kn5</code> du mod
+          <a href="https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html">Mazda MX-5 RF Hardtop</a>, à extraire</span></label>
+        <input id="kn5" type="file" accept=".kn5">
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>02</b> Ta MX-5</h2>
+    <div class="body">
+      <div class="grid">
+        <div><label for="car">Voiture remplacée</label><select id="car"></select></div>
+        <div><label for="top">Toit</label>
+          <select id="top"><option value="closed">Fermé (RF)</option><option value="open">Décapoté (toit et vitres rangés)</option></select></div>
+        <div><label for="sound">Son moteur</label>
+          <select id="sound"><option value="miata">Mazda Miata (son du jeu, inutilisé à l'origine)</option><option value="">Celui de la voiture remplacée</option></select></div>
+        <div><label for="perf">Performances</label>
+          <select id="perf"><option value="rf184">MX-5 RF 2.0 184 ch · 1 125 kg · boîte 6</option><option value="">Celles de la voiture remplacée</option></select></div>
+        <div><label for="logo">Logo dans les menus</label>
+          <select id="logo"><option value="MAZDA">Mazda</option><option value="none">Celui de la voiture remplacée</option></select></div>
+        <div><label for="badges">Nom dans les menus <span class="hint">· facultatif : 1 ou 2 images, sinon « MX-5 Miata »</span></label>
+          <input id="badges" type="file" accept="image/*" multiple></div>
+      </div>
+      <p style="margin:16px 0 0"><label class="check"><input id="vf" type="checkbox">
+        <span>J'ai installé la VF (patch français de nfsmw-nx)<br><span class="hint">sinon les menus repasseraient en anglais</span></span></label></p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>03</b> Fabriquer</h2>
+    <div class="body">
+      <button id="go" class="go" disabled>Chargement…</button>
+      <p class="hint" style="margin:10px 0 0">une à deux minutes : c'est ton navigateur qui fait tout le travail</p>
+      <div id="log"></div>
+      <div id="status" class="status"></div>
+      <a id="download" class="download" hidden>Télécharger le zip</a>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>04</b> Installer sur la Switch</h2>
+    <div class="body"><ol>
+      <li>Jeu fermé, dézipper et copier le dossier <code>game_root</code> sur <code>sdmc:/switch/nfsmw-nx/</code> en remplaçant les fichiers.</li>
+      <li>Au garage, la voiture choisie est devenue la MX-5. Couleur la plus proche du Deep Crystal Blue : <strong>Métallisé n° 75</strong>.</li>
+      <li>Pour revenir en arrière, supprimer les fichiers copiés (liste dans <code>LISEZMOI.txt</code>).</li>
+    </ol></div>
+  </section>
+
+  <footer>Outils et explications : <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames">github.com/soaresden/MazdaMx5-nd-rf-ingames</a>.
+    Seule l'IS300 a été testée en jeu, les autres voitures sont expérimentales.<br>
+    Merci à <a href="https://github.com/StevensND/nfsmw-nx">StevensND</a> (nfsmw-nx),
+    Kunos Simulazioni et <a href="https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html">Modland</a> (modèle Assetto Corsa),
+    <a href="https://github.com/x07x08/nfsmw-save-editor">x07x08</a>, <a href="https://github.com/sprintstate/nfs-mw-save-editor">sprintstate</a>,
+    <a href="https://github.com/dbalatoni13/nfsmw">dbalatoni13</a> (décompilation), <a href="https://github.com/vgmstream/vgmstream">vgmstream</a>,
+    <a href="https://pyodide.org">Pyodide</a>, et OfficialWhippy pour le dessin « MX-5 » du badge.<br>
+    Need for Speed est une marque d'Electronic Arts ; Mazda, MX-5 et Miata sont des marques de Mazda. Projet de fan.</footer>
+</div>
+<script>
+  const CARS = [
+    ['IS300', 'Lexus IS 300', true], ['ELISE', 'Lotus Elise'], ['PUNTO', 'Fiat Punto'], ['CLIO', 'Renault Clio'],
+    ['GTI', 'Volkswagen Golf GTI'], ['A3', 'Audi A3'], ['TT', 'Audi TT'], ['A4', 'Audi A4'],
+    ['COBALTSS', 'Chevrolet Cobalt SS'], ['ECLIPSEGT', 'Mitsubishi Eclipse'], ['LANCEREVO8', 'Mitsubishi Lancer Evo'],
+    ['IMPREZAWRX', 'Subaru Impreza WRX'], ['RX7', 'Mazda RX-7'], ['RX8', 'Mazda RX-8'], ['RX8SPEEDT', 'Mazda RX-8 (Speed)'],
+    ['SUPRA', 'Toyota Supra'], ['MUSTANGGT', 'Ford Mustang GT'], ['GTO', 'Pontiac GTO'], ['CAMARO', 'Chevrolet Camaro'],
+    ['MONARO', 'Holden Monaro'], ['CTS', 'Cadillac CTS'], ['CAYMANS', 'Porsche Cayman S'], ['997S', 'Porsche 911 Carrera S'],
+    ['911TURBO', 'Porsche 911 Turbo'], ['911GT2', 'Porsche 911 GT2'], ['CARRERAGT', 'Porsche Carrera GT'],
+    ['BMWM3', 'BMW M3'], ['BMWM3GTR', 'BMW M3 GTR'], ['BMWM3GTRE46', 'BMW M3 GTR (course)'], ['CLK500', 'Mercedes CLK 500'],
+    ['SL500', 'Mercedes SL 500'], ['SL65', 'Mercedes SL 65 AMG'], ['SLR', 'Mercedes SLR'], ['DB9', 'Aston Martin DB9'],
+    ['CORVETTE', 'Chevrolet Corvette C6'], ['CORVETTEC6R', 'Chevrolet Corvette C6.R'], ['VIPER', 'Dodge Viper'],
+    ['FORDGT', 'Ford GT'], ['GALLARDO', 'Lamborghini Gallardo'], ['MURCIELAGO', 'Lamborghini Murciélago'],
+  ];
+  const $ = (id) => document.getElementById(id);
+  for (const [value, label, tested] of CARS) {
+    const o = document.createElement('option');
+    o.value = value; o.textContent = label + (tested ? ' · testée, recommandée' : ' · expérimental');
+    $('car').append(o);
+  }
+  // development only: ?test reads the disc image and the model from the local test server
+  const TEST = new URLSearchParams(location.search).has('test');
+  const log = (t) => { $('log').textContent += t + '\n'; $('log').scrollTop = 1e9; };
+  const status = (t, cls) => { $('status').textContent = t; $('status').className = 'status ' + (cls || ''); };
+  let ready = false;
+  const worker = new Worker('../web/worker.js');
+  const update = () => {
+    $('go').disabled = !(ready && (TEST || ($('iso').files.length && $('kn5').files.length)));
+    $('go').textContent = ready ? 'Fabriquer ma MX-5' : 'Chargement de Python…';
+  };
+  $('iso').onchange = $('kn5').onchange = update;
+  worker.onmessage = (ev) => {
+    const m = ev.data;
+    if (m.type === 'log') log(m.text);
+    if (m.type === 'ready') { ready = true; update(); log('Prêt.'); }
+    if (m.type === 'error') { status('Erreur : ' + m.text, 'err'); update(); }
+    if (m.type === 'done') {
+      const url = URL.createObjectURL(new Blob([m.zip], { type: 'application/zip' }));
+      const a = $('download');
+      a.href = url; a.download = `mx5_rf_${$('car').value.toLowerCase()}${$('top').value === 'open' ? '_decapotee' : ''}.zip`;
+      a.hidden = false;
+      status(`Terminé en ${m.seconds} s`, 'ok'); update();
+    }
+  };
+  const files = () => TEST ? { iso: location.origin + '/test/disc.iso', kn5: '/test/model.kn5' }
+                           : { iso: $('iso').files[0], kn5: $('kn5').files[0] };
+  $('go').onclick = () => {
+    $('go').disabled = true; $('download').hidden = true; $('log').textContent = ''; status('Fabrication en cours…');
+    worker.postMessage({
+      ...files(), badges: Array.from($('badges').files),
+      options: { car: $('car').value, top: $('top').value, sound: $('sound').value, perf: $('perf').value,
+                 logo: $('logo').value, vf: $('vf').checked },
+    });
+  };
+</script>
+</body>
+</html>
