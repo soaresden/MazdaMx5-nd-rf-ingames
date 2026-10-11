@@ -207,7 +207,7 @@
   const log = (t) => { $('log').textContent += t + '\n'; $('log').scrollTop = 1e9; };
   const status = (t, cls) => { $('status').textContent = t; $('status').className = 'status ' + (cls || ''); };
   let ready = false;
-  const worker = new Worker('../web/worker.js?lang=' + SB_LANG);
+  const worker = new Worker('worker.js?lang=' + SB_LANG);
   const update = () => {
     $('go').disabled = !(ready && (TEST || ($('iso').files.length && $('kn5').files.length)));
     $('go').textContent = ready ? SBT('Fabriquer la MX-5', 'Build the MX-5') : SBT('Chargement de Python…', 'Loading Python…');

@@ -14,7 +14,7 @@ wheels and red Brembo calipers.
 
 **➜ [soaresden.github.io/MazdaMx5-nd-rf-ingames](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/)**,
 the project hub, with one page per game (for now:
-[Need for Speed Most Wanted](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/nfs-most-wanted/)).
+[Need for Speed Most Wanted](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/nfsmw.html)).
 Both pages have a 🇫🇷 / 🇬🇧 switch.
 
 Each page builds the car **in your browser**, from **your** files. Nothing is sent over the
@@ -74,7 +74,7 @@ The technical details (formats, engine limits, what was learned on the Switch) a
 | Folder | Contents |
 |---|---|
 | `index.html` | the hub: the project and the list of games |
-| `nfs-most-wanted/`, `web/` | each game's page, and the worker running the Python tools in the browser ([Pyodide](https://pyodide.org)) |
+| `web/` | one page per game (`nfsmw.html`…) and the worker running the Python tools in the browser ([Pyodide](https://pyodide.org)) |
 | `common/` | shared by all games: Assetto Corsa KN5 reader, model loading, mesh simplification (QEM), a small renderer for previews |
 | `games/<game>/` | each game's tools and documentation |
 | `docs/` | README pictures |

@@ -14,7 +14,7 @@ noir brillant, jantes sombres et étriers Brembo rouges.
 
 **➜ [soaresden.github.io/MazdaMx5-nd-rf-ingames](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/)**,
 le hub du projet, avec une page par jeu (pour l'instant :
-[Need for Speed Most Wanted](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/nfs-most-wanted/)).
+[Need for Speed Most Wanted](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/nfsmw.html)).
 
 Chaque page fabrique la voiture **dans ton navigateur**, à partir de **tes** fichiers. Rien n'est
 envoyé sur internet, et ce dépôt ne contient **aucun fichier du jeu ni du modèle 3D**.
@@ -75,7 +75,7 @@ Le détail technique (formats, limites du moteur, ce qui a été appris sur Swit
 | Dossier | Contenu |
 |---|---|
 | `index.html` | le hub : le projet et la liste des jeux |
-| `nfs-most-wanted/`, `web/` | la page de chaque jeu, et le worker qui fait tourner les outils Python dans le navigateur ([Pyodide](https://pyodide.org)) |
+| `web/` | une page par jeu (`nfsmw.html`…) et le worker qui fait tourner les outils Python dans le navigateur ([Pyodide](https://pyodide.org)) |
 | `common/` | ce qui sert à tous les jeux : lecteur KN5 d'Assetto Corsa, chargement du modèle, simplification de maillage (QEM), petit moteur de rendu pour les aperçus |
 | `games/<jeu>/` | les outils et la documentation propres à chaque jeu |
 | `docs/` | images du README |
