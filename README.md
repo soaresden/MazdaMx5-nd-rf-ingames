@@ -7,7 +7,7 @@ et étriers Brembo rouges, dans les jeux auxquels je joue.
 
 ## Fabriquer la voiture en un clic
 
-**➜ [soaresden.github.io/MazdaMx5NDRF](https://soaresden.github.io/MazdaMx5NDRF/)**
+**➜ [soaresden.github.io/MazdaMx5-nd-rf-ingames](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/)**
 
 La page fabrique la voiture **dans ton navigateur**, à partir de **tes** fichiers. Rien n'est
 envoyé sur internet, et ce dépôt ne contient **aucun fichier du jeu ni du modèle 3D**.
@@ -91,3 +91,5 @@ Le détail technique (formats, limites du moteur, ce qui a été appris sur Swit
 
 Need for Speed est une marque d'Electronic Arts, Mazda, MX-5 et Miata sont des marques de Mazda
 Motor Corporation. Projet de fan, sans lien avec eux.
+
+Le code est sous licence [GPL-3.0](LICENSE).

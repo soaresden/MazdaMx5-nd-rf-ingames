@@ -75,7 +75,7 @@ fichiers :
 {files}
 Pour revenir à la voiture d'origine : supprimer ces fichiers de la carte SD.
 
-Fait avec https://github.com/soaresden/MazdaMx5NDRF à partir de TA copie du jeu et du modèle.
+Fait avec https://github.com/soaresden/MazdaMx5-nd-rf-ingames à partir de TA copie du jeu et du modèle.
 """
 
 

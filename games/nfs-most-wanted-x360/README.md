@@ -16,7 +16,7 @@ la version PC : la géométrie et les textures n'y sont pas au même format.
 
 ## Le plus simple : la page ou `make_car.py`
 
-La [page du projet](https://soaresden.github.io/MazdaMx5NDRF/) fait tout dans le navigateur.
+La [page du projet](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/) fait tout dans le navigateur.
 En ligne de commande, `make_car.py` fait la même chose et écrit un zip prêt à copier :
 
 ```bash
