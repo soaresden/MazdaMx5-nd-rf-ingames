@@ -1,0 +1,115 @@
+"""The PlayStation disc: files of its ISO 9660 file system, and a .bin/.cue copy of it with some
+files replaced in place (same sectors), made from the CHD the player has.
+
+Sectors are mode 2 form 1 (2048 bytes of data): a replaced sector keeps its header and subheader
+and gets its EDC and ECC computed again.
+"""
+import os
+import struct
+
+import chd
+
+SECTOR = chd.SECTOR
+
+
+def edc(data):
+    """CD-ROM EDC: CRC-32 with the polynomial 0xD8018001 (reflected), table driven."""
+    crc = 0
+    t = _EDC_TABLE
+    for b in data:
+        crc = t[(crc ^ b) & 0xFF] ^ (crc >> 8)
+    return crc
+
+
+def _edc_table():
+    t = []
+    for i in range(256):
+        c = i
+        for _ in range(8):
+            c = (c >> 1) ^ (0xD8018001 if c & 1 else 0)
+        t.append(c)
+    return t
+
+
+_EDC_TABLE = _edc_table()
+
+
+def make_sector(original, data):
+    """Mode 2 form 1 sector with the header and subheader of `original` and 2048 bytes of data."""
+    s = bytearray(original[:24]) + bytearray(data.ljust(2048, b'\0')) + bytearray(SECTOR - 2072)
+    struct.pack_into('<I', s, 2072, edc(s[16:2072]))
+    chd.ecc_generate(s)
+    return bytes(s)
+
+
+class Disc:
+    def __init__(self, chd_file):
+        self.c = chd.Chd(chd_file)
+        self.files = {}
+        pvd = self.c.user_data(16)
+        root = pvd[156:190]
+        self._walk(struct.unpack_from('<I', root, 2)[0], struct.unpack_from('<I', root, 10)[0], '')
+
+    def _walk(self, lba, size, path):
+        d = self.c.read(lba, (size + 2047) // 2048)
+        o = 0
+        while o < len(d):
+            n = d[o]
+            if n == 0:
+                o = (o // 2048 + 1) * 2048
+                continue
+            e_lba, = struct.unpack_from('<I', d, o + 2)
+            e_size, = struct.unpack_from('<I', d, o + 10)
+            flags, nl = d[o + 25], d[o + 32]
+            name = d[o + 33:o + 33 + nl]
+            if name not in (b'\0', b'\1'):
+                nm = name.decode('ascii').split(';')[0]
+                full = path + '/' + nm
+                if flags & 2:
+                    self._walk(e_lba, e_size, full)
+                else:
+                    # where the size is written in the directory, to change it if needed
+                    self.files[full.lstrip('/')] = (e_lba, e_size, lba + (o // 2048), o % 2048)
+            o += n
+
+    def read(self, name):
+        lba, size = self.files[name][:2]
+        return self.c.read(lba, (size + 2047) // 2048)[:size]
+
+    def room(self, name):
+        """Bytes the file can grow to without moving anything: up to the next file's first sector."""
+        lba = self.files[name][0]
+        after = min((f[0] for f in self.files.values() if f[0] > lba), default=self.c.frames)
+        return (after - lba) * 2048
+
+    def write_bin(self, path, replace, progress=None):
+        """Write the .bin (raw 2352-byte sectors) and its .cue; replace = {file name: new bytes}
+        (each must fit its room)."""
+        sectors = {}
+        dir_patch = {}
+        for name, data in replace.items():
+            lba, size, dlba, doff = self.files[name]
+            if len(data) > self.room(name):
+                raise ValueError('%s: %d bytes, room for %d' % (name, len(data), self.room(name)))
+            for i in range((len(data) + 2047) // 2048):
+                sectors[lba + i] = data[i * 2048:(i + 1) * 2048]
+            if len(data) != size:
+                dir_patch.setdefault(dlba, []).append((doff, len(data)))
+        total = self.c.frames
+        with open(path, 'wb') as f:
+            for lba in range(total):
+                raw = self.c.sector(lba)
+                if lba in sectors:
+                    raw = make_sector(raw, sectors[lba])
+                elif lba in dir_patch:
+                    d = bytearray(raw[24:24 + 2048])
+                    for off, n in dir_patch[lba]:
+                        struct.pack_into('<I', d, off + 10, n)
+                        struct.pack_into('>I', d, off + 14, n)
+                    raw = make_sector(raw, bytes(d))
+                f.write(raw)
+                if progress and lba % 10000 == 0:
+                    progress(lba, total)
+        base = os.path.basename(path)
+        with open(os.path.splitext(path)[0] + '.cue', 'w', newline='\r\n') as f:
+            f.write('FILE "%s" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00\n' % base)

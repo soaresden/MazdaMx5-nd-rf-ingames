@@ -17,9 +17,10 @@ re-writing every model of the disc byte for byte):
 A face (16 bytes) is a 96-bit little-endian field: vertex indices at bits 0, 9, 18 and 32,
 normal indices at 41, 51, 64 and 74 (9 bits each); bits 27-31 = 16 + a 2-bit value (bit 28 set:
 lit, the normals are used; clear: normal 0), bit 63 = drawing order flag. Then 3 bytes (RGB of an
-untextured face,
-FF on textured faces) and the face type (0x21 tri, 0x29 quad, 0x25 textured tri, 0x2D textured
-quad). Quads go round their corners 0-1-2-3. A textured face adds: uv0 (u8 u, u8 v), u16 palette word, uv1, 2 zero bytes, uv2, uv3.
+untextured face, FF on textured faces) and the face type (0x21 tri, 0x29 quad, 0x25 textured tri,
+0x2D textured quad). Quads go round their corners 0-1-2-3. A textured face adds: uv0 (u8 u, u8 v),
+u16 palette word (CLUT (w >> 6) * 4 + (w & 3); 14 = brake lights), uv1, 2 bytes (zero but on a few
+cars), uv2, uv3.
 Texture u, v are texel coordinates of the 256x256 4-bit texture (v from 32 on the disc's cars).
 LOD header: counts, then at 0x14 the bounding box (s16 min x y z w, max x y z w), 0x24 scale,
 0x26 bounding sphere radius.

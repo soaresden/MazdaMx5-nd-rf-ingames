@@ -134,6 +134,29 @@ class Arc:
         return self.entries[i][1] != self.entries[i][2]
 
 
+def replace(arc, new, align=0x800):
+    """The archive with some entries replaced ({index: uncompressed bytes}, stored compressed);
+    the other entries are copied as they are stored. Entries start on `align` boundaries."""
+    count = len(arc)
+    off = (16 + 12 * count + align - 1) // align * align
+    table = bytearray()
+    body = bytearray()
+    for i in range(count):
+        if i in new:
+            size = len(new[i])
+            stored = compress(new[i])
+            if len(stored) >= size:
+                stored = new[i]
+        else:
+            stored, size = arc.raw(i), arc.entries[i][2]
+        table += struct.pack('<III', off + len(body), len(stored), size)
+        body += stored
+        body += b'\0' * (-len(body) % align)
+    head = bytearray(arc.data[:16]) + table
+    head += b'\0' * (off - len(head))
+    return bytes(head + body)
+
+
 def build(files, compressed, align=0x800, version=1):
     """A GT-ARC from a list of (uncompressed) files; compressed[i] says which ones to compress."""
     count = len(files)
