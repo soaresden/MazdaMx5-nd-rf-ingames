@@ -14,6 +14,7 @@ import views as V
 SHELL = {'EXT_Carpaint', 'EXT_Plastic_Black', 'EXT_Lights_Chrome', 'EXT_Carpaint_Roof', 'EXT_Details',
          'EXT_Skirt_PLASTIC', 'EXT_Chrome', 'EXT_Lights_Plastic', 'EXT_Rubber', 'EXT_Glass',
          'EXT_Glass_rear_Light', 'EXT_Plastic_Black_Roof', 'EXT_Glass_flat', 'EXT_PLATE_plastic'}
+OPEN_SHELL = {'INT_LR', 'INT_LR_carpaint'}
 DROP = {'EXT_RearLight_Beam', 'EXT_FrontLight_Beam', 'DAMAGE_GLASS', 'INT_Glass_REFLEX'}
 WHEEL_MATS = {'EXT_Tyre', 'EXT_Rim', 'EXT_Loghi_CUP', 'EXT_Disc', 'EXT_Calipers', 'EXT_Details_CUP'}
 MIRROR_HOUSINGS = ('GEO_Door_L_SUB1', 'GEO_Door_R_SUB1')
@@ -60,7 +61,9 @@ def load(kn5_path, top='closed'):
         hard = name.startswith('HardTop_')
         if top == 'open' and hard:
             continue
-        if mat in SHELL and name not in MIRROR_HOUSINGS:
+        # open: the shell wraps the cockpit (seats, dashboard) where the roof was
+        in_shell = mat in SHELL or (top == 'open' and mat in OPEN_SHELL)
+        if in_shell and name not in MIRROR_HOUSINGS:
             sp.append(pos)
             st.append(tri + n)
             n += len(pos)

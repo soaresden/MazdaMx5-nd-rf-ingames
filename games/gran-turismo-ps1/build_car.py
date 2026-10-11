@@ -13,6 +13,7 @@ import struct
 
 import numpy as np
 
+import decimate
 import gt1car
 import shell
 import views as V
@@ -34,8 +35,7 @@ PAINTS = [
     ('Platinum Quartz', (156, 150, 140)),
 ]
 
-# levels of detail: (stations, points per side of a ring)
-LODS = [(15, 6), (9, 4), (6, 3)]
+LODS = [200, 90, 40]   # vertices of the three levels of detail (the disc's cars: up to 272)
 
 
 def paint_rgb(base, shade):
@@ -54,64 +54,109 @@ def ps1(rgb):
 
 
 # ---------------------------------------------------------------------------------------------
-def make_shell(sp, st, stations, per_side):
-    """Shell vertices (metres), faces (lists of 3 or 4 indices, outward winding as the game's),
-    vertex normals."""
+ARCH = 0.37   # half length of a wheel arch (m)
+
+
+def station_list(z0, z1, wheel_z, n):
+    """n stations from rear to front: both ends, the edges and the middle of the wheel arches
+    (so that the shell tucks in under the arches only), the others in the longest gaps."""
+    fixed = [z0 + 0.01, z1 - 0.01]
+    for wz in wheel_z:
+        fixed += [wz - ARCH, wz, wz + ARCH]
+    st = sorted(z for z in fixed if z0 < z < z1)
+    st = st[:n]
+    while len(st) < n:
+        gaps = np.diff(st)
+        k = int(gaps.argmax())
+        st.insert(k + 1, (st[k] + st[k + 1]) / 2)
+    return np.array(st)
+
+
+def make_shell(sp, st, target, wheel_z, smooth=False, stations=56, per_side=16, log=None):
+    """Shell vertices (metres), faces (lists of 3 or 4 indices, going round; the game's winding:
+    cross(p1 - p0, p2 - p0) points inwards), vertex normals (outwards).
+
+    A detailed shell first (rings of 2 * per_side + 2 points at `stations` stations, the edges and
+    middles of the wheel arches among them), its right half simplified to about target / 2
+    vertices with the points of the centre line kept on it, then mirrored: closed, symmetric, and
+    no face crosses the centre line (the textures are mirrored)."""
     z0, z1 = sp[:, 2].min(), sp[:, 2].max()
-    u = np.linspace(0, 1, stations)
-    u = u - 0.06 * np.sin(2 * np.pi * u)
-    v, q, ring = shell.build(sp, st, z0 + 0.01 + (z1 - z0 - 0.02) * u, per_side)
+    zs = station_list(z0, z1, wheel_z, stations)
+    v, _, _ = shell.build(sp, st, zs, per_side, smooth=smooth)
     K = 2 * per_side + 2
-    R = len(v) // K
-    verts = [tuple(p) for p in v]
-    faces = [list(f) for f in q[:(R - 1) * K]]
-    # end caps, split on the centre line so that no face crosses it (the textures are mirrored)
-    for r, front in ((0, False), (R - 1, True)):
-        base = r * K
+    R = len(zs)
+    H = per_side + 2                       # right half of a ring: top (x=0) .. bottom (x=0)
+    rings = v.reshape(R, K, 3)[:, :H].copy()
+    rings[:, 0, 0] = rings[:, -1, 0] = 0.0
+    pts = [tuple(x) for x in rings.reshape(-1, 3)]
+    idx = lambda r, k: r * H + k
+    tris = []
+    for r in range(R - 1):
+        for k in range(H - 1):
+            a, b, c, d = idx(r, k), idx(r, k + 1), idx(r + 1, k + 1), idx(r + 1, k)
+            tris += [(a, b, c), (a, c, d)]
+    # end caps: the right half of each end ring, joined to its projection on the centre plane
+    for r in (0, R - 1):
         cen = {}
-        for k in range(per_side + 2):
-            a, b = base + k, base + (K - k) % K
-            if a == b:
-                cen[k] = a
+        for k in range(H):
+            if k in (0, H - 1):
+                cen[k] = idx(r, k)
             else:
-                p = (v[a] + v[b]) / 2
-                p[0] = 0.0
-                cen[k] = len(verts)
-                verts.append(tuple(p))
-        for k in range(per_side + 1):
-            ra, rb = base + k, base + k + 1
-            la, lb = base + (K - k) % K, base + (K - k - 1) % K
-            for f in ([ra, rb, cen[k + 1], cen[k]], [cen[k], cen[k + 1], lb, la]):
-                faces.append(f)
-    verts = np.array(verts)
-    # drop repeated corners (quads -> triangles), orient every face outwards
-    centre = np.array([0.0, (verts[:, 1].min() + verts[:, 1].max()) / 2, 0.0])
+                q = list(rings[r, k])
+                q[0] = 0.0
+                cen[k] = len(pts)
+                pts.append(tuple(q))
+        for k in range(H - 1):
+            a, b, c, d = idx(r, k), idx(r, k + 1), cen[k + 1], cen[k]
+            f = [(a, b, c), (a, c, d)]
+            if r == 0:
+                f = [t[::-1] for t in f]
+            tris += f
+    pts = np.array(pts)
+    tris = [t for t in tris if len(set(t)) == 3]
+    # drop zero-area triangles where a ring point sits on the centre line
+    on_plane = np.abs(pts[:, 0]) < 1e-9
+    # orientation of the half: the same as the stations' quads; checked on the whole shell below
+    hv, ht, hplane = decimate.simplify(pts, np.array(tris), max(8, target // 2), on_plane)
+    # mirror: left half = right half with x negated, faces reversed; centre line points shared
+    nh = len(hv)
+    mirror = np.arange(nh) + nh
+    mirror[hplane] = np.nonzero(hplane)[0]
+    lv = hv * [-1, 1, 1]
+    verts = np.vstack([hv, lv])
+    faces = [tuple(t) for t in ht] + [tuple(mirror[t][::-1]) for t in ht]
+    used = np.unique(np.array(faces))
+    remap = -np.ones(len(verts), np.int64)
+    remap[used] = np.arange(len(used))
+    verts = verts[used]
+    faces = np.array([[remap[i] for i in f] for f in faces])
+    open_, dup, vol = decimate.check(verts, faces)
+    if vol > 0:                            # the game's winding: cross product inwards
+        faces = faces[:, ::-1]
+        open_, dup, vol = decimate.check(verts, faces)
+    if open_ or dup:
+        raise ValueError('shell not closed: %d open edges, %d repeated' % (open_, dup))
+    quads = decimate.pair_quads(verts, faces)
+    # no quad across the centre line
     out = []
-    for f in faces:
-        g = []
-        for i in f:
-            if i not in g:
-                g.append(i)
-        if len(g) < 3:
-            continue
-        p = verts[g]
-        n = np.cross(p[1] - p[0], p[2] - p[0])
-        if len(g) == 4:
-            n = n + np.cross(p[2] - p[0], p[3] - p[0])
-        c = p.mean(0)
-        outward = c - centre
-        outward[2] *= 0.3
-        # the game's faces: cross(p1 - p0, p2 - p0) points inwards
-        if n @ outward > 0:
-            g = g[::-1]
-        out.append(g)
-    # vertex normals: mean of the outward face normals around each vertex
+    for f in quads:
+        x = verts[f, 0]
+        if len(f) == 4 and x.min() < -1e-6 and x.max() > 1e-6:
+            out += [[f[0], f[1], f[2]], [f[0], f[2], f[3]]]
+        else:
+            out.append(list(f))
     vn = np.zeros_like(verts)
-    for g in out:
-        p = verts[g]
+    for f in out:
+        p = verts[f]
         n = -np.cross(p[1] - p[0], p[2] - p[0])
-        vn[g] += n / max(np.linalg.norm(n), 1e-9)
+        if len(f) == 4:
+            n = n - np.cross(p[2] - p[0], p[3] - p[0])
+        for i in f:
+            vn[i] += n
     vn /= np.maximum(np.linalg.norm(vn, axis=1, keepdims=True), 1e-9)
+    if log:
+        log('    shell: %d vertices, %d faces (%d quads), closed, volume %.2f m3'
+            % (len(verts), len(out), sum(len(f) == 4 for f in out), -vol))
     return verts, out, vn
 
 
@@ -152,6 +197,21 @@ class Atlas:
         (u0, _), (v0, _) = self.boxes[view]
         ou, ov, r = self.place[view]
         return np.stack([ou + (q[:, ua] * us - u0) * r, ov + (q[:, va] * vs - v0) * r], 1)
+
+    def miss(self, view, p):
+        """How far (m) the points p are from what the view's picture shows at their place (large:
+        something else hides them in that picture)."""
+        pic = self.pics[view]
+        (ua, us), (va, vs), (da, ds) = V.VIEWS[view]
+        q = np.array(p, np.float64)
+        q[:, 0] = np.abs(q[:, 0])
+        (u0, _), (v0, _) = self.boxes[view]
+        W, H = pic['size']
+        r = pic['res']
+        x = np.clip(((q[:, ua] * us - u0) * r).astype(int), 0, W - 1)
+        y = np.clip(((q[:, va] * vs - v0) * r).astype(int), 0, H - 1)
+        d = pic['depth'][y, x]
+        return np.where(d < -1e8, 9.0, np.abs(q[:, da] * ds - d))
 
     def texels(self):
         """Per texel of the texture: class, rgb, shade (from the pictures, 4x4 reduced)."""
@@ -207,15 +267,29 @@ def _grow(cls, rgb, shade, steps=6):
 
 
 # ---------------------------------------------------------------------------------------------
-def face_view(p, n):
-    """The view a face takes its texels from (None: underside, plain black)."""
-    ax = np.abs(n)
-    k = ax.argmax()
-    if k == 1:
-        return 'top' if n[1] > 0 else None
-    if k == 0:
-        return 'side'
-    return 'front' if n[2] > 0 else 'rear'
+AXES = {'side': (0, 1), 'top': (1, 1), 'front': (2, 1), 'rear': (2, -1)}
+
+
+def face_view(p, n, atlas=None, tol=0.12):
+    """The view a face takes its texels from (None: underside, plain black): among the views
+    that see it (nothing in front of it in their picture), the one it faces most."""
+    n = n / max(np.linalg.norm(n), 1e-9)
+    if n[1] < -0.9:
+        return None            # facing the ground
+    m = n.copy()
+    m[0] = abs(m[0])           # the left side uses the right side's pictures
+    best, score = None, -9.0
+    for view, (k, sgn) in AXES.items():
+        c = m[k] * sgn
+        if c <= 0.05:
+            continue
+        if atlas is not None:
+            pts = np.vstack([p, p.mean(0)])
+            if np.median(atlas.miss(view, pts)) > tol:
+                c -= 2.0           # hidden in that picture: only if nothing better
+        if c > score:
+            best, score = view, c
+    return best
 
 
 def raster_mask(uv, size=256):
@@ -250,7 +324,7 @@ def build_texture(atlas, lods, template_tex, night=False):
         for fi, f in enumerate(faces):
             p = verts[f]
             n = -np.cross(p[1] - p[0], p[2] - p[0])
-            view = face_view(p, n)
+            view = face_view(p, n, atlas)
             if view is None:
                 info.append((li, fi, None, None, None))
                 continue
@@ -348,11 +422,12 @@ def build_texture(atlas, lods, template_tex, night=False):
     t[0x60:0x8060] = packed.tobytes()
     words = ps1(cluts)
     words[:, :, 0] = 0               # colour 0: transparent (no texel uses it)
-    n = min(len(old), len(PAINTS))
-    for p in range(n):
+    # as many palettes as the template has paints (the eight MX-5 paints over and over)
+    words = words[np.arange(len(old)) % len(PAINTS)].copy()
+    for p in range(len(old)):
         for k in (0, 12, 13):
             words[p, k] = old[p, k]
-    t[0x8060:0x8060 + n * 0x200] = words[:n].astype('<u2').tobytes()
+    t[0x8060:0x8060 + len(old) * 0x200] = words.astype('<u2').tobytes()
     faces_out = {}
     for idx, (li, fi, view, uv, m) in enumerate(info):
         faces_out[(li, fi)] = (groups.get(idx), uv)

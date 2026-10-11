@@ -52,20 +52,65 @@ def literal(data):
     return bytes(out)
 
 
-def compress(data, window=0x7FFF, max_len=258):
-    """Greedy LZSS with a hash chain; output decodes with decompress()."""
-    out = bytearray()
+def _matches(data, window, max_len, tries):
+    """For each position: (longest match length, its distance, longest match length within 128
+    bytes, its distance), by hash chains."""
     n = len(data)
     heads = {}
     prev = [-1] * n
+    ml = [0] * n
+    md = [0] * n
+    sl = [0] * n
+    sd = [0] * n
+    for i in range(n - 2):
+        k = data[i:i + 3]
+        p = heads.get(k, -1)
+        prev[i] = p
+        heads[k] = i
+        limit = min(max_len, n - i)
+        bl = bd = 0
+        sbl = sbd = 0
+        t = tries
+        while p >= 0 and i - p <= window and t:
+            l = 3
+            while l < limit and data[p + l] == data[i + l]:
+                l += 1
+            d = i - p
+            if l > bl:
+                bl, bd = l, d
+            if d <= 128 and l > sbl:
+                sbl, sbd = l, d
+            if bl == limit:
+                break
+            p = prev[p]
+            t -= 1
+        ml[i], md[i], sl[i], sd[i] = bl, bd, sbl, sbd
+    return ml, md, sl, sd
+
+
+def compress(data, window=0x7FFF, max_len=258, tries=48):
+    """LZSS with an optimal parse of the matches found (costs in bits: literal 9, match within
+    128 bytes 17, farther 25, flag bits included); output decodes with decompress()."""
+    data = bytes(data)
+    n = len(data)
+    ml, md, sl, sd = _matches(data, window, max_len, tries)
+    INF = 1 << 60
+    cost = [0] * (n + 1)
+    choice = [0] * n   # 0: literal, else (length << 1) | short
+    for i in range(n - 1, -1, -1):
+        best = 9 + cost[i + 1]
+        ch = 0
+        L = ml[i]
+        if L >= 3:
+            S = sl[i]
+            for l in range(3, L + 1):
+                c = (17 if l <= S else 25) + cost[i + l]
+                if c < best:
+                    best, ch = c, (l << 1) | (l <= S)
+        cost[i] = best
+        choice[i] = ch
+    out = bytearray()
     i = 0
-
-    def insert(p):
-        if p + 3 <= n:
-            k = data[p:p + 3]
-            prev[p] = heads.get(k, -1)
-            heads[k] = p
-
     while i < n:
         flag_pos = len(out)
         out.append(0)
@@ -73,36 +118,19 @@ def compress(data, window=0x7FFF, max_len=258):
         for bit in range(8):
             if i >= n:
                 break
-            best_len = 0
-            best_d = 0
-            if i + 3 <= n:
-                p = heads.get(data[i:i + 3], -1)
-                tries = 64
-                limit = min(max_len, n - i)
-                while p >= 0 and i - p <= window and tries:
-                    l = 3
-                    while l < limit and data[p + l] == data[i + l]:
-                        l += 1
-                    if l > best_len:
-                        best_len, best_d = l, i - p
-                        if l == limit:
-                            break
-                    p = prev[p]
-                    tries -= 1
-            if best_len >= 3 and not (best_len == 3 and best_d > 128):
+            ch = choice[i]
+            if ch:
+                l, short = ch >> 1, ch & 1
+                d = (sd[i] if short else md[i]) - 1
                 flags |= 1 << bit
-                out.append(best_len - 3)
-                d = best_d - 1
+                out.append(l - 3)
                 if d < 0x80:
                     out.append(d)
                 else:
                     out += bytes((0x80 | d >> 8, d & 0xFF))
-                for k in range(best_len):
-                    insert(i + k)
-                i += best_len
+                i += l
             else:
                 out.append(data[i])
-                insert(i)
                 i += 1
         out[flag_pos] = flags
     return bytes(out)

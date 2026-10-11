@@ -58,7 +58,7 @@ def ring_targets(n, half_width, y0, y1):
     return np.stack([x, y], 1)
 
 
-def build(pos, tri, stations, per_side=7, centre_y=None):
+def build(pos, tri, stations, per_side=7, centre_y=None, smooth=False):
     """Shell from the detailed mesh: (verts Vx3, quads Qx4 going round, ring of each vertex).
 
     stations: z of the rings, rear to front. A ring has 2 * per_side + 2 points: top, right side
@@ -86,6 +86,11 @@ def build(pos, tri, stations, per_side=7, centre_y=None):
         rings.append(np.c_[ring, np.full(len(ring), z)])
     rings = np.array(rings)                               # R x K x 3
     R, K = rings.shape[:2]
+    if smooth and R > 2:
+        # a point that sticks out of both its neighbours along the car (a headrest, an aerial
+        # base...) goes back between them: median of three, end rings kept
+        mid = np.median(np.stack([rings[:-2], rings[1:-1], rings[2:]]), 0)
+        rings[1:-1, :, :2] = mid[:, :, :2]
     verts = rings.reshape(-1, 3)
     quads = []
     for i in range(R - 1):
