@@ -1,0 +1,35 @@
+# Game and model data: never commit them (everyone builds from their own copies)
+*.iso
+*.ISO
+*.xex
+*.kn5
+*.rar
+*.zip
+*.BIN
+*.bin
+*.dds
+*.LZC
+*.lzc
+*.BUN
+*.bun
+game_root/
+build/
+out/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Local build outputs and test logs
+MX5 RF/
+logs/
+*.log
+
+# Disc images
+*.chd
+*.cue
+*.img
+
+# Personal shortcuts
+*.url
