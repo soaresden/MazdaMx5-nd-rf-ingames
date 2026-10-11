@@ -50,7 +50,7 @@ internet, and this repository holds **no game file and no 3D model**.
 - **Paint**: from the game's paint shop. The closest to Deep Crystal Blue is **Metallic no. 75**.
 
 The technical details (formats, engine limits, what was learned on the Switch) are in
-[games/nfs-most-wanted-x360](games/nfs-most-wanted-x360/). (in French)
+[games/nfs-most-wanted-x360](games/nfs-most-wanted-x360/) (in French).
 
 ## What you need
 
