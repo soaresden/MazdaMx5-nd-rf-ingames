@@ -4,6 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MX-5 RF · Most Wanted</title>
+<script>
+  // Langue : choix mémorisé (sb.lang) sinon langue du navigateur ; les éléments data-en passent en anglais.
+  (function () {
+    var l = null; try { l = localStorage.getItem('sb.lang'); } catch (_) {}
+    if (l !== 'fr' && l !== 'en') l = /^fr/i.test(navigator.language || '') ? 'fr' : 'en';
+    window.SB_LANG = l; document.documentElement.lang = l;
+    window.SBT = function (fr, en) { return l === 'en' && en != null ? en : fr; };
+    document.addEventListener('DOMContentLoaded', function () {
+      if (l === 'en') document.querySelectorAll('[data-en]').forEach(function (e) { e.innerHTML = e.getAttribute('data-en'); });
+      var b = document.getElementById('lang');
+      b.textContent = l === 'en' ? '🇫🇷 FR' : '🇬🇧 EN';
+      b.onclick = function () { try { localStorage.setItem('sb.lang', l === 'en' ? 'fr' : 'en'); } catch (_) {} location.reload(); };
+    });
+  })();
+</script>
 <meta name="description" content="Fabrique la Mazda MX-5 RF (ND) pour Need for Speed Most Wanted (Xbox 360 / Switch nfsmw-nx), dans ton navigateur, à partir de ta copie du jeu.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,6 +42,10 @@
   nav { padding: 14px 0; font: 700 15px/1 "Barlow Condensed"; text-transform: uppercase; letter-spacing: .08em; }
   nav a { color: var(--muted); text-decoration: none; }
   nav a:hover { color: var(--yellow); }
+  nav { display: flex; justify-content: space-between; align-items: center; }
+  #lang { font: 700 14px "Barlow Condensed", sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--text);
+          background: var(--stripe); border: 1px solid #4a4c40; padding: 6px 12px; cursor: pointer; min-height: 36px; }
+  #lang:hover { border-color: var(--yellow); }
 
   /* hero: the garage screenshot with the game's yellow-green grade and a car-select title bar */
   .hero { position: relative; border: 1px solid var(--line); overflow: hidden; margin-bottom: 22px; }
@@ -85,28 +104,28 @@
 </head>
 <body>
 <div class="wrap">
-  <nav><a href="../">‹ Tous les jeux</a></nav>
+  <nav><a href="../" data-en="‹ All games">‹ Tous les jeux</a><button id="lang" title="Français / English">🇬🇧 EN</button></nav>
 
   <div class="hero">
-    <img src="../docs/mx5_en_jeu.jpg" alt="La MX-5 RF décapotée, en bleu, dans le garage de Most Wanted">
+    <img src="../docs/mx5_en_jeu.jpg" alt="MX-5 RF · Most Wanted">
     <div class="title"><span class="chev">‹‹</span>
       <h1>Mazda MX-5 RF<small>Need for Speed · Most Wanted</small></h1>
       <span class="chev">››</span></div>
   </div>
 
-  <p class="lead">Version <strong>Xbox 360</strong>, jouée sur <strong>Nintendo Switch</strong> avec le portage
+  <p class="lead" data-en="&lt;strong&gt;Xbox 360&lt;/strong&gt; version, played on the &lt;strong&gt;Nintendo Switch&lt;/strong&gt; with the &lt;a href=&quot;https://github.com/StevensND/nfsmw-nx&quot;&gt;nfsmw-nx&lt;/a&gt; port. The car is built &lt;strong&gt;in your browser&lt;/strong&gt; from &lt;strong&gt;your&lt;/strong&gt; copy of the game and of the model: nothing is sent over the internet, no game file is provided here.">Version <strong>Xbox 360</strong>, jouée sur <strong>Nintendo Switch</strong> avec le portage
     <a href="https://github.com/StevensND/nfsmw-nx">nfsmw-nx</a>. La voiture est fabriquée <strong>dans ton navigateur</strong>
     à partir de <strong>ta</strong> copie du jeu et du modèle : rien n'est envoyé sur internet, aucun fichier du jeu n'est fourni ici.</p>
 
   <section class="panel">
-    <h2><b>01</b> Tes fichiers</h2>
+    <h2><b>01</b> <span data-en="Your files">Tes fichiers</span></h2>
     <div class="body grid">
       <div>
-        <label for="iso">Image disque du jeu <span class="hint">· Xbox 360, .iso, ~7 Go</span></label>
+        <label for="iso" data-en="Game disc image &lt;span class=&quot;hint&quot;&gt;· Xbox 360, .iso, ~7 GB&lt;/span&gt;">Image disque du jeu <span class="hint">· Xbox 360, .iso, ~7 Go</span></label>
         <input id="iso" type="file" accept=".iso">
       </div>
       <div>
-        <label for="kn5">Modèle Assetto Corsa <span class="hint">· <code>mazda_mx5_rf.kn5</code> du mod
+        <label for="kn5" data-en="Assetto Corsa model &lt;span class=&quot;hint&quot;&gt;· &lt;code&gt;mazda_mx5_rf.kn5&lt;/code&gt; from the &lt;a href=&quot;https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html&quot;&gt;Mazda MX-5 RF Hardtop&lt;/a&gt; mod, extracted&lt;/span&gt;">Modèle Assetto Corsa <span class="hint">· <code>mazda_mx5_rf.kn5</code> du mod
           <a href="https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html">Mazda MX-5 RF Hardtop</a>, à extraire</span></label>
         <input id="kn5" type="file" accept=".kn5">
       </div>
@@ -114,47 +133,47 @@
   </section>
 
   <section class="panel">
-    <h2><b>02</b> Ta MX-5</h2>
+    <h2><b>02</b> <span data-en="The MX-5">La MX-5</span></h2>
     <div class="body">
       <div class="grid">
-        <div><label for="car">Voiture remplacée</label><select id="car"></select></div>
-        <div><label for="top">Toit</label>
-          <select id="top"><option value="closed">Fermé (RF)</option><option value="open">Décapoté (toit et vitres rangés)</option></select></div>
-        <div><label for="sound">Son moteur</label>
-          <select id="sound"><option value="miata">Mazda Miata (son du jeu, inutilisé à l'origine)</option><option value="">Celui de la voiture remplacée</option></select></div>
-        <div><label for="perf">Performances</label>
-          <select id="perf"><option value="rf184">MX-5 RF 2.0 184 ch · 1 125 kg · boîte 6</option><option value="">Celles de la voiture remplacée</option></select></div>
-        <div><label for="logo">Logo dans les menus</label>
-          <select id="logo"><option value="MAZDA">Mazda</option><option value="none">Celui de la voiture remplacée</option></select></div>
-        <div><label for="badges">Nom dans les menus <span class="hint">· facultatif : 1 ou 2 images, sinon « MX-5 Miata »</span></label>
+        <div><label for="car" data-en="Car replaced">Voiture remplacée</label><select id="car"></select></div>
+        <div><label for="top" data-en="Roof">Toit</label>
+          <select id="top"><option value="closed" data-en="Closed (RF)">Fermé (RF)</option><option value="open" data-en="Open (roof and windows stowed)">Décapoté (toit et vitres rangés)</option></select></div>
+        <div><label for="sound" data-en="Engine sound">Son moteur</label>
+          <select id="sound"><option value="miata" data-en="Mazda Miata (in the game, unused originally)">Mazda Miata (son du jeu, inutilisé à l'origine)</option><option value="" data-en="The replaced car&#39;s">Celui de la voiture remplacée</option></select></div>
+        <div><label for="perf" data-en="Performance">Performances</label>
+          <select id="perf"><option value="rf184" data-en="MX-5 RF 2.0 184 hp · 1,125 kg · 6-speed">MX-5 RF 2.0 184 ch · 1 125 kg · boîte 6</option><option value="" data-en="The replaced car&#39;s">Celles de la voiture remplacée</option></select></div>
+        <div><label for="logo" data-en="Logo in the menus">Logo dans les menus</label>
+          <select id="logo"><option value="MAZDA">Mazda</option><option value="none" data-en="The replaced car&#39;s">Celui de la voiture remplacée</option></select></div>
+        <div><label for="badges" data-en="Name in the menus &lt;span class=&quot;hint&quot;&gt;· optional: 1 or 2 pictures, otherwise “MX-5 Miata”&lt;/span&gt;">Nom dans les menus <span class="hint">· facultatif : 1 ou 2 images, sinon « MX-5 Miata »</span></label>
           <input id="badges" type="file" accept="image/*" multiple></div>
       </div>
       <p style="margin:16px 0 0"><label class="check"><input id="vf" type="checkbox">
-        <span>J'ai installé la VF (patch français de nfsmw-nx)<br><span class="hint">sinon les menus repasseraient en anglais</span></span></label></p>
+        <span data-en="I installed the French dub (nfsmw-nx French patch)&lt;br&gt;&lt;span class=&quot;hint&quot;&gt;otherwise the menus would switch back to English&lt;/span&gt;">J'ai installé la VF (patch français de nfsmw-nx)<br><span class="hint">sinon les menus repasseraient en anglais</span></span></label></p>
     </div>
   </section>
 
   <section class="panel">
-    <h2><b>03</b> Fabriquer</h2>
+    <h2><b>03</b> <span data-en="Build">Fabriquer</span></h2>
     <div class="body">
-      <button id="go" class="go" disabled>Chargement…</button>
-      <p class="hint" style="margin:10px 0 0">une à deux minutes : c'est ton navigateur qui fait tout le travail</p>
+      <button id="go" class="go" disabled data-en="Loading…">Chargement…</button>
+      <p class="hint" style="margin:10px 0 0" data-en="one to two minutes: your browser does all the work">une à deux minutes : c'est ton navigateur qui fait tout le travail</p>
       <div id="log"></div>
       <div id="status" class="status"></div>
-      <a id="download" class="download" hidden>Télécharger le zip</a>
+      <a id="download" class="download" hidden data-en="Download the zip">Télécharger le zip</a>
     </div>
   </section>
 
   <section class="panel">
-    <h2><b>04</b> Installer sur la Switch</h2>
+    <h2><b>04</b> <span data-en="Install on the Switch">Installer sur la Switch</span></h2>
     <div class="body"><ol>
-      <li>Jeu fermé, dézipper et copier le dossier <code>game_root</code> sur <code>sdmc:/switch/nfsmw-nx/</code> en remplaçant les fichiers.</li>
-      <li>Au garage, la voiture choisie est devenue la MX-5. Couleur la plus proche du Deep Crystal Blue : <strong>Métallisé n° 75</strong>.</li>
-      <li>Pour revenir en arrière, supprimer les fichiers copiés (liste dans <code>LISEZMOI.txt</code>).</li>
+      <li data-en="With the game closed, unzip and copy the &lt;code&gt;game_root&lt;/code&gt; folder to &lt;code&gt;sdmc:/switch/nfsmw-nx/&lt;/code&gt;, replacing the files.">Jeu fermé, dézipper et copier le dossier <code>game_root</code> sur <code>sdmc:/switch/nfsmw-nx/</code> en remplaçant les fichiers.</li>
+      <li data-en="In the garage, the chosen car is now the MX-5. Closest colour to Deep Crystal Blue: &lt;strong&gt;Metallic no. 75&lt;/strong&gt;.">Au garage, la voiture choisie est devenue la MX-5. Couleur la plus proche du Deep Crystal Blue : <strong>Métallisé n° 75</strong>.</li>
+      <li data-en="To go back, delete the copied files (listed in &lt;code&gt;LISEZMOI.txt&lt;/code&gt;).">Pour revenir en arrière, supprimer les fichiers copiés (liste dans <code>LISEZMOI.txt</code>).</li>
     </ol></div>
   </section>
 
-  <footer>Outils et explications : <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames">github.com/soaresden/MazdaMx5-nd-rf-ingames</a>.
+  <footer data-en="Tools and write-ups: &lt;a href=&quot;https://github.com/soaresden/MazdaMx5-nd-rf-ingames&quot;&gt;github.com/soaresden/MazdaMx5-nd-rf-ingames&lt;/a&gt;. Only the IS300 was tested in the game, the other cars are experimental.&lt;br&gt;Thanks to &lt;a href=&quot;https://github.com/StevensND/nfsmw-nx&quot;&gt;StevensND&lt;/a&gt; (nfsmw-nx), Kunos Simulazioni and &lt;a href=&quot;https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html&quot;&gt;Modland&lt;/a&gt; (Assetto Corsa model), &lt;a href=&quot;https://github.com/x07x08/nfsmw-save-editor&quot;&gt;x07x08&lt;/a&gt;, &lt;a href=&quot;https://github.com/sprintstate/nfs-mw-save-editor&quot;&gt;sprintstate&lt;/a&gt;, &lt;a href=&quot;https://github.com/dbalatoni13/nfsmw&quot;&gt;dbalatoni13&lt;/a&gt; (decompilation), &lt;a href=&quot;https://github.com/vgmstream/vgmstream&quot;&gt;vgmstream&lt;/a&gt;, &lt;a href=&quot;https://pyodide.org&quot;&gt;Pyodide&lt;/a&gt;, and OfficialWhippy for the “MX-5” drawing of the badge.&lt;br&gt;Need for Speed is a trademark of Electronic Arts; Mazda, MX-5 and Miata are trademarks of Mazda. Fan project.">Outils et explications : <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames">github.com/soaresden/MazdaMx5-nd-rf-ingames</a>.
     Seule l'IS300 a été testée en jeu, les autres voitures sont expérimentales.<br>
     Merci à <a href="https://github.com/StevensND/nfsmw-nx">StevensND</a> (nfsmw-nx),
     Kunos Simulazioni et <a href="https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html">Modland</a> (modèle Assetto Corsa),
@@ -172,7 +191,7 @@
     ['SUPRA', 'Toyota Supra'], ['MUSTANGGT', 'Ford Mustang GT'], ['GTO', 'Pontiac GTO'], ['CAMARO', 'Chevrolet Camaro'],
     ['MONARO', 'Holden Monaro'], ['CTS', 'Cadillac CTS'], ['CAYMANS', 'Porsche Cayman S'], ['997S', 'Porsche 911 Carrera S'],
     ['911TURBO', 'Porsche 911 Turbo'], ['911GT2', 'Porsche 911 GT2'], ['CARRERAGT', 'Porsche Carrera GT'],
-    ['BMWM3', 'BMW M3'], ['BMWM3GTR', 'BMW M3 GTR'], ['BMWM3GTRE46', 'BMW M3 GTR (course)'], ['CLK500', 'Mercedes CLK 500'],
+    ['BMWM3', 'BMW M3'], ['BMWM3GTR', 'BMW M3 GTR'], ['BMWM3GTRE46', SBT('BMW M3 GTR (course)', 'BMW M3 GTR (race)')], ['CLK500', 'Mercedes CLK 500'],
     ['SL500', 'Mercedes SL 500'], ['SL65', 'Mercedes SL 65 AMG'], ['SLR', 'Mercedes SLR'], ['DB9', 'Aston Martin DB9'],
     ['CORVETTE', 'Chevrolet Corvette C6'], ['CORVETTEC6R', 'Chevrolet Corvette C6.R'], ['VIPER', 'Dodge Viper'],
     ['FORDGT', 'Ford GT'], ['GALLARDO', 'Lamborghini Gallardo'], ['MURCIELAGO', 'Lamborghini Murciélago'],
@@ -180,7 +199,7 @@
   const $ = (id) => document.getElementById(id);
   for (const [value, label, tested] of CARS) {
     const o = document.createElement('option');
-    o.value = value; o.textContent = label + (tested ? ' · testée, recommandée' : ' · expérimental');
+    o.value = value; o.textContent = label + (tested ? SBT(' · testée, recommandée', ' · tested, recommended') : SBT(' · expérimental', ' · experimental'));
     $('car').append(o);
   }
   // development only: ?test reads the disc image and the model from the local test server
@@ -188,29 +207,29 @@
   const log = (t) => { $('log').textContent += t + '\n'; $('log').scrollTop = 1e9; };
   const status = (t, cls) => { $('status').textContent = t; $('status').className = 'status ' + (cls || ''); };
   let ready = false;
-  const worker = new Worker('../web/worker.js');
+  const worker = new Worker('../web/worker.js?lang=' + SB_LANG);
   const update = () => {
     $('go').disabled = !(ready && (TEST || ($('iso').files.length && $('kn5').files.length)));
-    $('go').textContent = ready ? 'Fabriquer ma MX-5' : 'Chargement de Python…';
+    $('go').textContent = ready ? SBT('Fabriquer la MX-5', 'Build the MX-5') : SBT('Chargement de Python…', 'Loading Python…');
   };
   $('iso').onchange = $('kn5').onchange = update;
   worker.onmessage = (ev) => {
     const m = ev.data;
     if (m.type === 'log') log(m.text);
-    if (m.type === 'ready') { ready = true; update(); log('Prêt.'); }
-    if (m.type === 'error') { status('Erreur : ' + m.text, 'err'); update(); }
+    if (m.type === 'ready') { ready = true; update(); log(SBT('Prêt.', 'Ready.')); }
+    if (m.type === 'error') { status(SBT('Erreur : ', 'Error: ') + m.text, 'err'); update(); }
     if (m.type === 'done') {
       const url = URL.createObjectURL(new Blob([m.zip], { type: 'application/zip' }));
       const a = $('download');
       a.href = url; a.download = `mx5_rf_${$('car').value.toLowerCase()}${$('top').value === 'open' ? '_decapotee' : ''}.zip`;
       a.hidden = false;
-      status(`Terminé en ${m.seconds} s`, 'ok'); update();
+      status(SBT(`Terminé en ${m.seconds} s`, `Done in ${m.seconds} s`), 'ok'); update();
     }
   };
   const files = () => TEST ? { iso: location.origin + '/test/disc.iso', kn5: '/test/model.kn5' }
                            : { iso: $('iso').files[0], kn5: $('kn5').files[0] };
   $('go').onclick = () => {
-    $('go').disabled = true; $('download').hidden = true; $('log').textContent = ''; status('Fabrication en cours…');
+    $('go').disabled = true; $('download').hidden = true; $('log').textContent = ''; status(SBT('Fabrication en cours…', 'Building…'));
     worker.postMessage({
       ...files(), badges: Array.from($('badges').files),
       options: { car: $('car').value, top: $('top').value, sound: $('sound').value, perf: $('perf').value,

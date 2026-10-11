@@ -1,9 +1,11 @@
 # Mazda MX-5 RF (ND) dans les jeux de voitures
 
+🇬🇧 [English version](README.en.md)
+
 J'adore cette voiture. Le projet : la **convertir dans les jeux de voitures que j'aime** pour
 pouvoir la conduire, sur **plusieurs générations de consoles**, de la PS1 à la Xbox 360.
 
-La voiture, c'est la mienne : une Mazda MX-5 RF (ND2) 2.0 de 184 ch **Deep Crystal Blue**, toit
+La voiture : une Mazda MX-5 RF (ND2) 2.0 de 184 ch **Deep Crystal Blue**, toit
 noir brillant, jantes sombres et étriers Brembo rouges.
 
 ![La MX-5 RF décapotée dans le garage de Need for Speed Most Wanted](docs/mx5_en_jeu.jpg)

@@ -13,13 +13,23 @@ const SOURCES = [
 ];
 
 const say = (type, data) => postMessage({ type, ...data });
+// language of the page (worker.js?lang=en); the steps logged by make_car.py are in French
+const EN = new URL(self.location).searchParams.get('lang') === 'en';
+const T = (fr, en) => (EN ? en : fr);
+const STEPS_EN = [
+  [/^1\/3 la voiture.*/, '1/3 the car (geometry, textures, wheels, performance, sound)'],
+  [/^2\/3 les menus.*/, '2/3 the menus (logo and name)'],
+  [/^3\/3 le zip/, '3/3 the zip'],
+  [/^VF : (\d+) entrées anglaises masquées.*/, 'French dub: $1 English entries hidden in GLOBALMEMORYFILE.BIN'],
+];
+const tr = (text) => { if (EN) for (const [re, en] of STEPS_EN) if (re.test(text)) return text.replace(re, en); return text; };
 let pyodide = null;
 
 async function init() {
-  say('log', { text: 'Chargement de Python (Pyodide)…' });
+  say('log', { text: T('Chargement de Python (Pyodide)…', 'Loading Python (Pyodide)…') });
   pyodide = await loadPyodide();
   await pyodide.loadPackage(['numpy', 'pillow']);
-  say('log', { text: 'Chargement des outils…' });
+  say('log', { text: T('Chargement des outils…', 'Loading the tools…') });
   for (const path of SOURCES) {
     const res = await fetch(new URL(`../${path}`, self.location));
     if (!res.ok) throw new Error(`${path} : ${res.status}`);
@@ -93,7 +103,8 @@ onmessage = async (ev) => {
     const t0 = Date.now();
     // test mode: URLs of a local server instead of chosen files
     const kn5Data = typeof kn5 === 'string' ? await (await fetch(kn5)).arrayBuffer() : await kn5.arrayBuffer();
-    say('log', { text: `Modèle lu (${(kn5Data.byteLength / 1048576).toFixed(0)} Mo).` });
+    const mb = (kn5Data.byteLength / 1048576).toFixed(0);
+    say('log', { text: T(`Modèle lu (${mb} Mo).`, `Model read (${mb} MB).`) });
     pyodide.FS.writeFile('/in/model.kn5', new Uint8Array(kn5Data));
     const names = [];
     for (let i = 0; i < (badges || []).length; i++) {
@@ -103,7 +114,7 @@ onmessage = async (ev) => {
     }
     pyodide.globals.set('ISO_FILE', iso);
     pyodide.globals.set('OPTIONS', pyodide.toPy({ ...options, names: names.length ? names : null }));
-    pyodide.globals.set('jslog', (text) => say('log', { text }));
+    pyodide.globals.set('jslog', (text) => say('log', { text: tr(text) }));
     const zip = await pyodide.runPythonAsync(`
 import make_car
 o = OPTIONS

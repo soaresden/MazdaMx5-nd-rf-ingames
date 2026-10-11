@@ -3,7 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MX-5 RF dans mes jeux</title>
+<title>La MX-5 RF dans mes jeux</title>
+<script>
+  // Langue : choix mémorisé (sb.lang) sinon langue du navigateur ; les éléments data-en passent en anglais.
+  (function () {
+    var l = null; try { l = localStorage.getItem('sb.lang'); } catch (_) {}
+    if (l !== 'fr' && l !== 'en') l = /^fr/i.test(navigator.language || '') ? 'fr' : 'en';
+    window.SB_LANG = l; document.documentElement.lang = l;
+    window.SBT = function (fr, en) { return l === 'en' && en != null ? en : fr; };
+    if (l === 'en') document.title = 'The MX-5 RF in my games';
+    document.addEventListener('DOMContentLoaded', function () {
+      if (l === 'en') document.querySelectorAll('[data-en]').forEach(function (e) { e.innerHTML = e.getAttribute('data-en'); });
+      var b = document.getElementById('lang');
+      b.textContent = l === 'en' ? '🇫🇷 FR' : '🇬🇧 EN';
+      b.onclick = function () { try { localStorage.setItem('sb.lang', l === 'en' ? 'fr' : 'en'); } catch (_) {} location.reload(); };
+    });
+  })();
+</script>
 <meta name="description" content="Ma Mazda MX-5 RF (ND) convertie dans les jeux de voitures que j'aime, sur plusieurs générations de consoles.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -47,55 +63,59 @@
   .carbon .art { background: repeating-linear-gradient(45deg, #121212 0 6px, #1d1d1d 6px 12px); }
   .carbon h2 { color: #ff7a2b; }
   .gt2 .art { background: linear-gradient(135deg, #222, #555 55%, #d81e2c 55.5%, #d81e2c 60%, #222 60.5%); }
+  #lang { position: absolute; top: 14px; right: 16px; border: 1px solid var(--line); background: var(--card); color: var(--text);
+          padding: 7px 12px; font: 700 15px "Barlow Condensed", sans-serif; cursor: pointer; min-height: 38px; }
+  #lang:hover { border-color: var(--accent); }
   footer { color: var(--muted); font-size: 15px; text-align: center; margin-top: 34px; }
 </style>
 </head>
 <body>
+<button id="lang" title="Français / English">🇬🇧 EN</button>
 <div class="wrap">
   <header>
     <div class="kicker">Mazda MX-5 RF · ND2 · Deep Crystal Blue</div>
-    <h1>Ma MX-5 dans mes jeux</h1>
-    <p class="intro">J'adore cette voiture. L'idée : la <strong>convertir dans les jeux de voitures que j'aime</strong> pour pouvoir
+    <h1 data-en="The MX-5 in my games">La MX-5 dans mes jeux</h1>
+    <p class="intro" data-en="I love this car. The idea: <strong>bring it into the racing games I love</strong> so I can drive it, across <strong>several console generations</strong>, from the PS1 to the Xbox 360. Each game has its own page: it builds the car in your browser, from <strong>your</strong> copy of the game, without sending anything over the internet.">J'adore cette voiture. L'idée : la <strong>convertir dans les jeux de voitures que j'aime</strong> pour pouvoir
       la conduire, sur <strong>plusieurs générations de consoles</strong>, de la PS1 à la Xbox 360. Chaque jeu a sa page : elle
       fabrique la voiture dans ton navigateur, à partir de <strong>ta</strong> copie du jeu, sans rien envoyer sur internet.</p>
   </header>
 
   <div class="games">
     <a class="game mw" href="nfs-most-wanted/">
-      <span class="badge ready">Disponible</span>
+      <span class="badge ready" data-en="Available">Disponible</span>
       <div class="art"></div>
       <div class="txt"><h2>Need for Speed Most Wanted</h2><div class="plat">Xbox 360 · Switch (nfsmw-nx) · 2005</div>
-        <p>Toit fermé ou décapoté, logo et nom dans les menus, 184 ch, son Miata. Remplace la voiture de ton choix.</p></div>
+        <p data-en="Hardtop closed or open, logo and name in the menus, 184 hp, Miata engine sound. Replaces the car of your choice.">Toit fermé ou décapoté, logo et nom dans les menus, 184 ch, son Miata. Remplace la voiture de ton choix.</p></div>
     </a>
     <div class="game gt">
-      <span class="badge wip">En cours</span>
+      <span class="badge wip" data-en="In progress">En cours</span>
       <div class="art"></div>
       <div class="txt"><h2>Gran Turismo</h2><div class="plat">PlayStation · 1997</div>
-        <p>À la place de la Mazda Eunos Roadster, la MX-5 de première génération.</p></div>
+        <p data-en="In place of the Mazda Eunos Roadster, the first-generation MX-5.">À la place de la Mazda Eunos Roadster, la MX-5 de première génération.</p></div>
     </div>
     <div class="game u1">
-      <span class="badge later">Prévu</span>
+      <span class="badge later" data-en="Planned">Prévu</span>
       <div class="art"></div>
       <div class="txt"><h2>NFS Underground</h2><div class="plat">Xbox · 2003</div></div>
     </div>
     <div class="game u2">
-      <span class="badge later">Prévu</span>
+      <span class="badge later" data-en="Planned">Prévu</span>
       <div class="art"></div>
       <div class="txt"><h2>NFS Underground 2</h2><div class="plat">Xbox · 2004</div></div>
     </div>
     <div class="game carbon">
-      <span class="badge later">Prévu</span>
+      <span class="badge later" data-en="Planned">Prévu</span>
       <div class="art"></div>
-      <div class="txt"><h2>NFS Carbon</h2><div class="plat">à définir · 2006</div></div>
+      <div class="txt"><h2>NFS Carbon</h2><div class="plat" data-en="to be decided · 2006">à définir · 2006</div></div>
     </div>
     <div class="game gt2">
-      <span class="badge later">Prévu</span>
+      <span class="badge later" data-en="Planned">Prévu</span>
       <div class="art"></div>
       <div class="txt"><h2>Gran Turismo 2</h2><div class="plat">PlayStation · 1999</div></div>
     </div>
   </div>
 
-  <footer>Le code et les explications : <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames">github.com/soaresden/MazdaMx5-nd-rf-ingames</a>
+  <footer data-en="Code and write-ups: <a href=&quot;https://github.com/soaresden/MazdaMx5-nd-rf-ingames&quot;>github.com/soaresden/MazdaMx5-nd-rf-ingames</a> · no game or model file is provided · fan project, not affiliated with Mazda or the publishers.">Le code et les explications : <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames">github.com/soaresden/MazdaMx5-nd-rf-ingames</a>
     · aucun fichier de jeu ni de modèle n'est fourni · projet de fan, sans lien avec Mazda ni les éditeurs.</footer>
 </div>
 </body>
