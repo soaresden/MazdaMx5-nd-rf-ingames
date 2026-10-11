@@ -49,8 +49,9 @@ Le détail technique (formats, limites du moteur, ce qui a été appris sur Swit
 ## Ce qu'il faut
 
 - **Ta copie du jeu**, en image disque (pour Most Wanted : l'image Xbox 360, `.iso`).
-- **Le modèle** : le mod Assetto Corsa **`ks_mazda_mx5_rf`**, extrait ; seul le fichier
-  `mazda_mx5_rf.kn5` sert. Il n'est pas fourni ici.
+- **Le modèle** : le mod Assetto Corsa **`ks_mazda_mx5_rf`**
+  ([Mazda MX-5 RF Hardtop sur Modland](https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html)), extrait ; seul le fichier `mazda_mx5_rf.kn5` sert.
+  Il n'est pas fourni ici.
 - Pour la page : un navigateur récent (Chrome, Edge, Firefox). Pour la ligne de commande :
   Python 3.10 ou plus récent avec `numpy` et `Pillow` :
 
@@ -75,7 +76,8 @@ Le détail technique (formats, limites du moteur, ce qui a été appris sur Swit
 
 - **[StevensND](https://github.com/StevensND)** pour [nfsmw-nx](https://github.com/StevensND/nfsmw-nx),
   le portage de Most Wanted sur Switch, et ses journaux qui ont permis de tout déboguer.
-- **Kunos Simulazioni** pour le modèle de la MX-5 RF d'Assetto Corsa.
+- **Kunos Simulazioni** pour le modèle de la MX-5 RF d'Assetto Corsa (`ks_mazda_mx5_rf`), et
+  [Modland](https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html) qui le met à disposition.
 - **[x07x08](https://github.com/x07x08)** pour [nfsmw-save-editor](https://github.com/x07x08/nfsmw-save-editor),
   auquel ce projet a ajouté les sauvegardes Xbox 360.
 - **[sprintstate](https://github.com/sprintstate)** pour [nfs-mw-save-editor](https://github.com/sprintstate/nfs-mw-save-editor)
