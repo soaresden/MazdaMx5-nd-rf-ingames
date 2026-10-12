@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MX-5 RF · Gran Turismo</title>
+<script>
+  // Langue : choix mémorisé (sb.lang) sinon langue du navigateur ; les éléments data-en passent en anglais.
+  (function () {
+    var l = null; try { l = localStorage.getItem('sb.lang'); } catch (_) {}
+    if (l !== 'fr' && l !== 'en') l = /^fr/i.test(navigator.language || '') ? 'fr' : 'en';
+    window.SB_LANG = l; document.documentElement.lang = l;
+    window.SBT = function (fr, en) { return l === 'en' && en != null ? en : fr; };
+    document.addEventListener('DOMContentLoaded', function () {
+      if (l === 'en') document.querySelectorAll('[data-en]').forEach(function (e) { e.innerHTML = e.getAttribute('data-en'); });
+      var b = document.getElementById('lang');
+      b.textContent = l === 'en' ? '🇫🇷 FR' : '🇬🇧 EN';
+      b.onclick = function () { try { localStorage.setItem('sb.lang', l === 'en' ? 'fr' : 'en'); } catch (_) {} location.reload(); };
+    });
+  })();
+</script>
+<meta name="description" content="Fabrique la Mazda MX-5 RF (ND) pour Gran Turismo (PlayStation, Europe multi), sur ton PC ou dans ton navigateur, à partir de ta copie du jeu : une image .bin/.cue pour DuckStation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Saira+Extra+Condensed:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060b18; --panel: rgba(9, 16, 36, .86); --line: #1f2c4f; --text: #eef2fb; --muted: #9ba7c4;
+    --blue: #2f6fe0; --blue-dim: #24467f; --white: #e7ebf4; --ok: #8fdc8a; --err: #ff6b5a; --code: #0b1226;
+    --stripe: linear-gradient(90deg, #0f2f7a, #1d4fb8 70%, #2a5fcf);
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; color: var(--text); font: 500 17px/1.5 "Barlow Condensed", "Arial Narrow", sans-serif;
+         background:
+           radial-gradient(1100px 560px at 70% -10%, rgba(47, 111, 224, .32), transparent 62%),
+           radial-gradient(800px 480px at 0% 40%, rgba(29, 79, 184, .16), transparent 60%),
+           var(--bg);
+         min-height: 100vh; }
+  a { color: #8fb4ff; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 16px 64px; }
+  nav { padding: 14px 0; font: 700 15px/1 "Barlow Condensed"; text-transform: uppercase; letter-spacing: .08em;
+        display: flex; justify-content: space-between; align-items: center; }
+  nav a { color: var(--muted); text-decoration: none; }
+  nav a:hover { color: var(--white); }
+  #lang { font: 700 14px "Barlow Condensed", sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--text);
+          background: #0d1733; border: 1px solid #33467a; padding: 6px 12px; cursor: pointer; min-height: 36px; }
+  #lang:hover { border-color: var(--white); }
+
+  /* hero: the blue of the game's menus, with its white diagonal band */
+  .hero { position: relative; border: 1px solid var(--line); overflow: hidden; margin-bottom: 22px; height: clamp(190px, 34vw, 300px);
+          background: linear-gradient(120deg, #0a2463, #1d4fb8 52%, var(--white) 52.4%, var(--white) 56%, #0f2f7a 56.4%, #0a1d4f); }
+  .hero::before { content: "GRAN TURISMO"; position: absolute; left: 22px; top: 18px; font: italic 800 clamp(22px, 4.4vw, 40px)/1 "Saira Extra Condensed";
+                  letter-spacing: .08em; color: rgba(255, 255, 255, .9); }
+  .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 110px rgba(0, 0, 0, .7);
+                 background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.7)); }
+  .title { position: absolute; left: 0; right: 0; bottom: 18px; z-index: 1; padding: 0 12px; text-align: center; }
+  .title h1 { margin: 0; font: 800 clamp(30px, 6.2vw, 64px)/1 "Saira Extra Condensed", sans-serif; text-transform: uppercase;
+              letter-spacing: .02em; text-shadow: 0 3px 0 #000, 0 0 24px rgba(0, 0, 0, .8); }
+  .title h1 small { display: block; font-size: .36em; letter-spacing: .22em; color: var(--white); margin-top: 6px; }
+
+  .lead { color: var(--muted); font-size: 18px; margin: 0 0 22px; }
+  .lead strong { color: var(--text); }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); margin: 0 0 16px; }
+  .panel > h2 { margin: 0; padding: 10px 16px; background: var(--stripe); border-bottom: 1px solid var(--line);
+                font: 700 20px/1.2 "Saira Extra Condensed"; text-transform: uppercase; letter-spacing: .08em;
+                display: flex; align-items: center; gap: 12px; }
+  .panel > h2 b { color: #0a1d4f; background: var(--white); font-size: 15px; padding: 1px 8px; letter-spacing: 0; }
+  .body { padding: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  label, .label { display: block; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin: 0 0 6px; }
+  .hint { color: var(--muted); text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 15px; }
+  select, input[type=file], input[type=number] { width: 100%; font: 600 16px "Barlow Condensed", sans-serif; color: var(--text);
+         background: #000; border: 1px solid var(--line); border-left: 3px solid var(--blue-dim); padding: 9px 10px; }
+  select:focus, input:focus { outline: none; border-left-color: var(--blue); }
+  input[type=file]::file-selector-button { font: 700 14px "Barlow Condensed"; text-transform: uppercase; letter-spacing: .06em;
+         background: var(--white); color: #0a1d4f; border: 0; padding: 5px 10px; margin-right: 10px; cursor: pointer; }
+  .check { display: flex; gap: 10px; align-items: flex-start; text-transform: none; letter-spacing: 0; font-weight: 600; margin: 0; }
+  .check input { accent-color: var(--blue); margin-top: 5px; width: 17px; height: 17px; flex: none; }
+  .check.off { opacity: .55; }
+  .cars { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 8px 18px; margin-top: 8px; }
+  .group { grid-column: 1 / -1; margin: 8px 0 0; color: var(--white); font: 700 15px "Barlow Condensed"; text-transform: uppercase; letter-spacing: .1em;
+           border-bottom: 1px solid var(--line); padding-bottom: 3px; }
+  .mini { font: 700 13px "Barlow Condensed"; text-transform: uppercase; letter-spacing: .06em; color: var(--text); background: #0d1733;
+          border: 1px solid #33467a; padding: 3px 10px; cursor: pointer; margin-left: 6px; }
+  .mini:hover { border-color: var(--white); }
+  .tip { margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--white); background: rgba(231, 235, 244, .07); font-size: 15px; }
+  .tip b { color: var(--white); }
+  .soon { display: inline-block; font: 700 12px "Barlow Condensed"; text-transform: uppercase; letter-spacing: .1em;
+          background: #2a3044; color: var(--muted); padding: 1px 8px; margin-left: 6px; vertical-align: 2px; }
+
+  .go { display: inline-flex; align-items: center; gap: 12px; font: 800 24px/1 "Saira Extra Condensed"; text-transform: uppercase;
+        letter-spacing: .08em; color: #0a1d4f; background: var(--white); border: 1px solid var(--white);
+        padding: 14px 26px; cursor: pointer; }
+  .go:hover:not(:disabled) { background: #fff; box-shadow: 0 0 0 3px var(--blue); }
+  .go:disabled { opacity: .45; cursor: default; }
+  #log { background: var(--code); border: 1px solid var(--line); padding: 10px 12px; margin-top: 14px; max-height: 260px; overflow: auto;
+         font: 13px/1.45 ui-monospace, Consolas, monospace; color: #c3cde6; white-space: pre-wrap; }
+  #log:empty { display: none; }
+  .bar { margin-top: 12px; height: 12px; background: #000; border: 1px solid var(--line); position: relative; overflow: hidden; }
+  .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--stripe); }
+  .bar.busy i { width: 30%; animation: busy 1.4s ease-in-out infinite; }
+  @keyframes busy { 0% { left: -30%; } 100% { left: 100%; } }
+  .status { margin-top: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .status.ok { color: var(--ok); } .status.err { color: var(--err); }
+  .downloads { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .download { display: inline-block; font: 800 20px "Saira Extra Condensed"; text-transform: uppercase; letter-spacing: .08em;
+              color: #0a1d4f; background: var(--white); padding: 10px 18px; text-decoration: none; border: 0; cursor: pointer; }
+  ol { margin: 0; padding-left: 22px; } li { margin-bottom: 6px; }
+  code { background: #000; border: 1px solid var(--line); padding: 0 5px; font-size: .9em; }
+  footer { color: var(--muted); font-size: 15px; margin-top: 26px; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav><a href="../" data-en="‹ All games">‹ Tous les jeux</a><button id="lang" title="Français / English">🇬🇧 EN</button></nav>
+
+  <div class="hero" role="img" aria-label="Gran Turismo">
+    <div class="title"><h1>Mazda MX-5 RF<small>Gran Turismo · PlayStation</small></h1></div>
+  </div>
+
+  <p class="lead" data-en="The &lt;strong&gt;Europe multi-language&lt;/strong&gt; version of the game (PAL, &lt;strong&gt;SCES-00984&lt;/strong&gt;), played in &lt;a href=&quot;https://www.duckstation.org&quot;&gt;DuckStation&lt;/a&gt; or another PlayStation emulator. The MX-5 RF takes the place of the Eunos Roadsters, and you get a new disc image &lt;code&gt;.bin&lt;/code&gt; + &lt;code&gt;.cue&lt;/code&gt;, built from &lt;strong&gt;your&lt;/strong&gt; copy of the game (&lt;code&gt;.chd&lt;/code&gt;, &lt;code&gt;.cue&lt;/code&gt;/&lt;code&gt;.bin&lt;/code&gt; or &lt;code&gt;.bin&lt;/code&gt;) and of the model: no game file is provided here.">La version <strong>Europe multi-langues</strong> du jeu (PAL, <strong>SCES-00984</strong>), jouée dans <a href="https://www.duckstation.org">DuckStation</a> ou un autre émulateur PlayStation. La MX-5 RF prend la place des Eunos Roadster, et tu obtiens une nouvelle image disque <code>.bin</code> + <code>.cue</code>, fabriquée à partir de <strong>ta</strong> copie du jeu (<code>.chd</code>, <code>.cue</code>/<code>.bin</code> ou <code>.bin</code>) et du modèle : aucun fichier du jeu n'est fourni ici.</p>
+
+  <section class="panel">
+    <h2><b>&#9654;</b> <span data-en="Windows package (recommended)">Paquet Windows (conseillé)</span></h2>
+    <div style="padding: 0 18px 18px">
+      <p data-en="&lt;strong&gt;The simplest (Windows), about a minute:&lt;/strong&gt; download the package, put your game image and &lt;code&gt;mazda_mx5_rf.kn5&lt;/code&gt; in its folder, then double-click &lt;code&gt;FABRIQUER.bat&lt;/code&gt;. It asks the questions (Roadsters, roof, price) in French or English. Without Python on the PC it downloads an official portable copy (python.org) into its own folder; nothing is installed in Windows."><strong>Le plus simple (Windows), environ une minute :</strong> télécharge le paquet, mets ton image du jeu et <code>mazda_mx5_rf.kn5</code> dans son dossier, puis double-clique sur <code>FABRIQUER.bat</code>. Il pose les questions (Roadster, toit, prix) en français ou en anglais. Sans Python sur le PC, il télécharge une copie portable officielle (python.org) dans son dossier, rien n'est installé dans Windows.</p>
+      <p><a class="go" href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames/releases/latest/download/MX5-RF_GranTurismo1.zip" download><span data-en="Download MX5-RF_GranTurismo1.zip">Télécharger MX5-RF_GranTurismo1.zip</span></a></p>
+      <p data-en="&lt;strong&gt;Without Windows&lt;/strong&gt; (Mac, Linux…): the page below does the same &lt;strong&gt;in your browser&lt;/strong&gt;, nothing is sent over the internet. It is much slower (allow about twenty minutes): keep the tab open."><strong>Sans Windows</strong> (Mac, Linux…) : la page ci-dessous fait la même chose <strong>dans ton navigateur</strong>, rien n'est envoyé sur internet. C'est bien plus lent (compte une vingtaine de minutes) : garde l'onglet ouvert.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>01</b> <span data-en="Your files">Tes fichiers</span></h2>
+    <div class="body grid">
+      <div>
+        <label for="chd" data-en="Game disc image &lt;span class=&quot;hint&quot;&gt;· Gran Turismo Europe multi (SCES-00984), &lt;code&gt;.chd&lt;/code&gt; or &lt;code&gt;.bin&lt;/code&gt;&lt;/span&gt;">Image disque du jeu <span class="hint">· Gran Turismo Europe multi (SCES-00984), <code>.chd</code> ou <code>.bin</code></span></label>
+        <input id="chd" type="file" accept=".chd,.bin">
+      </div>
+      <div>
+        <label for="kn5" data-en="Assetto Corsa model &lt;span class=&quot;hint&quot;&gt;· &lt;code&gt;mazda_mx5_rf.kn5&lt;/code&gt; from the &lt;a href=&quot;https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html&quot;&gt;Mazda MX-5 RF Hardtop&lt;/a&gt; mod, extracted&lt;/span&gt;">Modèle Assetto Corsa <span class="hint">· <code>mazda_mx5_rf.kn5</code> du mod
+          <a href="https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html">Mazda MX-5 RF Hardtop</a>, à extraire</span></label>
+        <input id="kn5" type="file" accept=".kn5">
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>02</b> <span data-en="The MX-5">La MX-5</span></h2>
+    <div class="body">
+      <div class="label"><span data-en="Roadsters replaced">Roadster remplacées</span>
+        <button class="mini" type="button" id="all" data-en="All">Toutes</button><button class="mini" type="button" id="none" data-en="None">Aucune</button></div>
+      <p class="hint" style="margin:0" data-en="All the Roadsters share one INFO page (the car's history): it becomes the MX-5 RF's as soon as one of them is replaced. The race versions are the cars after the Racing Modification.">Toutes les Roadster partagent une même page INFO (l'historique de la voiture) : elle devient celle de la MX-5 RF dès qu'une seule est remplacée. Les versions course sont les voitures après la préparation course (Racing Modification).</p>
+      <div class="cars" id="cars"></div>
+
+      <div class="grid" style="margin-top:18px">
+        <div><label for="top" data-en="Roof">Toit</label>
+          <select id="top"><option value="closed" data-en="Closed (hardtop up)">Capotée (toit fermé)</option><option value="open" data-en="Open (roof stowed)">Décapotée (toit rangé)</option></select></div>
+        <div><label for="price" data-en="Price at the Mazda dealer &lt;span class=&quot;hint&quot;&gt;· Cr&lt;/span&gt;">Prix chez le concessionnaire Mazda <span class="hint">· Cr</span></label>
+          <input id="price" type="number" min="1" max="999999" step="1" value="29900"></div>
+      </div>
+      <p class="tip" data-en="&lt;b&gt;Tip:&lt;/b&gt; put &lt;b&gt;100&lt;/b&gt; to be able to buy the MX-5 from the very start of a new game. 29,900 Cr is about its real price on the game's scale.">
+        <b>Astuce :</b> mets <b>100</b> pour pouvoir acheter la MX-5 dès le début d'une nouvelle partie. 29 900 Cr, c'est à peu près son vrai prix à l'échelle du jeu.</p>
+
+      <p style="margin:16px 0 0"><label class="check off"><input id="cheat" type="checkbox" disabled>
+        <span data-en="Add the &lt;a href=&quot;https://github.com/soaresden/GranTurismo1-OverlayCheat&quot;&gt;GranTurismo1-OverlayCheat&lt;/a&gt; cheat &lt;span class=&quot;soon&quot;&gt;coming soon&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;hint&quot;&gt;hold Select: freeze the licence timer, edit the credits&lt;/span&gt;">Ajouter le cheat <a href="https://github.com/soaresden/GranTurismo1-OverlayCheat">GranTurismo1-OverlayCheat</a> <span class="soon">bientôt</span><br>
+          <span class="hint">maintenir Select : figer le chrono des permis, modifier les crédits</span></span></label></p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>03</b> <span data-en="Build">Fabriquer</span></h2>
+    <div class="body">
+      <button id="go" class="go" disabled data-en="Loading…">Chargement…</button>
+      <p class="hint" style="margin:10px 0 0" data-en="a few minutes: your browser does all the work. The disc image (~690 MB) is written as it is made: in Chrome and Edge you choose where to save it first; elsewhere it is kept in the site's storage until you download it. Leave the tab open in the meantime.">quelques minutes : c'est ton navigateur qui fait tout le travail. L'image disque (~690 Mo) est écrite au fur et à mesure :
+        dans Chrome et Edge tu choisis d'abord où l'enregistrer ; ailleurs elle est gardée dans le stockage du site jusqu'au téléchargement. Laisse l'onglet ouvert pendant ce temps.</p>
+      <div class="bar" id="bar" hidden><i></i></div>
+      <div id="log"></div>
+      <div id="status" class="status"></div>
+      <div class="downloads">
+        <a id="dlbin" class="download" hidden data-en="Download the .bin">Télécharger le .bin</a>
+        <button id="dlcue" class="download" type="button" hidden data-en="Save the .cue">Enregistrer le .cue</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>04</b> <span data-en="Play">Jouer</span></h2>
+    <div class="body"><ol>
+      <li data-en="Put the &lt;code&gt;.bin&lt;/code&gt; and the &lt;code&gt;.cue&lt;/code&gt; &lt;strong&gt;in the same folder&lt;/strong&gt;, with the names they were given (the &lt;code&gt;.cue&lt;/code&gt; names the &lt;code&gt;.bin&lt;/code&gt;: if your browser renamed it, rename it back).">Mettre le <code>.bin</code> et le <code>.cue</code> <strong>dans le même dossier</strong>, avec les noms qu'ils ont reçus
+        (le <code>.cue</code> donne le nom du <code>.bin</code> : si ton navigateur l'a renommé, remets le même nom).</li>
+      <li data-en="In DuckStation (or another emulator), open the &lt;code&gt;.cue&lt;/code&gt;.">Dans DuckStation (ou un autre émulateur), ouvrir le <code>.cue</code>.</li>
+      <li data-en="The MX-5 RF is at the Mazda dealer (in place of the Eunos Roadsters) and in the used cars, with its name, its 184 hp, its eight paints (Deep Crystal Blue, Soul Red Crystal, Machine Grey…) and its INFO page.">La MX-5 RF est chez le concessionnaire Mazda (à la place des Eunos Roadster) et dans les voitures d'occasion, avec son nom,
+        ses 184 ch, ses huit peintures (Deep Crystal Blue, Soul Red Crystal, Machine Grey…) et sa page INFO.</li>
+      <li data-en="Your &lt;code&gt;.chd&lt;/code&gt; is not changed: to go back, play it again.">Ton <code>.chd</code> n'est pas modifié : pour revenir en arrière, il suffit de le relancer.</li>
+    </ol></div>
+  </section>
+
+  <footer data-en="Tools and write-ups: &lt;a href=&quot;https://github.com/soaresden/MazdaMx5-nd-rf-ingames/tree/main/games/gran-turismo-ps1&quot;&gt;github.com/soaresden/MazdaMx5-nd-rf-ingames&lt;/a&gt;. Tested in the game in DuckStation.&lt;br&gt;Thanks to &lt;a href=&quot;https://github.com/pez2k/gt2tools&quot;&gt;pez2k&lt;/a&gt; (gt2tools: file lists and formats), Kunos Simulazioni and &lt;a href=&quot;https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html&quot;&gt;Modland&lt;/a&gt; (Assetto Corsa model), MAME (CHD format), &lt;a href=&quot;https://github.com/liberationfonts/liberation-fonts&quot;&gt;Liberation Sans&lt;/a&gt; (INFO page letters, SIL OFL), &lt;a href=&quot;https://pyodide.org&quot;&gt;Pyodide&lt;/a&gt;, and OfficialWhippy for the “MX-5” drawing of the emblem.&lt;br&gt;Gran Turismo is a trademark of Sony Interactive Entertainment; Mazda, MX-5 and Eunos are trademarks of Mazda. Fan project.">Outils et explications : <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames/tree/main/games/gran-turismo-ps1">github.com/soaresden/MazdaMx5-nd-rf-ingames</a>.
+    Testé en jeu dans DuckStation.<br>
+    Merci à <a href="https://github.com/pez2k/gt2tools">pez2k</a> (gt2tools : listes de fichiers et formats),
+    Kunos Simulazioni et <a href="https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html">Modland</a> (modèle Assetto Corsa),
+    MAME (format CHD), <a href="https://github.com/liberationfonts/liberation-fonts">Liberation Sans</a> (lettres de la page INFO, SIL OFL),
+    <a href="https://pyodide.org">Pyodide</a>, et OfficialWhippy pour le dessin « MX-5 » de l'emblème.<br>
+    Gran Turismo est une marque de Sony Interactive Entertainment ; Mazda, MX-5 et Eunos sont des marques de Mazda. Projet de fan.</footer>
+</div>
+<script>
+  // the Roadsters of the disc (make_car.ROADSTERS), by group: [code, name, French note, English note]
+  const CARS = [
+    [SBT('Neuves, concessionnaire Mazda', 'New, Mazda dealer')],
+    ['aminn', 'Eunos Roadster NORMAL', 'neuve, 17 400 Cr', 'new, 17,400 Cr'],
+    ['amisn', 'Eunos Roadster S-SPECIAL', 'neuve, 22 250 Cr', 'new, 22,250 Cr'],
+    ['amivn', 'Eunos Roadster V-SPECIAL', 'neuve, 24 400 Cr', 'new, 24,400 Cr'],
+    ['aminr', 'Eunos Roadster NORMAL', 'version course', 'race version'],
+    ['amisr', 'Eunos Roadster S-SPECIAL', 'version course', 'race version'],
+    ['amivr', 'Eunos Roadster V-SPECIAL', 'version course', 'race version'],
+    [SBT("D'occasion", 'Used')],
+    ['an16n', "Eunos Roadster '89", 'occasion', 'used'],
+    ['as16n', "Eunos Roadster '92 S-SPECIAL", 'occasion', 'used'],
+    ['av16n', "Eunos Roadster '90 V-SPECIAL", 'occasion', 'used'],
+    ['an16r', "Eunos Roadster '89", 'occasion, version course', 'used, race version'],
+    ['as16r', "Eunos Roadster '92", 'occasion, version course', 'used, race version'],
+    ['av16r', "Eunos Roadster '90", 'occasion, version course', 'used, race version'],
+    [SBT('Autres', 'Others')],
+    ['arodn', 'Eunos Roadster RS', '', ''],
+    ['a-ian', 'Eunos Roadster', 'spéciale', 'special'],
+    ['a-iar', 'Eunos Roadster', 'spéciale, version course', 'special, race version'],
+  ];
+  const $ = (id) => document.getElementById(id);
+  for (const [code, name, fr, en] of CARS) {
+    if (!name) { const g = document.createElement('div'); g.className = 'group'; g.textContent = code; $('cars').append(g); continue; }
+    const l = document.createElement('label');
+    l.className = 'check';
+    const note = SBT(fr, en);
+    l.innerHTML = `<input type="checkbox" value="${code}" checked><span>${name}${note ? ` <span class="hint">· ${note}</span>` : ''}</span>`;
+    $('cars').append(l);
+  }
+  const boxes = () => Array.from($('cars').querySelectorAll('input'));
+  const chosen = () => boxes().filter((b) => b.checked).map((b) => b.value);
+
+  // development only: ?test reads the disc image and the model from the local test server
+  const TEST = new URLSearchParams(location.search).has('test');
+  const log = (t) => { $('log').textContent += t + '\n'; $('log').scrollTop = 1e9; };
+  const status = (t, cls) => { $('status').textContent = t; $('status').className = 'status ' + (cls || ''); };
+  const bar = (frac) => {
+    const b = $('bar'); b.hidden = frac == null;
+    b.classList.toggle('busy', frac === 'busy');
+    b.firstChild.style.width = typeof frac === 'number' ? (100 * frac).toFixed(1) + '%' : '';
+  };
+  let ready = false, busy = false, target = null, binName = '', binUrl = null, cueUrl = null, t0 = 0;
+  const worker = new Worker('gt1-worker.js?lang=' + SB_LANG);
+  const update = () => {
+    const price = +$('price').value;
+    $('go').disabled = busy || !(ready && chosen().length && price >= 1 && price <= 999999
+                                  && (TEST || ($('chd').files.length && $('kn5').files.length)));
+    $('go').textContent = !ready ? SBT('Chargement de Python…', 'Loading Python…')
+                        : busy ? SBT('Fabrication…', 'Building…') : SBT('Fabriquer la MX-5', 'Build the MX-5');
+  };
+  $('chd').onchange = $('kn5').onchange = $('price').oninput = $('cars').onchange = update;
+  $('all').onclick = () => { boxes().forEach((b) => { b.checked = true; }); update(); };
+  $('none').onclick = () => { boxes().forEach((b) => { b.checked = false; }); update(); };
+  const cueText = (name) => `FILE "${name}" BINARY\r\n  TRACK 01 MODE2/2352\r\n    INDEX 01 00:00:00\r\n`;
+  const opfsFile = async (name) => (await (await navigator.storage.getDirectory()).getFileHandle(name)).getFile();
+  const elapsed = () => Math.round((Date.now() - t0) / 1000);
+
+  worker.onmessage = async (ev) => {
+    const m = ev.data;
+    if (m.type === 'log') log(m.text);
+    if (m.type === 'ready') { ready = true; update(); log(SBT('Prêt.', 'Ready.')); }
+    if (m.type === 'progress') {
+      bar(m.done / m.total);
+      status(SBT(`Image disque : ${Math.floor(100 * m.done / m.total)} % · ${elapsed()} s`,
+                 `Disc image: ${Math.floor(100 * m.done / m.total)}% · ${elapsed()} s`));
+    }
+    if (m.type === 'error') { busy = false; bar(null); status(SBT('Erreur : ', 'Error: ') + m.text, 'err'); update(); }
+    if (m.type === 'done') {
+      busy = false; bar(1);
+      const mb = Math.round(m.size / 1048576);
+      if (m.kind === 'file') {
+        binName = m.saved;
+        status(SBT(`Terminé en ${m.seconds} s : ${binName} enregistré (${mb} Mo). Enregistre maintenant le .cue à côté.`,
+                   `Done in ${m.seconds} s: ${binName} saved (${mb} MB). Now save the .cue next to it.`), 'ok');
+      } else {
+        try {
+          binUrl = URL.createObjectURL(m.kind === 'opfs' ? await opfsFile(m.opfs) : m.blob);
+        } catch (e) { status(SBT('Erreur : ', 'Error: ') + e, 'err'); update(); return; }
+        const a = $('dlbin');
+        a.href = binUrl; a.download = binName; a.hidden = false;
+        status(SBT(`Terminé en ${m.seconds} s. Télécharge les deux fichiers (${mb} Mo et 1 Ko).`,
+                   `Done in ${m.seconds} s. Download both files (${mb} MB and 1 KB).`), 'ok');
+      }
+      $('dlcue').hidden = false;
+      update();
+    }
+  };
+  $('dlcue').onclick = async () => {
+    const name = binName.replace(/\.bin$/i, '') + '.cue';
+    if (target && window.showSaveFilePicker) {
+      try {
+        const h = await showSaveFilePicker({ suggestedName: name, startIn: target,
+                                             types: [{ description: 'CUE', accept: { 'application/octet-stream': ['.cue'] } }] });
+        const w = await h.createWritable();
+        await w.write(cueText(binName));
+        await w.close();
+        status(SBT(`${h.name} enregistré : ouvre-le dans DuckStation.`, `${h.name} saved: open it in DuckStation.`), 'ok');
+        return;
+      } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    if (cueUrl) URL.revokeObjectURL(cueUrl);
+    cueUrl = URL.createObjectURL(new Blob([cueText(binName)], { type: 'application/octet-stream' }));
+    const a = document.createElement('a');
+    a.href = cueUrl; a.download = name; document.body.append(a); a.click(); a.remove();
+  };
+
+  const files = () => TEST ? { chd: location.origin + '/test/disc.chd', kn5: '/test/model.kn5' }
+                           : { chd: $('chd').files[0], kn5: $('kn5').files[0] };
+  $('go').onclick = async () => {
+    const top = $('top').value;
+    binName = `Gran Turismo MX-5 RF${top === 'open' ? ' open' : ''}.bin`;
+    target = null;
+    // Chrome, Edge: the .bin goes straight to the file chosen now (the click allows the dialog)
+    if (window.showSaveFilePicker && !TEST) {
+      try {
+        target = await showSaveFilePicker({ suggestedName: binName,
+                                            types: [{ description: SBT('Image disque PlayStation', 'PlayStation disc image'),
+                                                      accept: { 'application/octet-stream': ['.bin'] } }] });
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+        target = null;
+      }
+    }
+    if (binUrl) { URL.revokeObjectURL(binUrl); binUrl = null; }
+    busy = true; t0 = Date.now(); update();
+    $('dlbin').hidden = $('dlcue').hidden = true; $('log').textContent = ''; bar('busy');
+    status(SBT('Fabrication en cours…', 'Building…'));
+    worker.postMessage({ ...files(), target,
+                         options: { cars: chosen(), top, price: +$('price').value, cheat: false } });
+  };
+</script>
+</body>
+</html>

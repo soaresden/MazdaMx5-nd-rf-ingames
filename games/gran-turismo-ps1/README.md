@@ -2,7 +2,15 @@
 
 La MX-5 RF remplace les Eunos Roadster du jeu (neuves chez Mazda, d'occasion, versions course),
 toit fermé ou décapoté. Le résultat est une image disque `.bin/.cue` pour DuckStation (et les
-autres émulateurs), faite à partir de **ton** image `.chd` du jeu.
+autres émulateurs), faite à partir de **ton** image `.chd` du jeu. Testé en jeu dans DuckStation.
+
+**Dans le navigateur** : [la page Gran Turismo](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/gt1.html)
+(`web/gt1.html`) fait tourner ces mêmes outils avec [Pyodide](https://pyodide.org). L'image
+disque (~690 Mo) n'est jamais gardée entière en mémoire : `Disc.bin_chunks` la donne quelques Mo
+à la fois, écrits au fur et à mesure dans le fichier choisi (Chrome, Edge) ou dans le stockage
+privé du site (OPFS) avant le téléchargement.
+
+En ligne de commande :
 
 ```bash
 python make_car.py --chd "Gran Turismo [SCES_009.84].chd" --kn5 mazda_mx5_rf.kn5 --out "GT MX5.bin" --top closed --price 29900
@@ -30,9 +38,10 @@ python make_car.py --chd "Gran Turismo [SCES_009.84].chd" --kn5 mazda_mx5_rf.kn5
   MX-5, prix redessiné avec les chiffres du jeu).
 - **Page INFO** (`MENU_IMG.ARC`, image 408 `CIAN16N.slt`, six langues) : l'historique est dessiné
   dans l'image de la page, et toutes les Roadster (neuves et d'occasion) montrent la même. Elle
-  est redessinée avec le titre « Mazda MX-5 RF » et l'histoire de la RF ND2, en Arial Bold aux
-  tailles mesurées sur l'originale (25 et 14 px) et dans les gris de la page. Remplacer une seule
-  Roadster change donc aussi la page INFO des autres.
+  est redessinée avec le titre « Mazda MX-5 RF » et l'histoire de la RF ND2, en Liberation Sans
+  Bold (les mêmes chasses qu'Arial Bold, licence SIL OFL, dans `fonts/`) aux tailles mesurées
+  sur l'originale (25 et 14 px) et dans les gris de la page. Remplacer une seule Roadster change
+  donc aussi la page INFO des autres.
 - **Disque** : `CAR.DAT`, `CARINF.DAT` et `MENU_IMG.ARC` réécrits à leur place (aucun fichier ne
   bouge), secteurs refaits avec leur EDC/ECC ; le reste est la copie exacte du CHD.
 
@@ -41,13 +50,14 @@ python make_car.py --chd "Gran Turismo [SCES_009.84].chd" --kn5 mazda_mx5_rf.kn5
 | Fichier | |
 |---|---|
 | `common/chd.py` | CHD v5 (cdlz / cdzl), carte compressée de Huffman, ECC des secteurs mode 2 (en-tête mis à zéro) |
-| `gtarc.py` | archives `@(#)GT-ARC`, LZSS du jeu ; compresseur à analyse optimale (10 % plus serré que celui du jeu) |
+| `gtarc.py` | archives `@(#)GT-ARC`, LZSS du jeu ; compresseur à analyse optimale (10 % plus serré que celui du jeu), recherche des correspondances avec numpy |
 | `gt1car.py` | modèles `@(#)GT-CAR` : 680 des 688 modèles du disque réécrits à l'octet près ; quads en boucle 0-1-2-3 ; produit vectoriel des faces vers l'intérieur |
 | `gt1data.py`, `carinf.py` | tables `@(#)SPEC`, `@(#)COLOR`… (enregistrements + tables de chaînes) |
 | `pslz.py` | exécutables compressés à l'envers (`PSLZ`) |
 | `tim.py`, `slt.py`, `titles.py`, `dealer.py`, `infopage.py`, `menus.py` | images des menus (TIM 4 bits, pages 640×480 en six blocs de VRAM) |
 | `shell.py`, `decimate.py`, `views.py`, `mx5scene.py`, `build_car.py`, `preview.py` | la conversion |
-| `disc.py`, `make_car.py` | système de fichiers ISO 9660 et image `.bin/.cue` |
+| `disc.py`, `make_car.py` | système de fichiers ISO 9660 et image `.bin/.cue` (EDC et ECC calculés avec numpy, par paquets de secteurs) |
+| `fonts/` | Liberation Sans Bold et sa licence (SIL Open Font License) |
 
 Les numéros des fichiers dans les archives (les Roadster dans `CAR.DAT`, les pages des menus)
 viennent des listes de fichiers de [pez2k/gt2tools](https://github.com/pez2k/gt2tools), dont la

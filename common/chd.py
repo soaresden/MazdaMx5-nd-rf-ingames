@@ -1,6 +1,6 @@
 """Read CD images in MAME's CHD format (version 5), as made by `chdman createcd`.
 
-Only the standard library (zlib, lzma), so it also runs in the browser (Pyodide). Gives the raw
+The standard library (zlib, lzma) and numpy, so it also runs in the browser (Pyodide). Gives the raw
 2352-byte sectors of the disc; `Chd.sector(lba)` and `Chd.user_data(lba)` (the 2048 bytes of a
 mode 1 / mode 2 form 1 sector).
 
@@ -13,6 +13,8 @@ sync pattern and the ECC of sectors whose ECC could be rebuilt (flag bit per fra
 import lzma
 import struct
 import zlib
+
+import numpy as np
 
 SECTOR = 2352
 SUBCODE = 96
@@ -245,16 +247,20 @@ class Chd:
         size = frames * SECTOR
         sect = (unlzma if codec == b'cdlz' else inflate)(src[hb:hb + base], size)
         sub = inflate(src[hb + base:], frames * SUBCODE)
-        out = bytearray(dest)
-        for i in range(frames):
-            s = bytearray(sect[i * SECTOR:(i + 1) * SECTOR])
-            if src[i // 8] & (1 << (i % 8)):
-                s[0:12] = SYNC
-                ecc_generate(s)
-            o = i * FRAME
-            out[o:o + SECTOR] = s
-            out[o + SECTOR:o + FRAME] = sub[i * SUBCODE:(i + 1) * SUBCODE]
-        return bytes(out)
+        sect = np.frombuffer(sect.ljust(size, b'\0')[:size], np.uint8).reshape(frames, SECTOR).copy()
+        flags = np.unpackbits(np.frombuffer(src[:eb], np.uint8), bitorder='little')[:frames].astype(bool)
+        if flags.any():
+            # sync pattern and ECC removed by chdman: put back
+            fixed = sect[flags]
+            fixed[:, 0:12] = np.frombuffer(SYNC, np.uint8)
+            ecc_generate_many(fixed)
+            sect[flags] = fixed
+        out = np.zeros(dest, np.uint8)
+        fr = out[:frames * FRAME].reshape(frames, FRAME)
+        fr[:, :SECTOR] = sect
+        sub = sub.ljust(frames * SUBCODE, b'\0')[:frames * SUBCODE]
+        fr[:, SECTOR:] = np.frombuffer(sub, np.uint8).reshape(frames, SUBCODE)
+        return out.tobytes()
 
     @property
     def frames(self):
@@ -285,35 +291,58 @@ for _i in range(256):
     _ECC_B[_i ^ _ECC_F[_i]] = _i
 
 
-def _ecc_block(src, major_count, minor_count, major_mult, minor_inc):
+def _ecc_plan(major_count, minor_count, major_mult, minor_inc):
+    """Which byte (from offset 12) goes in each step of each parity byte, and the multiplication
+    by the power of alpha it ends up with (each step: a ^= t, b ^= t, a = F[a])."""
     size = major_count * minor_count
-    out = bytearray(2 * major_count)
+    idx = np.empty((major_count, minor_count), np.int32)
     for major in range(major_count):
-        idx = (major >> 1) * major_mult + (major & 1)
-        a = b = 0
-        for _ in range(minor_count):
-            t = src[idx]
-            idx += minor_inc
-            if idx >= size:
-                idx -= size
-            a ^= t
-            b ^= t
-            a = _ECC_F[a]
-        a = _ECC_B[_ECC_F[a] ^ b]
-        out[major] = a
-        out[major + major_count] = a ^ b
-    return out
+        k = (major >> 1) * major_mult + (major & 1)
+        for j in range(minor_count):
+            idx[major, j] = k
+            k += minor_inc
+            if k >= size:
+                k -= size
+    f = np.array(_ECC_F, np.uint8)
+    mul = np.empty((minor_count, 256), np.uint8)
+    t = f.copy()                       # multiplication by alpha^1
+    for j in range(minor_count - 1, -1, -1):
+        mul[j] = t                     # step j is followed by minor_count - j multiplications
+        t = f[t]
+    return idx, mul, major_count
+
+
+_ECC_P = _ecc_plan(86, 24, 2, 86)
+_ECC_Q = _ecc_plan(52, 43, 86, 88)
+_ECC_FA = np.array(_ECC_F, np.uint8)
+_ECC_BA = np.array(_ECC_B, np.uint8)
+
+
+def _ecc_parity(data, plan):
+    """The parity bytes (a of each major, then a ^ b) of sectors data[:, 12:], all at once."""
+    idx, mul, count = plan
+    v = data[:, 12:][:, idx]                                   # (sectors, major, minor)
+    a = np.bitwise_xor.reduce(mul[np.arange(idx.shape[1]), v], axis=2)
+    b = np.bitwise_xor.reduce(v, axis=2)
+    a = _ECC_BA[_ECC_FA[a] ^ b]
+    return np.concatenate([a, a ^ b], 1)
+
+
+def ecc_generate_many(s):
+    """Rebuild the P and Q parity of raw sectors (uint8 array, sectors x 2352) in place. For mode
+    2 form 1 the parity is computed with the 4 header bytes taken as zero."""
+    hdr = s[:, 12:16].copy()
+    s[s[:, 15] == 2, 12:16] = 0
+    s[:, 2076:2076 + 172] = _ecc_parity(s, _ECC_P)
+    s[:, 2248:2248 + 104] = _ecc_parity(s, _ECC_Q)
+    s[:, 12:16] = hdr
 
 
 def ecc_generate(s):
-    """Rebuild the P and Q parity of a raw sector in place. For mode 2 form 1 the parity is
-    computed with the 4 header bytes taken as zero."""
-    hdr = bytes(s[12:16])
-    if s[15] == 2:
-        s[12:16] = b'\0\0\0\0'
-    s[2076:2076 + 172] = _ecc_block(s[12:], 86, 24, 2, 86)
-    s[2248:2248 + 104] = _ecc_block(s[12:], 52, 43, 86, 88)
-    s[12:16] = hdr
+    """Rebuild the P and Q parity of one raw sector (bytearray) in place."""
+    a = np.frombuffer(bytes(s), np.uint8).reshape(1, SECTOR).copy()
+    ecc_generate_many(a)
+    s[:] = a.tobytes()
 
 
 def edc(data):

@@ -16,6 +16,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..', '..', 'common'))
 
+import binimage         # noqa: E402
 import build_car as B   # noqa: E402
 import carinf           # noqa: E402
 import disc             # noqa: E402
@@ -94,7 +95,8 @@ def generate(chd, kn5, cars=('aminn',), top='closed', price=PRICE, log=print):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument('--chd', required=True, help='your disc image of Gran Turismo (PAL), .chd')
+    ap.add_argument('--chd', '--disc', dest='chd', required=True,
+                    help='your disc image of Gran Turismo (PAL, Europe, multi-language, SCES-00984): .chd, .cue or .bin')
     ap.add_argument('--kn5', required=True, help='mazda_mx5_rf.kn5 from the Assetto Corsa mod')
     ap.add_argument('--out', required=True, help='.bin to write (the .cue goes next to it)')
     ap.add_argument('--car', action='append', choices=sorted(ROADSTERS), help='Roadster(s) to replace (default: all)')
@@ -102,6 +104,9 @@ def main():
     ap.add_argument('--price', type=int, default=PRICE, help='price at the dealer, Cr (100: from the first day)')
     a = ap.parse_args()
     t0 = time.time()
+    src = binimage.cue_bin(a.chd) if a.chd.lower().endswith('.cue') else a.chd
+    if os.path.abspath(src).lower() == os.path.abspath(a.out).lower():
+        raise SystemExit('--out would overwrite the source image: choose another name')
     files, d = generate(a.chd, a.kn5, a.car or list(ROADSTERS), a.top, a.price)
     print('the disc image')
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)

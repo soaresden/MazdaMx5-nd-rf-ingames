@@ -15,6 +15,7 @@ GLASS_RGB = (0.10, 0.12, 0.14)
 
 # view: (image u axis, image v axis (down), depth axis (towards the camera))
 DENSITY = 12.0     # sample points per square pixel
+CHUNK = 600000     # sample points at a time
 
 VIEWS = {
     'side':  ((2, 1), (1, -1), (0, 1)),     # seen from the right: u = z
@@ -48,11 +49,26 @@ def sample(img, uv):
     return img[y, x]
 
 
+def _chunks(p2, tri, density, limit):
+    """The triangles in runs whose sample points (as _samples counts them) stay under limit."""
+    a, b, c = p2[tri[:, 0]], p2[tri[:, 1]], p2[tri[:, 2]]
+    area = 0.5 * np.abs((b[:, 0] - a[:, 0]) * (c[:, 1] - a[:, 1]) - (c[:, 0] - a[:, 0]) * (b[:, 1] - a[:, 1]))
+    n = np.minimum((area * density).astype(np.intp) + 3, 4000)   # intp: 32 bits in the browser
+    cut = np.searchsorted(np.cumsum(n), np.arange(limit, n.sum() + limit, limit))
+    start = 0
+    for e in np.unique(np.r_[cut, len(tri)]):
+        e = max(int(e), start + 1)
+        if start >= len(tri):
+            break
+        yield tri[start:e]
+        start = e
+
+
 def _samples(p2, tri, density, rng):
     """Random barycentric points on each triangle; density = points per square pixel."""
     a, b, c = p2[tri[:, 0]], p2[tri[:, 1]], p2[tri[:, 2]]
     area = 0.5 * np.abs((b[:, 0] - a[:, 0]) * (c[:, 1] - a[:, 1]) - (c[:, 0] - a[:, 0]) * (b[:, 1] - a[:, 1]))
-    n = np.minimum((area * density).astype(np.int64) + 3, 4000)
+    n = np.minimum((area * density).astype(np.intp) + 3, 4000)   # intp: 32 bits in the browser
     t = np.repeat(np.arange(len(tri)), n)
     r1 = np.sqrt(rng.random(len(t), dtype=np.float32))
     r2 = rng.random(len(t), dtype=np.float32)
@@ -89,36 +105,40 @@ def render(scene, view, res, box, light=(0.35, 0.85, 0.4), hull=None, seed=1):
             px = (pos[:, ua] * us - u0) * res
             py = (pos[:, va] * vs - v0) * res
             # dense enough that the nearest surface covers every pixel: with fewer points some
-            # pixels showed what is behind it (dark specks over the paint)
-            t, w = _samples(np.stack([px, py], 1), P['tri'], DENSITY, rng)
-            tv = P['tri'][t]
-            ix = (px[tv] * w).sum(1).astype(np.int64)
-            iy = (py[tv] * w).sum(1).astype(np.int64)
-            ok = (ix >= 0) & (ix < W) & (iy >= 0) & (iy < H)
-            w, tv, ix, iy = w[ok], tv[ok], ix[ok], iy[ok]
-            if not len(tv):
-                continue
-            d = ((pos[tv, da] * ds) * w).sum(1)
-            pix = iy * W + ix
-            # keep the nearest point per pixel among these and what is already there
-            order = np.lexsort((d, pix))
-            pix, d, w, tv = pix[order], d[order], w[order], tv[order]
-            last = np.r_[pix[1:] != pix[:-1], True]
-            pix, d, w, tv = pix[last], d[last], w[last], tv[last]
-            win = d > best[pix]
-            pix, d, w, tv = pix[win], d[win], w[win], tv[win]
-            best[pix] = d
-            if P.get('nrm') is None:
-                continue
-            n = (P['nrm'][tv] * w[:, :, None]).sum(1)
-            n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-6)
-            lit = 0.55 + 0.45 * np.clip(n @ L, 0, 1)
-            col = (P['rgb'][tv] * w[:, :, None]).sum(1)
-            if P['tex'] is not None:
-                col = col * sample(P['tex'], (P['uv'][tv] * w[:, :, None]).sum(1))
-            rgb[pix] = col * lit[:, None]
-            shade[pix] = (P['shade'][tv] * w).sum(1) * lit
-            cls[pix] = P['cls']
+            # pixels showed what is behind it (dark specks over the paint). The triangles go by
+            # chunks of at most CHUNK points: the arrays of millions of points were too much for
+            # the browser's Python (WebAssembly)
+            p2 = np.stack([px, py], 1)
+            for tri in _chunks(p2, P['tri'], DENSITY, CHUNK):
+                t, w = _samples(p2, tri, DENSITY, rng)
+                tv = tri[t]
+                ix = (px[tv] * w).sum(1).astype(np.int64)
+                iy = (py[tv] * w).sum(1).astype(np.int64)
+                ok = (ix >= 0) & (ix < W) & (iy >= 0) & (iy < H)
+                w, tv, ix, iy = w[ok], tv[ok], ix[ok], iy[ok]
+                if not len(tv):
+                    continue
+                d = ((pos[tv, da] * ds) * w).sum(1)
+                pix = iy * W + ix
+                # keep the nearest point per pixel among these and what is already there
+                order = np.lexsort((d, pix))
+                pix, d, w, tv = pix[order], d[order], w[order], tv[order]
+                last = np.r_[pix[1:] != pix[:-1], True]
+                pix, d, w, tv = pix[last], d[last], w[last], tv[last]
+                win = d > best[pix]
+                pix, d, w, tv = pix[win], d[win], w[win], tv[win]
+                best[pix] = d
+                if P.get('nrm') is None:
+                    continue
+                n = (P['nrm'][tv] * w[:, :, None]).sum(1)
+                n /= np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-6)
+                lit = 0.55 + 0.45 * np.clip(n @ L, 0, 1)
+                col = (P['rgb'][tv] * w[:, :, None]).sum(1)
+                if P['tex'] is not None:
+                    col = col * sample(P['tex'], (P['uv'][tv] * w[:, :, None]).sum(1))
+                rgb[pix] = col * lit[:, None]
+                shade[pix] = (P['shade'][tv] * w).sum(1) * lit
+                cls[pix] = P['cls']
         return best, rgb, cls, shade
 
     best, rgb, cls, shade = splat([P for P in scene.parts if not P['glass']])

@@ -7,18 +7,12 @@ and gets its EDC and ECC computed again.
 import os
 import struct
 
+import numpy as np
+
+import binimage
 import chd
 
 SECTOR = chd.SECTOR
-
-
-def edc(data):
-    """CD-ROM EDC: CRC-32 with the polynomial 0xD8018001 (reflected), table driven."""
-    crc = 0
-    t = _EDC_TABLE
-    for b in data:
-        crc = t[(crc ^ b) & 0xFF] ^ (crc >> 8)
-    return crc
 
 
 def _edc_table():
@@ -32,19 +26,60 @@ def _edc_table():
 
 
 _EDC_TABLE = _edc_table()
+_EDC_LEN = 2056          # bytes 16..2071 of a mode 2 form 1 sector
+_EDC_POS = None
+
+
+def _edc_pos():
+    """The EDC is linear in the data (it starts at 0): what byte value v at position k adds,
+    for every k and v, so that a sector's EDC is the xor of 2056 table entries."""
+    t = np.array(_EDC_TABLE, np.uint32)
+    pos = np.empty((_EDC_LEN, 256), np.uint32)
+    c = t.copy()                 # the last byte: one step
+    for k in range(_EDC_LEN - 1, -1, -1):
+        pos[k] = c
+        c = t[c & 0xFF] ^ (c >> 8)   # one more (zero) byte after it
+    return pos
+
+
+def edc_many(data):
+    """CD-ROM EDC (CRC-32 with the polynomial 0xD8018001, reflected) of rows of 2056 bytes."""
+    global _EDC_POS
+    if _EDC_POS is None:
+        _EDC_POS = _edc_pos()
+    return np.bitwise_xor.reduce(_EDC_POS[np.arange(_EDC_LEN), data], axis=1)
+
+
+def edc(data):
+    """CD-ROM EDC: CRC-32 with the polynomial 0xD8018001 (reflected), table driven."""
+    crc = 0
+    t = _EDC_TABLE
+    for b in data:
+        crc = t[(crc ^ b) & 0xFF] ^ (crc >> 8)
+    return crc
+
+
+def make_sectors(originals, datas):
+    """Mode 2 form 1 sectors with the header and subheader of the originals and 2048 bytes of
+    data each (shorter data is padded with zeros), EDC and ECC computed again."""
+    n = len(originals)
+    s = np.zeros((n, SECTOR), np.uint8)
+    s[:, :24] = np.frombuffer(b''.join(o[:24] for o in originals), np.uint8).reshape(n, 24)
+    s[:, 24:2072] = np.frombuffer(b''.join(bytes(d).ljust(2048, b'\0') for d in datas), np.uint8).reshape(n, 2048)
+    s[:, 2072:2076] = edc_many(s[:, 16:2072]).astype('<u4').view(np.uint8).reshape(n, 4)
+    chd.ecc_generate_many(s)
+    return [r.tobytes() for r in s]
 
 
 def make_sector(original, data):
     """Mode 2 form 1 sector with the header and subheader of `original` and 2048 bytes of data."""
-    s = bytearray(original[:24]) + bytearray(data.ljust(2048, b'\0')) + bytearray(SECTOR - 2072)
-    struct.pack_into('<I', s, 2072, edc(s[16:2072]))
-    chd.ecc_generate(s)
-    return bytes(s)
+    return make_sectors([original], [data])[0]
 
 
 class Disc:
     def __init__(self, chd_file):
-        self.c = chd.Chd(chd_file)
+        # the player's image: .chd, or .bin / .cue
+        self.c = binimage.open_image(chd_file)
         self.files = {}
         pvd = self.c.user_data(16)
         root = pvd[156:190]
@@ -82,9 +117,9 @@ class Disc:
         after = min((f[0] for f in self.files.values() if f[0] > lba), default=self.c.frames)
         return (after - lba) * 2048
 
-    def write_bin(self, path, replace, progress=None):
-        """Write the .bin (raw 2352-byte sectors) and its .cue; replace = {file name: new bytes}
-        (each must fit its room)."""
+    def bin_chunks(self, replace, chunk=2048, progress=None):
+        """The .bin (raw 2352-byte sectors), `chunk` sectors at a time; replace = {file name: new
+        bytes} (each must fit its room)."""
         sectors = {}
         dir_patch = {}
         for name, data in replace.items():
@@ -92,28 +127,48 @@ class Disc:
             if len(data) > self.room(name):
                 raise ValueError('%s: %d bytes, room for %d' % (name, len(data), self.room(name)))
             for i in range((len(data) + 2047) // 2048):
-                sectors[lba + i] = data[i * 2048:(i + 1) * 2048]
+                sectors[lba + i] = (data, i * 2048)
             if len(data) != size:
                 dir_patch.setdefault(dlba, []).append((doff, len(data)))
         total = self.c.frames
-        # written under a temporary name and renamed once complete: a half-written image never
-        # looks like a finished one
-        part = path + '.part'
-        with open(part, 'wb') as f:
-            for lba in range(total):
-                raw = self.c.sector(lba)
+        for start in range(0, total, chunk):
+            raws = [self.c.sector(lba) for lba in range(start, min(total, start + chunk))]
+            todo, datas = [], []
+            for k, raw in enumerate(raws):
+                lba = start + k
                 if lba in sectors:
-                    raw = make_sector(raw, sectors[lba])
+                    data, o = sectors[lba]
+                    datas.append(data[o:o + 2048])
                 elif lba in dir_patch:
                     d = bytearray(raw[24:24 + 2048])
                     for off, n in dir_patch[lba]:
                         struct.pack_into('<I', d, off + 10, n)
                         struct.pack_into('>I', d, off + 14, n)
-                    raw = make_sector(raw, bytes(d))
-                f.write(raw)
-                if progress and lba % 10000 == 0:
-                    progress(lba, total)
+                    datas.append(bytes(d))
+                else:
+                    continue
+                todo.append(k)
+            if todo:
+                for k, new in zip(todo, make_sectors([raws[k] for k in todo], datas)):
+                    raws[k] = new
+            yield b''.join(raws)
+            if progress:
+                progress(start + len(raws), total)
+
+    @staticmethod
+    def cue(bin_name):
+        """The .cue of a .bin called `bin_name` (one data track)."""
+        return 'FILE "%s" BINARY\r\n  TRACK 01 MODE2/2352\r\n    INDEX 01 00:00:00\r\n' % bin_name
+
+    def write_bin(self, path, replace, progress=None):
+        """Write the .bin (raw 2352-byte sectors) and its .cue; replace = {file name: new bytes}
+        (each must fit its room)."""
+        # written under a temporary name and renamed once complete: a half-written image never
+        # looks like a finished one
+        part = path + '.part'
+        with open(part, 'wb') as f:
+            for b in self.bin_chunks(replace, progress=progress):
+                f.write(b)
         os.replace(part, path)
-        base = os.path.basename(path)
-        with open(os.path.splitext(path)[0] + '.cue', 'w', newline='\r\n') as f:
-            f.write('FILE "%s" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00\n' % base)
+        with open(os.path.splitext(path)[0] + '.cue', 'w', newline='') as f:
+            f.write(self.cue(os.path.basename(path)))

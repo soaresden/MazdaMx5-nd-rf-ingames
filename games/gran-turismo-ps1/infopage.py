@@ -3,17 +3,22 @@ drawn into the page itself, one picture per language. All the Roadsters (new and
 ciaminn.htm, ciamisn.htm, ciamivn.htm, cian16n.htm, cias16n.htm, ciav16n.htm) show this one page.
 
 The page is drawn again with the MX-5 RF's title and text, in the letters of the game (a bold
-Helvetica: Arial Bold at the same sizes, 25 px for the title and 14 px for the text, measured on
-the originals) and the page's own greys. The layout is measured on each page: left edge, the gap
-between the two columns, title and first line, 16 px between lines.
+Helvetica: Liberation Sans Bold, which has the widths of Arial Bold, at the same sizes, 25 px for
+the title and 14 px for the text, measured on the originals) and the page's own greys. The layout
+is measured on each page: left edge, the gap between the two columns, title and first line, 16 px
+between lines.
 """
 import collections
+import os
 import re
 
 import numpy as np
 
 PAGE = 408
-FONT = r'C:\Windows\Fonts\arialbd.ttf'
+# Liberation Sans Bold (SIL Open Font License, fonts/LICENSE-LiberationSans.txt): free to ship
+# with the tools, so the web page draws the same page (a browser has no Windows fonts)
+FONT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fonts', 'LiberationSans-Bold.ttf')
+FALLBACK = r'C:\Windows\Fonts\arialbd.ttf'
 TITLE_SIZE, TEXT_SIZE, PITCH = 25, 14, 16
 TOP = 190            # everything below is the title and the text (the icons are above)
 
@@ -158,8 +163,9 @@ def write(page, text, title=TITLE):
     """Page with the title and the text in place of the originals (ValueError if it does not fit)."""
     from PIL import ImageFont
     bg, ink, greys, left, width, right, title_top, first, last = _layout(page)
-    tf = ImageFont.truetype(FONT, TITLE_SIZE)
-    bf = ImageFont.truetype(FONT, TEXT_SIZE)
+    font = FONT if os.path.exists(FONT) else FALLBACK
+    tf = ImageFont.truetype(font, TITLE_SIZE)
+    bf = ImageFont.truetype(font, TEXT_SIZE)
     lines = _wrap(text, bf, width)
     per_col = (last - first) // PITCH + 1
     if len(lines) > 2 * per_col:

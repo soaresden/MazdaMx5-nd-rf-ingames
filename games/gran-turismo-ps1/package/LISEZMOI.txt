@@ -1,0 +1,22 @@
+La MX-5 RF dans Gran Turismo (PlayStation) - fabrication sur ton PC (Windows)
+==============================================================================
+
+Il te faut :
+  - TON Gran Turismo, version EUROPE multi-langues (PAL, SCES-00984), en image disque :
+    .chd, ou .cue + .bin, ou .bin ;
+  - le modèle Assetto Corsa de la MX-5 RF : mazda_mx5_rf.kn5 (mod gratuit, voir la page du projet).
+Aucun fichier du jeu ni du modèle n'est fourni ici.
+
+1. Mets ton image du jeu et le fichier .kn5 dans ce dossier (à côté de FABRIQUER.bat).
+2. Double-clique sur FABRIQUER.bat.
+   - Première fois sans Python : il télécharge une copie portable officielle de Python
+     (python.org, environ 30 Mo) dans outils\python. Rien n'est installé dans Windows.
+3. Réponds aux questions : la langue, les Roadster à remplacer (Entrée = toutes),
+   capotée ou décapotée, le prix chez Mazda (29900 = réaliste ; 100 = dès le début du jeu).
+4. Environ une minute plus tard, le disque est dans MX5_RF_capotee (ou MX5_RF_decapotee) :
+   ouvre le .cue dans DuckStation.
+
+Ta sauvegarde de Gran Turismo marche avec ce disque (elle est sur la carte mémoire de l'émulateur).
+Ton image du jeu n'est jamais modifiée.
+
+Projet : https://soaresden.github.io/MazdaMx5-nd-rf-ingames/  (code : GPL-3.0)
