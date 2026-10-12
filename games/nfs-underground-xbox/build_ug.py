@@ -59,10 +59,14 @@ MATS = {
     'hlp_L': ('HEADLIGHTREFLECTOR', LIGHTS, OPAQUE), 'hlp_R': ('HEADLIGHTREFLECTOR', LIGHTS, OPAQUE),
     'bl_L': ('BRAKELIGHT', LIGHTS, OPAQUE), 'bl_R': ('BRAKELIGHT', LIGHTS, OPAQUE),
 }
-# Underground 2 has no HEADLIGHTREFLECTOR shader: its lamps use 0x12C9453C (the shader of the
-# Miata's own lamp bodies) and the generic glass textures of each side
-LAMP_UG2 = 0x12C9453C
+# Underground 2 lamps (as the Miata's): only the game's shared textures of each side, which it
+# swaps when the lights go on; a car texture on them is not drawn (see-through lamps). Lamp
+# bodies: shader 0x12C9453C and HEADLIGHT_LEFT / RIGHT; glass: HEADLIGHT_GLASS_LEFT / RIGHT; brake
+# lights: shader 0xF7FC7674 and BRAKELIGHT_LEFT / RIGHT. No HEADLIGHTREFLECTOR shader in this game.
+LAMP_UG2, BRAKE_UG2 = 0x12C9453C, 0xF7FC7674
 GLASS_UG2 = {'L': H('HEADLIGHT_GLASS_LEFT'), 'R': H('HEADLIGHT_GLASS_RIGHT')}
+HEAD_UG2 = {'L': H('HEADLIGHT_LEFT'), 'R': H('HEADLIGHT_RIGHT')}
+BRAKE_TEX_UG2 = {'L': H('BRAKELIGHT_LEFT'), 'R': H('BRAKELIGHT_RIGHT')}
 DROP = {'plate', 'tyre', 'rim', 'logo', 'disc', 'caliper'}   # the game draws plate and wheels
 # The paint texture is made by the game from the Miata's door lines and shading
 # (MIATA_DOORLINE*, 8-bit, swizzled, laid out for the Miata): the MX-5's own UVs would pick those
@@ -145,10 +149,14 @@ def collect(kn5, top):
 def material(mat):
     if mat in MATS:
         shader, texture, flags = MATS[mat]
-        if GAME == 'ug2' and shader == 'HEADLIGHTGLASS':
-            texture = GLASS_UG2[mat[-1]]
-        elif GAME == 'ug2' and shader == 'HEADLIGHTREFLECTOR':
-            shader = LAMP_UG2
+        if GAME == 'ug2':
+            side = mat[-1] if mat[-2:] in ('_L', '_R') else 'L'
+            if shader == 'HEADLIGHTGLASS':
+                texture = GLASS_UG2[side]
+            elif shader == 'HEADLIGHTREFLECTOR':
+                shader, texture = LAMP_UG2, HEAD_UG2[side]
+            elif shader == 'BRAKELIGHT':
+                shader, texture = BRAKE_UG2, BRAKE_TEX_UG2[side]
         return shader, texture, flags
     return ('DULLPLASTIC', ATLAS, OPAQUE)
 
