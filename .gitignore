@@ -33,3 +33,7 @@ logs/
 
 # Personal shortcuts
 *.url
+
+# NFS Underground discs, ports and test folders (game data)
+games/NFSU1-xbox/
+games/NFSU2-xbox/

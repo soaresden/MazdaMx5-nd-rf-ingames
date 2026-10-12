@@ -59,7 +59,19 @@ MATS = {
     'hlp_L': ('HEADLIGHTREFLECTOR', LIGHTS, OPAQUE), 'hlp_R': ('HEADLIGHTREFLECTOR', LIGHTS, OPAQUE),
     'bl_L': ('BRAKELIGHT', LIGHTS, OPAQUE), 'bl_R': ('BRAKELIGHT', LIGHTS, OPAQUE),
 }
+# Underground 2 has no HEADLIGHTREFLECTOR shader: its lamps use 0x12C9453C (the shader of the
+# Miata's own lamp bodies) and the generic glass textures of each side
+LAMP_UG2 = 0x12C9453C
+GLASS_UG2 = {'L': H('HEADLIGHT_GLASS_LEFT'), 'R': H('HEADLIGHT_GLASS_RIGHT')}
 DROP = {'plate', 'tyre', 'rim', 'logo', 'disc', 'caliper'}   # the game draws plate and wheels
+# The paint texture is made by the game from the Miata's door lines and shading
+# (MIATA_DOORLINE*, 8-bit, swizzled, laid out for the Miata): the MX-5's own UVs would pick those
+# lines up as stickers. The paint takes one plain spot of it instead, blank in all six overlays
+# of both games (72 texels of 512 around it).
+SKIN_UV = (0.8213, 0.3799)
+# the first group of the Miata's BASE is the driver (texture DRIVER): the game draws it on its own
+# (Underground does not show it in the menus), so it stays first
+DRIVER = H('DRIVER')
 
 # MW parts -> the Miata solid they go into (without the LOD letter)
 PARTS = {
@@ -132,7 +144,12 @@ def collect(kn5, top):
 
 def material(mat):
     if mat in MATS:
-        return MATS[mat]
+        shader, texture, flags = MATS[mat]
+        if GAME == 'ug2' and shader == 'HEADLIGHTGLASS':
+            texture = GLASS_UG2[mat[-1]]
+        elif GAME == 'ug2' and shader == 'HEADLIGHTREFLECTOR':
+            shader = LAMP_UG2
+        return shader, texture, flags
     return ('DULLPLASTIC', ATLAS, OPAQUE)
 
 
@@ -164,13 +181,18 @@ def make_mesh(subs, keys):
         tk = keys.get(texture, texture)
         if tk not in tex:
             tex.append(tk)
-        sk = SH[shader]
+        sk = SH.get(shader, shader)
         if sk not in shaders:
             shaders.append(sk)
         start = len(ib)
         lo, hi = None, None
         for sb in lst:
-            uv = MW.atlas_uv(sb.mat, sb.uv) if texture == ATLAS else sb.uv
+            if texture == ATLAS:
+                uv = MW.atlas_uv(sb.mat, sb.uv)
+            elif texture == SKIN:
+                uv = np.tile(np.array(SKIN_UV, sb.uv.dtype), (len(sb.uv), 1))
+            else:
+                uv = sb.uv
             used = np.unique(sb.tri)
             remap = np.full(len(sb.pos), -1, np.int64)
             remap[used] = np.arange(len(used)) + base
@@ -219,6 +241,39 @@ def letter_of(s):
             if geo_ug.bstringhash(s.name + mid + L) == key:
                 return L
     return 'A'
+
+
+def with_driver(s, m):
+    """The mesh m with the template solid's driver group (its first group, texture DRIVER) put
+    back in front of its own groups, as in the Miata's BASE."""
+    box = struct.unpack_from('<6f', s.groups_raw, 0)
+    n, ti, flags, start, z, si = struct.unpack_from('<6I', s.groups_raw, 24)
+    if ti >= len(s.tex) or s.tex[ti] != DRIVER:
+        return m
+    stride = struct.unpack_from('<I', s.mheader, 8)[0] >> 16
+    idx = np.frombuffer(s.ib, np.uint16)[start:start + n].astype(np.int64)
+    used = np.unique(idx)
+    remap = {v: k for k, v in enumerate(used)}
+    vb = b''.join(s.vb[v * stride:(v + 1) * stride] for v in used)
+    nd = len(used)
+    m = dict(m)
+    tex, shaders = list(m['tex']), list(m['shaders'])
+    if DRIVER not in tex:
+        tex.append(DRIVER)
+    if s.shaders[si] not in shaders:
+        shaders.append(s.shaders[si])
+    raw = struct.pack('<6f6I', *box, n, tex.index(DRIVER), flags, 0, z, shaders.index(s.shaders[si])) + s.groups_raw[48:64]
+    rest = bytearray(m['groups'])
+    for o in range(0, len(rest), 64):
+        st, = struct.unpack_from('<I', rest, o + 36)
+        struct.pack_into('<I', rest, o + 36, st + n)
+    ib = np.array([remap[v] for v in idx], np.uint16).tobytes() +         (np.frombuffer(m['ib'], np.uint16).astype(np.int64) + nd).astype(np.uint16).tobytes()
+    if m['nverts'] + nd > 65535:
+        raise ValueError('too many vertices with the driver')
+    dl, dh = np.array(box[:3]), np.array(box[3:])
+    m.update(vb=vb + m['vb'], ib=ib, groups=raw + bytes(rest), ngroups=m['ngroups'] + 1, nverts=m['nverts'] + nd,
+             ntris=m['ntris'] + n // 3, tex=tex, shaders=shaders, lo=np.minimum(m['lo'], dl), hi=np.maximum(m['hi'], dh))
+    return m
 
 
 def degenerate_mesh(keys):
@@ -356,6 +411,8 @@ def _build(geometry, textures_bin, kn5, top, game, log, scale):
         if m is None:
             m = degenerate_mesh(keys)
             how = 'empty'
+        elif part == 'BASE':
+            m = with_driver(s, m)
         apply_mesh(s, m, lambda p: move_markers(p, where))
         done[how] += 1
     log('  solides : %d MX-5, %d copies (kits), %d vides, %d gardés (roues)'
