@@ -14,6 +14,8 @@ EMPTY, PAINT, BLACK, GLASS, LAMP_F, LAMP_R, OTHER = range(7)
 GLASS_RGB = (0.10, 0.12, 0.14)
 
 # view: (image u axis, image v axis (down), depth axis (towards the camera))
+DENSITY = 12.0     # sample points per square pixel
+
 VIEWS = {
     'side':  ((2, 1), (1, -1), (0, 1)),     # seen from the right: u = z
     'top':   ((2, 1), (0, 1), (1, 1)),      # seen from above: u = z, v = x (centre line at v=0)
@@ -86,7 +88,9 @@ def render(scene, view, res, box, light=(0.35, 0.85, 0.4), hull=None, seed=1):
             pos = P['pos']
             px = (pos[:, ua] * us - u0) * res
             py = (pos[:, va] * vs - v0) * res
-            t, w = _samples(np.stack([px, py], 1), P['tri'], 4.0, rng)
+            # dense enough that the nearest surface covers every pixel: with fewer points some
+            # pixels showed what is behind it (dark specks over the paint)
+            t, w = _samples(np.stack([px, py], 1), P['tri'], DENSITY, rng)
             tv = P['tri'][t]
             ix = (px[tv] * w).sum(1).astype(np.int64)
             iy = (py[tv] * w).sum(1).astype(np.int64)

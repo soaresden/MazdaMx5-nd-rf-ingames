@@ -161,6 +161,10 @@ def make_shell(sp, st, target, wheel_z, smooth=False, stations=56, per_side=16, 
 
 
 # ---------------------------------------------------------------------------------------------
+LIGHTS = {'side': (0.35, 0.85, 0.4), 'top': (0.35, 0.85, 0.4), 'front': (0.35, 0.85, 0.4),
+          'rear': (0.35, 0.85, -0.4)}
+
+
 class Atlas:
     """Where each view goes in the texture, and the pictures."""
 
@@ -186,8 +190,12 @@ class Atlas:
             'front': (256 - col, TEX_V0, r_fr),
             'rear': (256 - col, TEX_V0 + int(np.ceil(Hh * r_fr)), r_fr),
         }
-        # pictures at 4x the texel density, reduced later
-        self.pics = {v: V.render(scene, v, self.place[v][2] * 4, self.boxes[v], hull=hull) for v in self.boxes}
+        # pictures at 4x the texel density, reduced later. The light comes from in front of each
+        # picture's camera (and from above): with one light from the front of the car, the rear
+        # picture was lit by the ambient term only and the back of the car came out dark and dirty
+        # (the game shades the faces again on top of it).
+        self.pics = {v: V.render(scene, v, self.place[v][2] * 4, self.boxes[v], hull=hull, light=LIGHTS[v])
+                     for v in self.boxes}
 
     def uv(self, view, p):
         """Texel coordinates of points p (Nx3) in a view (|x| for the mirrored halves)."""
