@@ -172,9 +172,11 @@ def replace(arc, new, align=0x800):
     for i in range(count):
         if i in new:
             size = len(new[i])
-            stored = compress(new[i])
-            if len(stored) >= size:
-                stored = new[i]
+            # compressed if the entry was: the game decompresses some files whatever the sizes
+            # say (a menu page stored 21102 bytes compressed for 20276); stored raw only if it was
+            stored = compress(new[i]) if arc.compressed(i) else new[i]
+            if len(stored) == size and arc.compressed(i):
+                stored += b'\0'          # stored == size would read as "not compressed"
         else:
             stored, size = arc.raw(i), arc.entries[i][2]
         table += struct.pack('<III', off + len(body), len(stored), size)
