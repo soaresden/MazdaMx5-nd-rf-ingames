@@ -42,6 +42,10 @@ HEADLIGHT_GLASS = 0xD17A8EBE      # the glass texture of the Miata's headlights
 ATLAS_SLOT = CAR + '_ENGINE'      # 256x256 DXT1: cockpit, plastics, details
 LIGHTS_SLOT = CAR + '_STYLE01_ENGINE'   # 256x256 DXT1 (mips): the lamps
 OPAQUE, BLENDED = 0x14180, 0x1C180
+# vertex layouts: Underground 36 bytes (position, colour, uv, normal), Underground 2 32 bytes
+# (position, uv, normal: no colour)
+STRIDE = {'ug1': 36, 'ug2': 32}
+GAME = 'ug1'
 
 ATLAS = 'atlas'
 LIGHTS = 'lights'
@@ -67,8 +71,12 @@ PARTS = {
     'KIT00_LEFT_BRAKELIGHT': 'KIT00_BRAKELIGHT', 'KIT00_RIGHT_BRAKELIGHT': 'KIT00_BRAKELIGHT',
     'KIT00_LEFT_SIDE_MIRROR': 'KIT00_LEFT_SIDE_MIRROR', 'KIT00_RIGHT_SIDE_MIRROR': 'KIT00_RIGHT_SIDE_MIRROR',
 }
+# Underground 2 has the headlights in two solids (the kits' ones are mostly in one)
+SPLIT_HEADLIGHTS = {'KIT00_LEFT_HEADLIGHT': 'KIT00_HEADLIGHT_LEFT', 'KIT00_RIGHT_HEADLIGHT': 'KIT00_HEADLIGHT_RIGHT',
+                    'KIT00_LEFT_HEADLIGHT_GLASS': 'KIT00_HEADLIGHT_LEFT', 'KIT00_RIGHT_HEADLIGHT_GLASS': 'KIT00_HEADLIGHT_RIGHT'}
 # triangles of the most detailed level, per solid; the other levels a share of it
 BUDGET = {'KIT00_BODY': 9000, 'BASE': 9000, 'KIT00_HOOD': 2500, 'KIT00_HEADLIGHT': 2500,
+          'KIT00_HEADLIGHT_LEFT': 1300, 'KIT00_HEADLIGHT_RIGHT': 1300,
           'KIT00_BRAKELIGHT': 1500, 'KIT00_LEFT_SIDE_MIRROR': 400, 'KIT00_RIGHT_SIDE_MIRROR': 400}
 LOD_SHARE = {'A': 1.0, 'B': 0.45, 'C': 0.2, 'D': 0.08}
 
@@ -76,8 +84,16 @@ LOD_SHARE = {'A': 1.0, 'B': 0.45, 'C': 0.2, 'D': 0.08}
 def solid_kind(name):
     """(our part or None, how): 'ours', 'copy' (a kit piece that becomes ours), 'empty', 'keep'."""
     n = name[len(CAR) + 1:]
-    if '_WHEEL' in n:
+    if '_WHEEL' in n or '_BRAKE_' in n or n.endswith('_BRAKE'):
         return None, 'keep'
+    if n.startswith('KIT00_HEADLIGHT_LEFT'):
+        return 'KIT00_HEADLIGHT_LEFT', 'ours'
+    if n.startswith('KIT00_HEADLIGHT_RIGH'):
+        return 'KIT00_HEADLIGHT_RIGHT', 'ours'
+    if n.startswith('STYLE') and '_HEADLIGHT_LEFT' in n:
+        return 'KIT00_HEADLIGHT_LEFT', 'copy'
+    if n.startswith('STYLE') and '_HEADLIGHT_RIGH' in n:
+        return 'KIT00_HEADLIGHT_RIGHT', 'copy'
     for part in ('KIT00_BODY', 'KIT00_HOOD', 'BASE', 'KIT00_HEADLIGHT', 'KIT00_BRAKELIGHT'):
         if n.startswith(part + '_'):
             return part, 'ours'
@@ -109,6 +125,8 @@ def collect(kn5, top):
                 continue
             sb = MW.Sub(sb.mat, sb.pos + SHIFT.astype(sb.pos.dtype), sb.nrm, sb.uv, sb.col, sb.tri)
             out.setdefault(PARTS[part], []).append(sb)
+            if GAME == 'ug2' and part in SPLIT_HEADLIGHTS:
+                out.setdefault(SPLIT_HEADLIGHTS[part], []).append(sb)
     return textures, out
 
 
@@ -118,14 +136,14 @@ def material(mat):
     return ('DULLPLASTIC', ATLAS, OPAQUE)
 
 
-def lods(part, subs, letters):
-    """{letter: [Sub]} with the triangle budget of the part."""
+def lods(part, subs, letters, scale=1.0):
+    """{letter: [Sub]} with the triangle budget of the part (times scale)."""
     MW.MAX_TRIS = 1 << 20        # no split of the groups
     MW.MAX_GROUPS = 16
     merged = MW.merge(subs)
     out = {}
     for L in letters:
-        total = max(12, int(BUDGET.get(part, 2000) * LOD_SHARE[L]))
+        total = max(12, int(BUDGET.get(part, 2000) * scale * LOD_SHARE[L]))
         src = merged if L == 'A' else out['A']
         tg = MW.budget(src, total)
         out[L] = [r for r in (MW.reduce(sb, t) for sb, t in zip(src, tg)) if len(r.tri)]
@@ -157,13 +175,7 @@ def make_mesh(subs, keys):
             remap = np.full(len(sb.pos), -1, np.int64)
             remap[used] = np.arange(len(used)) + base
             p = sb.pos[used].astype(np.float32)
-            v = np.zeros((len(used), 9), np.float32)
-            v[:, 0:3] = p
-            v[:, 4:6] = uv[used]
-            v[:, 6:9] = sb.nrm[used]
-            vu = v.view(np.uint32)
-            vu[:, 3] = sb.col[used].astype(np.uint32)
-            vb.append(v)
+            vb.append(pack_vertices(p, uv[used], sb.nrm[used], sb.col[used]))
             ib.append(remap[sb.tri].astype(np.uint16).ravel())
             base += len(used)
             lo = p.min(0) if lo is None else np.minimum(lo, p.min(0))
@@ -185,11 +197,33 @@ def make_mesh(subs, keys):
                 nverts=base, ntris=len(idx) // 3, tex=tex, shaders=shaders, lo=lo_all, hi=hi_all)
 
 
+def pack_vertices(pos, uv, nrm, col):
+    if STRIDE[GAME] == 32:
+        v = np.zeros((len(pos), 8), np.float32)
+        v[:, 0:3], v[:, 3:5], v[:, 5:8] = pos, uv, nrm
+        return v
+    v = np.zeros((len(pos), 9), np.float32)
+    v[:, 0:3], v[:, 4:6], v[:, 6:9] = pos, uv, nrm
+    v.view(np.uint32)[:, 3] = np.asarray(col).astype(np.uint32)
+    return v
+
+
+def letter_of(s):
+    """LOD letter of a solid. Names longer than 27 characters are cut in the header: the letter is
+    found from the key (the hash of the whole name)."""
+    if len(s.name) < 27:
+        return s.name[-1] if s.name[-2] == '_' else 'A'
+    key, = struct.unpack_from('<I', s.header, 0x10)
+    for mid in ('', '_', 'R_', 'OR_', 'T_', 'HT_', 'GHT_', 'IGHT_', 'E_', 'ER_'):
+        for L in 'ABCDE':
+            if geo_ug.bstringhash(s.name + mid + L) == key:
+                return L
+    return 'A'
+
+
 def degenerate_mesh(keys):
-    v = np.zeros((3, 9), np.float32)
-    v[1, 0] = v[2, 1] = 0.001
-    v.view(np.uint32)[:, 3] = 0xFF000000
-    v[:, 8] = 1
+    pos = np.array([[0, 0, 0], [0.001, 0, 0], [0, 0.001, 0]], np.float32)
+    v = pack_vertices(pos, np.zeros((3, 2), np.float32), np.tile([0, 0, 1.0], (3, 1)), np.full(3, 0xFF000000))
     raw = struct.pack('<3f3f6I', 0, 0, 0, 0.001, 0.001, 0, 3, 0, OPAQUE, 0, 0, 0) + bytes(16)
     return dict(vb=v.tobytes(), ib=np.array([0, 1, 2], np.uint16).tobytes(), groups=raw, ngroups=1, nverts=3,
                 ntris=1, tex=[keys[ATLAS]], shaders=[SH['DULLPLASTIC']], lo=np.zeros(3), hi=np.full(3, 0.001))
@@ -206,7 +240,7 @@ def apply_mesh(s, m, markers=None):
     mh = bytearray(s.mheader)
     w1, = struct.unpack_from('<I', mh, 4)
     struct.pack_into('<I', mh, 4, (m['nverts'] << 16) | (w1 & 0xFFFF))
-    struct.pack_into('<I', mh, 8, (36 << 16) | m['ngroups'])
+    struct.pack_into('<I', mh, 8, (STRIDE[GAME] << 16) | m['ngroups'])
     s.mheader = bytes(mh)
     s.vb, s.ib, s.groups_raw = m['vb'], m['ib'], m['groups']
     s.tex, s.shaders = m['tex'], m['shaders']
@@ -230,11 +264,26 @@ def move_markers(payload, where):
     return bytes(p)
 
 
-def build(geometry, textures_bin, kn5, top='closed', log=print):
-    """(GEOMETRY.BIN, TEXTURES.BIN) of the MX-5 from the Miata's."""
+def build(geometry, textures_bin, kn5, top='closed', game='ug1', log=print):
+    """(GEOMETRY.BIN, TEXTURES.BIN) of the MX-5 from the Miata's (game: 'ug1' or 'ug2'). The new
+    GEOMETRY.BIN is kept smaller than the Miata's (the game has memory for that much): the
+    triangle budgets go down until it is."""
+    scale = 1.0
+    while True:
+        geo, tex = _build(geometry, textures_bin, kn5, top, game, log, scale)
+        if len(geo) <= 0.95 * len(geometry) or scale < 0.2:
+            log('  GEOMETRY.BIN %d octets (Miata : %d)' % (len(geo), len(geometry)))
+            return geo, tex
+        scale *= 0.8 * len(geometry) / len(geo)
+        log('  trop gros (%d octets, Miata %d) : budgets x %.2f' % (len(geo), len(geometry), scale))
+
+
+def _build(geometry, textures_bin, kn5, top, game, log, scale):
     from PIL import Image
+    global GAME
+    GAME = game
     ac_tex, parts = collect(kn5, top)
-    tpk = tpk_ug.Tpk(textures_bin)
+    tpk = (tpk_ug.Tpk2 if game == 'ug2' else tpk_ug.Tpk)(textures_bin)
     slot = {t['name']: t for t in tpk.tex}
     keys = {ATLAS: slot[ATLAS_SLOT]['hash'], LIGHTS: slot[LIGHTS_SLOT]['hash']}
     # textures: the atlas of Most Wanted (same layout, 256 texels) and the lamps
@@ -262,11 +311,11 @@ def build(geometry, textures_bin, kn5, top='closed', log=print):
     for s in solids:
         part, how = solid_kind(s.name)
         if part:
-            letters.setdefault(part, set()).add(s.name[-1] if s.name[-2] == '_' else 'A')
+            letters.setdefault(part, set()).add(letter_of(s))
     meshes = {}
     for part, subs in parts.items():
         L = sorted(letters.get(part, {'A'}) | {'A'})
-        meshes[part] = {k: make_mesh(v, keys) for k, v in lods(part, subs, L).items() if v}
+        meshes[part] = {k: make_mesh(v, keys) for k, v in lods(part, subs, L, scale).items() if v}
         log('  %-24s %s' % (part, ', '.join('%s %d' % (k, m['ntris']) for k, m in sorted(meshes[part].items()))))
     # markers: lamps at the MX-5's lamps, the rear ones (exhausts, plate) moved with the rear end
     body = np.concatenate([sb.pos for sb in parts['KIT00_BODY']])
@@ -297,10 +346,13 @@ def build(geometry, textures_bin, kn5, top='closed', log=print):
         if how == 'keep':
             done['keep'] += 1
             continue
-        letter = s.name[-1] if s.name[-2] == '_' else 'A'
+        letter = letter_of(s)
         m = None
         if part in meshes:
-            m = meshes[part].get(letter) or meshes[part]['A']
+            if how == 'copy':   # kit pieces: the lightest level (the file must not grow)
+                m = meshes[part][max(meshes[part])]
+            else:
+                m = meshes[part].get(letter) or meshes[part]['A']
         if m is None:
             m = degenerate_mesh(keys)
             how = 'empty'

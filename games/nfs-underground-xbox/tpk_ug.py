@@ -102,3 +102,84 @@ class Tpk:
         outer, = struct.unpack_from('<I', d, 4)
         struct.pack_into('<I', out, 4, outer + (len(out) - len(d)))
         return bytes(out)
+
+
+class Tpk2:
+    """Underground 2 (Xbox): 0x33310003 gives per texture hash, file offset, compressed and
+    uncompressed sizes, flags; each JDLZ (or HUFF) stream holds the pixels, then the texture info (124
+    bytes, as in Underground) and the Xbox info (60 bytes). The streams sit in 0x33320002, each on
+    a 64-byte boundary."""
+    TAIL = 124 + 60
+
+    def __init__(self, data):
+        import huff
+        import jdlz
+        self.data = bytes(data)
+        self.table = _find(data, 0x33310003)
+        self.pix = _find(data, 0x33320002)
+        b, e = self.table
+        self.streams = [list(struct.unpack_from('<IIiiII', data, o)) for o in range(b, e - 23, 24)]
+        self.tex = []
+        self.raw = {}
+        for h, off, size, usize, flags, z in self.streams:
+            blob = self.data[off:off + size]
+            raw = huff.decompress(blob) if blob[:4] == b'HUFF' else jdlz.decompress(blob)
+            info = raw[-self.TAIL:-60]
+            plat = raw[-60:]
+            t = dict(hash=h, name=info[12:36].split(b'\0')[0].decode('latin-1'),
+                     w=struct.unpack_from('<H', info, 0x44)[0], h=struct.unpack_from('<H', info, 0x46)[0],
+                     mips=info[0x4E], fmt=struct.unpack_from('<I', plat, 12)[0], size=len(raw) - self.TAIL)
+            self.tex.append(t)
+            self.raw[h] = raw
+        self.by_hash = {t['hash']: t for t in self.tex}
+        self.new = {}
+
+    def pixels(self, hash_):
+        return self.raw[hash_][:-self.TAIL]
+
+    put = Tpk.put
+
+    def write(self):
+        import jdlz
+        d = self.data
+        pb, pe = self.pix
+        by_off = sorted(range(len(self.streams)), key=lambda i: self.streams[i][1])
+        first = self.streams[by_off[0]][1]
+        body = bytearray(d[pb:first])
+        pos = first
+        new_entries = {}
+        last_end = first
+        for i in by_off:
+            h, off, size, usize, flags, z = self.streams[i]
+            if h in self.new:
+                raw = self.new[h] + self.raw[h][-self.TAIL:]
+                blob = jdlz.compress(raw)
+                usize = len(raw)
+            else:
+                blob = d[off:off + size]
+            pad = (-pos) % 0x40
+            body += d[last_end:last_end + pad] if last_end + pad <= off else bytes(pad)
+            pos += pad
+            new_entries[i] = (h, pos, len(blob), usize, flags, z)
+            body += blob
+            pos += len(blob)
+            last_end = off + size
+        body += d[last_end:pe]
+        tb, te = self.table
+        table = b''.join(struct.pack('<IIiiII', *new_entries[i]) for i in range(len(self.streams)))
+        out = bytearray(d[:tb]) + table + d[te:pb - 8]
+        out += struct.pack('<II', 0x33320002, len(body)) + body + d[pe:]
+        grow = len(out) - len(d)
+        # the chunks around the pixels grow with them: 0xB3320000 and the outer 0xB3300000
+        for cid in (0xB3300000, 0xB3320000):
+            o = 0
+            while o + 8 <= len(d):
+                c, s = struct.unpack_from('<II', d, o)
+                if c == cid:
+                    struct.pack_into('<I', out, o + 4, s + grow)
+                    break
+                if c & 0x80000000 and c != 0xB3320000:
+                    o += 8
+                    continue
+                o += 8 + s
+        return bytes(out)

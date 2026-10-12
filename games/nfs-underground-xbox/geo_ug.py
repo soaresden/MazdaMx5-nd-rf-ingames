@@ -57,7 +57,9 @@ def read(d):
                 if c3 == 0x134011:
                     a = unpad(d, b3, e3, 16)
                     s.header = d[a:e3]
-                    s.name = s.header[0x94:].split(b'\0')[0].decode('latin-1')
+                    # the name: 0x94 in Underground (header version 0x13), 0xA4 in Underground 2 (0x16)
+                    s.version = s.header[0x0C]
+                    s.name = s.header[0xA4 if len(s.header) >= 192 else 0x94:].split(b'\0')[0].decode('latin-1')
                     s.bbox = struct.unpack_from('<8f', s.header, 0x20)
                 elif c3 == 0x134012:
                     s.tex = list(struct.unpack_from('<%dI' % ((e3 - b3) // 4), d, b3)[::2])
@@ -159,14 +161,22 @@ def write(template, solids):
     info = [x for x in inner if x[0] == 0x80134001][0]
     ic = chunks(template, info[2], info[3])
     h2 = bytearray(template[ic[0][2]:ic[0][3]])
-    solids = sorted(solids, key=lambda s: struct.unpack_from('<I', s.header, 0x10)[0])
+    # solids in the given order (Underground: key order; Underground 2: its own), the tables
+    # sorted by key
     keys = [struct.unpack_from('<I', s.header, 0x10)[0] for s in solids]
+    order = sorted(range(len(solids)), key=lambda i: keys[i])
+    t4 = [x for x in ic if x[0] == 0x134004][0]
+    entry = (t4[3] - t4[2]) // max(1, struct.unpack_from('<I', template, ic[0][2] + 12)[0])
     struct.pack_into('<I', h2, 12, len(solids))
     tail = [x for x in ic if x[0] not in (0x134002, 0x134003, 0x134004)]
 
     def info_chunk(offsets):
-        body = chunk(0x134002, bytes(h2)) + chunk(0x134003, b''.join(struct.pack('<II', k, 0) for k in keys))
-        body += chunk(0x134004, b''.join(struct.pack('<5I', k, o, n, 0, 0) for k, (o, n) in zip(keys, offsets)))
+        body = chunk(0x134002, bytes(h2)) + chunk(0x134003, b''.join(struct.pack('<II', keys[i], 0) for i in order))
+        if entry == 24:
+            t = b''.join(struct.pack('<6I', keys[i], offsets[i][0], offsets[i][1], offsets[i][1], 0, 0) for i in order)
+        else:
+            t = b''.join(struct.pack('<5I', keys[i], offsets[i][0], offsets[i][1], 0, 0) for i in order)
+        body += chunk(0x134004, t)
         for cid, h, b, e in tail:
             body += chunk(cid, template[b:e])
         return chunk(0x80134001, body)
