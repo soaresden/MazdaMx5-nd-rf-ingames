@@ -96,7 +96,10 @@ class Disc:
             if len(data) != size:
                 dir_patch.setdefault(dlba, []).append((doff, len(data)))
         total = self.c.frames
-        with open(path, 'wb') as f:
+        # written under a temporary name and renamed once complete: a half-written image never
+        # looks like a finished one
+        part = path + '.part'
+        with open(part, 'wb') as f:
             for lba in range(total):
                 raw = self.c.sector(lba)
                 if lba in sectors:
@@ -110,6 +113,7 @@ class Disc:
                 f.write(raw)
                 if progress and lba % 10000 == 0:
                     progress(lba, total)
+        os.replace(part, path)
         base = os.path.basename(path)
         with open(os.path.splitext(path)[0] + '.cue', 'w', newline='\r\n') as f:
             f.write('FILE "%s" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00\n' % base)
