@@ -104,6 +104,7 @@ def main():
     t0 = time.time()
     files, d = generate(a.chd, a.kn5, a.car or list(ROADSTERS), a.top, a.price)
     print('the disc image')
+    os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     d.write_bin(a.out, files, progress=lambda i, n: print('  %d%%' % (100 * i // n), end='\r'))
     print('written', a.out, 'in %.0f s' % (time.time() - t0))
 

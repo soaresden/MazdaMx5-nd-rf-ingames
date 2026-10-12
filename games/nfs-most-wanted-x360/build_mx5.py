@@ -105,6 +105,7 @@ MATS = {
 # glass textures get the generic opacity map of the Elise headlight glass
 OPACITY = {'hlg_L': '{car}_KIT00_HEADLIGHT_GLASS_OFF', 'hlg_R': '{car}_KIT00_HEADLIGHT_GLASS_OFF'}
 
+SKIP_NAMES = set()  # meshes left out (the other games: 'gum_07', the aerial)
 DROP_MATS = {'EXT_RearLight_Beam', 'EXT_FrontLight_Beam', 'DAMAGE_GLASS', 'INT_Glass_REFLEX',
              'INT_Decals_Chrome_Aluminium'}
 
@@ -300,7 +301,7 @@ def collect(kn5_path):
 
     for m in meshes:
         mat, path, name = m['mat']['name'], m['path'], m['name']
-        if 'COCKPIT_HR' in path or mat in DROP_MATS or name.startswith('GEO_Shift'):
+        if 'COCKPIT_HR' in path or mat in DROP_MATS or name.startswith('GEO_Shift') or name in SKIP_NAMES:
             continue
         pos, nrm, uv, tri = to_nfs(m['pos']), m['nrm'][:, [2, 0, 1]], m['uv'].copy(), m['tri']
         # AC stores V in [-1, 0]: shift by whole units into [0, 1] (the same texels with wrapping,
