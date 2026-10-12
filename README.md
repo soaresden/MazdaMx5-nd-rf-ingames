@@ -30,9 +30,9 @@ envoyé sur internet, et ce dépôt ne contient **aucun fichier du jeu ni du mod
 | Jeu | Plateforme | Voiture remplacée | État |
 |---|---|---|---|
 | [Need for Speed: Most Wanted (2005)](games/nfs-most-wanted-x360/) | Xbox 360, sur Switch via [nfsmw-nx](https://github.com/StevensND/nfsmw-nx) | au choix (testé : Lexus IS 300) | **fonctionne** |
-| Gran Turismo | PS1 | Mazda Eunos Roadster | en cours |
-| Need for Speed: Underground | Xbox | à définir | prévu |
-| Need for Speed: Underground 2 | Xbox | à définir | prévu |
+| [Gran Turismo](games/gran-turismo-ps1/) | PS1 (PAL), image .bin/.cue pour DuckStation | les Eunos Roadster (neuves, d'occasion) | **en test** (fonctionne en jeu) |
+| [Need for Speed: Underground](games/nfs-underground-xbox/) | Xbox USA, sur Switch via [nfsu1-sw](https://github.com/antoxa2584x/nfsu1-sw) | Mazda Miata | **en test** |
+| [Need for Speed: Underground 2](games/nfs-underground-xbox/) | Xbox USA, sur Switch via [nfsu2-sw](https://github.com/antoxa2584x/nfsu2-sw) | Mazda Miata | **en test** |
 | Need for Speed: Carbon | à définir | — | prévu |
 | Gran Turismo 2 | PS1 | — | prévu |
 
