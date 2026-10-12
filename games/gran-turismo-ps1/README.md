@@ -28,6 +28,11 @@ python make_car.py --chd "Gran Turismo [SCES_009.84].chd" --kn5 mazda_mx5_rf.kn5
 - **Menus** (`MENU_IMG.ARC`, six langues) : le nom de la voiture en image (emblème « MX-5 » et
   « RF » dans les lettres du jeu), et les vignettes du concessionnaire Mazda (nom, image de la
   MX-5, prix redessiné avec les chiffres du jeu).
+- **Page INFO** (`MENU_IMG.ARC`, image 408 `CIAN16N.slt`, six langues) : l'historique est dessiné
+  dans l'image de la page, et toutes les Roadster (neuves et d'occasion) montrent la même. Elle
+  est redessinée avec le titre « Mazda MX-5 RF » et l'histoire de la RF ND2, en Arial Bold aux
+  tailles mesurées sur l'originale (25 et 14 px) et dans les gris de la page. Remplacer une seule
+  Roadster change donc aussi la page INFO des autres.
 - **Disque** : `CAR.DAT`, `CARINF.DAT` et `MENU_IMG.ARC` réécrits à leur place (aucun fichier ne
   bouge), secteurs refaits avec leur EDC/ECC ; le reste est la copie exacte du CHD.
 
@@ -40,7 +45,7 @@ python make_car.py --chd "Gran Turismo [SCES_009.84].chd" --kn5 mazda_mx5_rf.kn5
 | `gt1car.py` | modèles `@(#)GT-CAR` : 680 des 688 modèles du disque réécrits à l'octet près ; quads en boucle 0-1-2-3 ; produit vectoriel des faces vers l'intérieur |
 | `gt1data.py`, `carinf.py` | tables `@(#)SPEC`, `@(#)COLOR`… (enregistrements + tables de chaînes) |
 | `pslz.py` | exécutables compressés à l'envers (`PSLZ`) |
-| `tim.py`, `slt.py`, `titles.py`, `dealer.py`, `menus.py` | images des menus (TIM 4 bits, pages 640×480 en six blocs de VRAM) |
+| `tim.py`, `slt.py`, `titles.py`, `dealer.py`, `infopage.py`, `menus.py` | images des menus (TIM 4 bits, pages 640×480 en six blocs de VRAM) |
 | `shell.py`, `decimate.py`, `views.py`, `mx5scene.py`, `build_car.py`, `preview.py` | la conversion |
 | `disc.py`, `make_car.py` | système de fichiers ISO 9660 et image `.bin/.cue` |
 

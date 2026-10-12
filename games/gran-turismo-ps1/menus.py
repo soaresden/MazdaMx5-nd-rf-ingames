@@ -3,7 +3,8 @@ languages, each a GT-ARC of pictures, the same numbering in all six):
 
 - the name picture of each replaced car (its page in the dealer, the garage...): the MX-5 emblem
   and "RF" in the game's letters (titles.py);
-- the three Eunos Roadster tiles of the Mazda new car page: name, picture and price (dealer.py).
+- the three Eunos Roadster tiles of the Mazda new car page: name, picture and price (dealer.py);
+- the Roadsters' INFO page, with the MX-5 RF's history (infopage.py).
 """
 import struct
 
@@ -12,6 +13,7 @@ import numpy as np
 import dealer
 import gt1data
 import gtarc
+import infopage
 import preview
 import slt
 import tim
@@ -23,6 +25,8 @@ TITLES = {'a-ian': 3, 'amian': 19, 'aminn': 20, 'amisn': 21, 'amivn': 22, 'an16n
 BASE_TITLE = 20               # 'EUNOS ROADSTER', in the plain letters the "RF" is taken from
 BASE_TEXT = 'EUNOS ROADSTER'
 TILE_OF = {'aminn': 4, 'amisn': 5, 'amivn': 6}
+# the cars whose INFO page is the Roadsters' one (CIAN16N.slt), which infopage.py draws again
+INFO_CARS = {'aminn', 'amisn', 'amivn', 'an16n', 'as16n', 'av16n'}
 THUMB_PAINT = {'aminn': 1, 'amisn': 2, 'amivn': 0}   # Soul Red, Machine Grey, Deep Crystal Blue
 
 
@@ -83,7 +87,11 @@ def patch(menu_img, carinf, codes, badge_path, car, tex, price, log=print):
                 dealer.write_picture(page, x0, y0, thumbs[c])
                 dealer.write_price(page, x0, y0, price, ink)
             new[dealer.MAZDA_NEW] = page.write()
+        if any(c in INFO_CARS for c in codes):
+            new.update(infopage.patch(inner, lang))
         new_outer[lang] = gtarc.replace(inner, new, align=4)
     log('  MENU_IMG.ARC : noms (%s) et vignettes du concessionnaire, 6 langues'
         % ', '.join(c for c in codes if c in TITLES))
+    if any(c in INFO_CARS for c in codes):
+        log("  MENU_IMG.ARC : page INFO (historique de la MX-5 RF), 6 langues")
     return gtarc.replace(outer, new_outer)
