@@ -54,3 +54,19 @@ peinture : celle du jeu (`MIATA_SKIN1`).
 la RX-7 ; `tpk_ug.py` réécrit à l'identique les `TEXTURES.BIN`. Les noms des morceaux
 (0x134011 ESOLID, 0x134B00 XBOX_PLATINFO, 0x134017-19 lissage des normales…) sont ceux d'EA,
 d'après la [décompilation de Most Wanted](https://github.com/dbalatoni13/nfsmw).
+
+## Conduite et nom (options de `make_car.py`, actives par défaut)
+
+- `--perf rf184` (`perf_ug.py`) : le CarTypeInfo de la Miata (bloc 0x34600 de
+  `GLOBAL/GLOBALB.BUN`, le même compressé JDLZ dans `GLOBALB.LZC`) reçoit les chiffres d'une
+  MX-5 RF 2.0 184 ch : 1125 kg (inertie recalculée), couple réel (9 points du ralenti au
+  rupteur), 7500 / 8000 tr/min, boîte 6 de la ND et pont 3,454, plus d'adhérence (arrière > avant),
+  freins et appuis du niveau RX-7 / RX-8 ; les améliorations moteur / ECU / turbo / pneus suivent.
+  `--wheels mx5` : empattement 2,309 m, voies 1,495 / 1,505 m, pneus 205/45 R17.
+- `--names on` (`lang_ug.py`, `fe_ug.py`) : « MX-5 RF » dans toutes les langues
+  (`CAR_NAME_MIATA`, `FULL_NAME_MIATA`… ; U1 en UTF-16, U2 en 8 bits) et le badge
+  « Mazda / MX-5 RF » (`SECONDARY_LOGO_MIATA`, `_MX5`, `_MIATA_RO`, DXT3 256x64).
+- Underground 2 : ces fichiers vont dans un nouveau `ZZDATA12.BIN` ; `zdir_ug2.py` redirige
+  leurs entrées (toutes les copies, ZZDATA2 et ZZDATA5) dans n'importe quel `ZDIR.BIN`, VF
+  comprise (`--vf-zzdata10` : le texte français de la VF reçoit aussi le nom).
+  `make_extras.py` fait seulement ces fichiers, sans refaire la voiture.
