@@ -155,7 +155,7 @@ onmessage = async (ev) => {
     await pyodide.runPythonAsync(`
 import make_car
 o = OPTIONS
-FILES, DISC = make_car.generate(open_chd(CHD_FILE), '/in/model.kn5', list(o['cars']), o['top'],
+FILES, DISC = make_car.generate(open_chd(CHD_FILE), '/in/model.kn5', dict(o['cars']), o['top'],
                                 int(o['price']), log=jslog)
 TOTAL = DISC.c.frames * 2352
 GEN = DISC.bin_chunks(FILES)

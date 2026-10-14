@@ -47,13 +47,19 @@
           background: #0d1733; border: 1px solid #33467a; padding: 6px 12px; cursor: pointer; min-height: 36px; }
   #lang:hover { border-color: var(--white); }
 
-  /* hero: the blue of the game's menus, with its white diagonal band */
-  .hero { position: relative; border: 1px solid var(--line); overflow: hidden; margin-bottom: 22px; height: clamp(190px, 34vw, 300px);
-          background: linear-gradient(120deg, #0a2463, #1d4fb8 52%, var(--white) 52.4%, var(--white) 56%, #0f2f7a 56.4%, #0a1d4f); }
-  .hero::before { content: "GRAN TURISMO"; position: absolute; left: 22px; top: 18px; font: italic 800 clamp(22px, 4.4vw, 40px)/1 "Saira Extra Condensed";
-                  letter-spacing: .08em; color: rgba(255, 255, 255, .9); }
-  .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 110px rgba(0, 0, 0, .7);
-                 background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.7)); }
+  /* hero: a race screenshot (the MX-5 RF on the Grand Valley speedway), the game's blue band at the top */
+  .hero { position: relative; border: 1px solid var(--line); overflow: hidden; margin-bottom: 22px; background: #0a1d4f; }
+  .hero img { display: block; width: 100%; height: clamp(220px, 46vw, 430px); object-fit: cover; object-position: 50% 78%; }
+  .hero::before { content: "GRAN TURISMO"; position: absolute; left: 0; right: 0; top: 0; z-index: 1; padding: 10px 22px;
+                  font: italic 800 clamp(20px, 4vw, 34px)/1 "Saira Extra Condensed"; letter-spacing: .08em; color: #fff;
+                  background: linear-gradient(120deg, rgba(10,36,99,.92), rgba(29,79,184,.86) 60%, rgba(10,29,79,.0)); }
+  .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 90px rgba(0, 0, 0, .55);
+                 background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,0) 42%); }
+  .hero .title { top: clamp(46px, 7vw, 62px); bottom: auto; text-align: left; padding: 0 22px; }
+  .hero .title h1 { font-size: clamp(26px, 5vw, 52px); }
+  .shot { margin: 14px 0 0; }
+  .shot img { display: block; width: 100%; max-width: 560px; border: 1px solid var(--line); }
+  .shot figcaption { font-size: 14px; color: var(--muted, #9aa); margin-top: 6px; }
   .title { position: absolute; left: 0; right: 0; bottom: 18px; z-index: 1; padding: 0 12px; text-align: center; }
   .title h1 { margin: 0; font: 800 clamp(30px, 6.2vw, 64px)/1 "Saira Extra Condensed", sans-serif; text-transform: uppercase;
               letter-spacing: .02em; text-shadow: 0 3px 0 #000, 0 0 24px rgba(0, 0, 0, .8); }
@@ -79,6 +85,8 @@
   .check { display: flex; gap: 10px; align-items: flex-start; text-transform: none; letter-spacing: 0; font-weight: 600; margin: 0; }
   .check input { accent-color: var(--blue); margin-top: 5px; width: 17px; height: 17px; flex: none; }
   .check.off { opacity: .55; }
+  .carrow { display: grid; grid-template-columns: 1fr minmax(150px, 46%); gap: 10px; align-items: center; text-transform: none; letter-spacing: 0; font-weight: 600; margin: 0; }
+  .carrow select { padding: 6px 8px; font-size: 15px; }
   .cars { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 8px 18px; margin-top: 8px; }
   .group { grid-column: 1 / -1; margin: 8px 0 0; color: var(--white); font: 700 15px "Barlow Condensed"; text-transform: uppercase; letter-spacing: .1em;
            border-bottom: 1px solid var(--line); padding-bottom: 3px; }
@@ -116,7 +124,8 @@
 <div class="wrap">
   <nav><a href="../" data-en="‹ All games">‹ Tous les jeux</a><button id="lang" title="Français / English">🇬🇧 EN</button></nav>
 
-  <div class="hero" role="img" aria-label="Gran Turismo">
+  <div class="hero">
+    <img src="../docs/gt1_en_jeu.jpg" alt="La MX-5 RF en course dans Gran Turismo" data-en-alt="The MX-5 RF racing in Gran Turismo">
     <div class="title"><h1>Mazda MX-5 RF<small>Gran Turismo · PlayStation</small></h1></div>
   </div>
 
@@ -149,14 +158,12 @@
   <section class="panel">
     <h2><b>02</b> <span data-en="The MX-5">La MX-5</span></h2>
     <div class="body">
-      <div class="label"><span data-en="Roadsters replaced">Roadster remplacées</span>
-        <button class="mini" type="button" id="all" data-en="All">Toutes</button><button class="mini" type="button" id="none" data-en="None">Aucune</button></div>
-      <p class="hint" style="margin:0" data-en="All the Roadsters share one INFO page (the car's history): it becomes the MX-5 RF's as soon as one of them is replaced. The race versions are the cars after the Racing Modification.">Toutes les Roadster partagent une même page INFO (l'historique de la voiture) : elle devient celle de la MX-5 RF dès qu'une seule est remplacée. Les versions course sont les voitures après la préparation course (Racing Modification).</p>
+      <div class="label"><span data-en="Each Roadster becomes">Chaque Roadster devient</span>
+        <button class="mini" type="button" id="all" data-en="All closed">Toutes capotées</button><button class="mini" type="button" id="allopen" data-en="All open">Toutes décapotées</button><button class="mini" type="button" id="none" data-en="None">Aucune</button></div>
+      <p class="hint" style="margin:0" data-en="For each Roadster: the MX-5 RF closed, open, or the original Roadster. Its race version (after the Racing Modification) gets the same roof. All the Roadsters share one INFO page (the history): it becomes the MX-5 RF&#x27;s as soon as one of them is replaced.">Pour chaque Roadster : la MX-5 RF capotée, décapotée, ou la Roadster d'origine. Sa version course (après la préparation course, Racing Modification) prend le même toit. Toutes les Roadster partagent une même page INFO (l'historique) : elle devient celle de la MX-5 RF dès qu'une seule est remplacée.</p>
       <div class="cars" id="cars"></div>
 
       <div class="grid" style="margin-top:18px">
-        <div><label for="top" data-en="Roof">Toit</label>
-          <select id="top"><option value="closed" data-en="Closed (hardtop up)">Capotée (toit fermé)</option><option value="open" data-en="Open (roof stowed)">Décapotée (toit rangé)</option></select></div>
         <div><label for="price" data-en="Price at the Mazda dealer &lt;span class=&quot;hint&quot;&gt;· Cr&lt;/span&gt;">Prix chez le concessionnaire Mazda <span class="hint">· Cr</span></label>
           <input id="price" type="number" min="1" max="999999" step="1" value="29900"></div>
       </div>
@@ -192,7 +199,10 @@
       <li data-en="The MX-5 RF is at the Mazda dealer (in place of the Eunos Roadsters) and in the used cars, with its name, its 184 hp, its eight paints (Deep Crystal Blue, Soul Red Crystal, Machine Grey…) and its INFO page.">La MX-5 RF est chez le concessionnaire Mazda (à la place des Eunos Roadster) et dans les voitures d'occasion, avec son nom,
         ses 184 ch, ses huit peintures (Deep Crystal Blue, Soul Red Crystal, Machine Grey…) et sa page INFO.</li>
       <li data-en="Your &lt;code&gt;.chd&lt;/code&gt; is not changed: to go back, play it again.">Ton <code>.chd</code> n'est pas modifié : pour revenir en arrière, il suffit de le relancer.</li>
-    </ol></div>
+    </ol>
+      <figure class="shot"><img src="../docs/gt1_concessionnaire.jpg" alt="Le concessionnaire Mazda avec trois MX-5 RF" loading="lazy">
+        <figcaption data-en="At the Mazda dealer: the three new Roadsters became MX-5 RFs (here at 100 Cr).">Chez le concessionnaire Mazda : les trois Roadster neuves sont devenues des MX-5 RF (ici à 100 Cr).</figcaption></figure>
+    </div>
   </section>
 
   <footer data-en="Tools and write-ups: &lt;a href=&quot;https://github.com/soaresden/MazdaMx5-nd-rf-ingames/tree/main/games/gran-turismo-ps1&quot;&gt;github.com/soaresden/MazdaMx5-nd-rf-ingames&lt;/a&gt;. Tested in the game in DuckStation.&lt;br&gt;Thanks to &lt;a href=&quot;https://github.com/pez2k/gt2tools&quot;&gt;pez2k&lt;/a&gt; (gt2tools: file lists and formats), Kunos Simulazioni and &lt;a href=&quot;https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html&quot;&gt;Modland&lt;/a&gt; (Assetto Corsa model), MAME (CHD format), &lt;a href=&quot;https://github.com/liberationfonts/liberation-fonts&quot;&gt;Liberation Sans&lt;/a&gt; (INFO page letters, SIL OFL), &lt;a href=&quot;https://pyodide.org&quot;&gt;Pyodide&lt;/a&gt;, and OfficialWhippy for the “MX-5” drawing of the emblem.&lt;br&gt;Gran Turismo is a trademark of Sony Interactive Entertainment; Mazda, MX-5 and Eunos are trademarks of Mazda. Fan project.">Outils et explications : <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames/tree/main/games/gran-turismo-ps1">github.com/soaresden/MazdaMx5-nd-rf-ingames</a>.
@@ -207,35 +217,36 @@
   // the Roadsters of the disc (make_car.ROADSTERS), by group: [code, name, French note, English note]
   const CARS = [
     [SBT('Neuves, concessionnaire Mazda', 'New, Mazda dealer')],
-    ['aminn', 'Eunos Roadster NORMAL', 'neuve, 17 400 Cr', 'new, 17,400 Cr'],
-    ['amisn', 'Eunos Roadster S-SPECIAL', 'neuve, 22 250 Cr', 'new, 22,250 Cr'],
-    ['amivn', 'Eunos Roadster V-SPECIAL', 'neuve, 24 400 Cr', 'new, 24,400 Cr'],
-    ['aminr', 'Eunos Roadster NORMAL', 'version course', 'race version'],
-    ['amisr', 'Eunos Roadster S-SPECIAL', 'version course', 'race version'],
-    ['amivr', 'Eunos Roadster V-SPECIAL', 'version course', 'race version'],
+    ['aminn', 'aminr', 'Eunos Roadster NORMAL', 'neuve, 17 400 Cr', 'new, 17,400 Cr'],
+    ['amisn', 'amisr', 'Eunos Roadster S-SPECIAL', 'neuve, 22 250 Cr', 'new, 22,250 Cr'],
+    ['amivn', 'amivr', 'Eunos Roadster V-SPECIAL', 'neuve, 24 400 Cr', 'new, 24,400 Cr'],
     [SBT("D'occasion", 'Used')],
-    ['an16n', "Eunos Roadster '89", 'occasion', 'used'],
-    ['as16n', "Eunos Roadster '92 S-SPECIAL", 'occasion', 'used'],
-    ['av16n', "Eunos Roadster '90 V-SPECIAL", 'occasion', 'used'],
-    ['an16r', "Eunos Roadster '89", 'occasion, version course', 'used, race version'],
-    ['as16r', "Eunos Roadster '92", 'occasion, version course', 'used, race version'],
-    ['av16r', "Eunos Roadster '90", 'occasion, version course', 'used, race version'],
+    ['an16n', 'an16r', "Eunos Roadster '89", 'occasion', 'used'],
+    ['as16n', 'as16r', "Eunos Roadster '92 S-SPECIAL", 'occasion', 'used'],
+    ['av16n', 'av16r', "Eunos Roadster '90 V-SPECIAL", 'occasion', 'used'],
     [SBT('Autres', 'Others')],
-    ['arodn', 'Eunos Roadster RS', '', ''],
-    ['a-ian', 'Eunos Roadster', 'spéciale', 'special'],
-    ['a-iar', 'Eunos Roadster', 'spéciale, version course', 'special, race version'],
+    ['arodn', '', 'Eunos Roadster RS', '', ''],
+    ['a-ian', 'a-iar', 'Eunos Roadster', 'spéciale', 'special'],
   ];
   const $ = (id) => document.getElementById(id);
-  for (const [code, name, fr, en] of CARS) {
-    if (!name) { const g = document.createElement('div'); g.className = 'group'; g.textContent = code; $('cars').append(g); continue; }
+  const ROOFS = [['closed', SBT('MX-5 RF capotée', 'MX-5 RF closed')], ['open', SBT('MX-5 RF décapotée', 'MX-5 RF open')],
+                 ['', SBT("Roadster d'origine", 'Original Roadster')]];
+  for (const [code, twin, name, fr, en] of CARS) {
+    if (!twin && !name) { const g = document.createElement('div'); g.className = 'group'; g.textContent = code; $('cars').append(g); continue; }
     const l = document.createElement('label');
-    l.className = 'check';
+    l.className = 'carrow';
     const note = SBT(fr, en);
-    l.innerHTML = `<input type="checkbox" value="${code}" checked><span>${name}${note ? ` <span class="hint">· ${note}</span>` : ''}</span>`;
+    l.innerHTML = `<span>${name}${note ? ` <span class="hint">· ${note}</span>` : ''}</span>`
+                + `<select data-code="${code}" data-twin="${twin}">${ROOFS.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select>`;
     $('cars').append(l);
   }
-  const boxes = () => Array.from($('cars').querySelectorAll('input'));
-  const chosen = () => boxes().filter((b) => b.checked).map((b) => b.value);
+  const boxes = () => Array.from($('cars').querySelectorAll('select'));
+  // {code: roof} with the race versions
+  const chosen = () => {
+    const out = {};
+    for (const b of boxes()) if (b.value) { out[b.dataset.code] = b.value; if (b.dataset.twin) out[b.dataset.twin] = b.value; }
+    return out;
+  };
 
   // development only: ?test reads the disc image and the model from the local test server
   const TEST = new URLSearchParams(location.search).has('test');
@@ -250,14 +261,17 @@
   const worker = new Worker('gt1-worker.js?lang=' + SB_LANG);
   const update = () => {
     const price = +$('price').value;
-    $('go').disabled = busy || !(ready && chosen().length && price >= 1 && price <= 999999
+    $('go').disabled = busy || !(ready && Object.keys(chosen()).length && price >= 1 && price <= 999999
                                   && (TEST || ($('chd').files.length && $('kn5').files.length)));
     $('go').textContent = !ready ? SBT('Chargement de Python…', 'Loading Python…')
                         : busy ? SBT('Fabrication…', 'Building…') : SBT('Fabriquer la MX-5', 'Build the MX-5');
   };
   $('chd').onchange = $('kn5').onchange = $('price').oninput = $('cars').onchange = update;
-  $('all').onclick = () => { boxes().forEach((b) => { b.checked = true; }); update(); };
-  $('none').onclick = () => { boxes().forEach((b) => { b.checked = false; }); update(); };
+  const setAll = (v) => { boxes().forEach((b) => { b.value = v; }); update(); };
+  $('all').onclick = () => setAll('closed');
+  $('allopen').onclick = () => setAll('open');
+  $('none').onclick = () => setAll('');
+  $('cars').addEventListener('change', update);
   const cueText = (name) => `FILE "${name}" BINARY\r\n  TRACK 01 MODE2/2352\r\n    INDEX 01 00:00:00\r\n`;
   const opfsFile = async (name) => (await (await navigator.storage.getDirectory()).getFileHandle(name)).getFile();
   const elapsed = () => Math.round((Date.now() - t0) / 1000);
@@ -314,8 +328,9 @@
   const files = () => TEST ? { chd: location.origin + '/test/disc.chd', kn5: '/test/model.kn5' }
                            : { chd: $('chd').files[0], kn5: $('kn5').files[0] };
   $('go').onclick = async () => {
-    const top = $('top').value;
-    binName = `Gran Turismo MX-5 RF${top === 'open' ? ' open' : ''}.bin`;
+    const roofs = new Set(Object.values(chosen()));
+    const top = roofs.size === 1 ? [...roofs][0] : 'mixed';
+    binName = `Gran Turismo MX-5 RF${top === 'open' ? ' open' : top === 'mixed' ? ' mix' : ''}.bin`;
     target = null;
     // Chrome, Edge: the .bin goes straight to the file chosen now (the click allows the dialog)
     if (window.showSaveFilePicker && !TEST) {
@@ -333,7 +348,7 @@
     $('dlbin').hidden = $('dlcue').hidden = true; $('log').textContent = ''; bar('busy');
     status(SBT('Fabrication en cours…', 'Building…'));
     worker.postMessage({ ...files(), target,
-                         options: { cars: chosen(), top, price: +$('price').value, cheat: false } });
+                         options: { cars: chosen(), top: 'closed', price: +$('price').value, cheat: false } });
   };
 </script>
 </body>

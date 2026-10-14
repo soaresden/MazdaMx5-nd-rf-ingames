@@ -71,22 +71,42 @@ def cheat_patcher():
                      '(dossier gt1cheat), ou GT1CHEAT_DIR')
 
 
+def tops_of(cars, top='closed'):
+    """{code: 'closed' | 'open'}: cars is a dict code -> roof, or codes all with the same roof."""
+    if isinstance(cars, dict):
+        out = dict(cars)
+    else:
+        out = {c: top for c in cars}
+    for c, t in out.items():
+        if c not in ROADSTERS:
+            raise ValueError('%s : pas une Roadster du jeu (%s)' % (c, ', '.join(ROADSTERS)))
+        if t not in ('closed', 'open'):
+            raise ValueError('%s : toit %r (closed ou open)' % (c, t))
+    return out
+
+
 def generate(chd, kn5, cars=('aminn',), top='closed', price=PRICE, log=print, cheat=False):
-    """{file name on the disc: new bytes}, and the Disc."""
+    """{file name on the disc: new bytes}, and the Disc. cars: the Roadsters to replace, each with
+    its own roof ({code: 'closed' | 'open'}), or a list of codes that all get `top`."""
+    cars = tops_of(cars, top)
     d = disc.Disc(chd)
     cnf = d.read('SYSTEM.CNF').decode('latin-1')
     if BOOT not in cnf:
         raise ValueError("ce n'est pas Gran Turismo PAL (%s)" % BOOT)
-    log('1/4 la MX-5 (modèle et texture)')
-    sp, st, scene, W = mx5(kn5, top)
-    lods = [B.make_shell(sp, st, n, (W[0][2], W[2][2]), smooth=top == 'open', log=log) for n in B.LODS]
-    hv, hf, _ = lods[0]
-    ht = np.array([t for f in hf for t in ([(f[0], f[1], f[2]), (f[0], f[2], f[3])] if len(f) == 4 else [tuple(f)])])
-    atlas = B.Atlas(scene, sp, (hv, ht))
+    models = {}
+    for t in sorted(set(cars.values())):
+        log('1/4 la MX-5 %s (modèle et texture)' % ('décapotée' if t == 'open' else 'capotée'))
+        sp, st, scene, W = mx5(kn5, t)
+        lods = [B.make_shell(sp, st, n, (W[0][2], W[2][2]), smooth=t == 'open', log=log) for n in B.LODS]
+        hv, hf, _ = lods[0]
+        ht = np.array([q for f in hf for q in ([(f[0], f[1], f[2]), (f[0], f[2], f[3])] if len(f) == 4 else [tuple(f)])])
+        models[t] = (sp, W, lods, B.Atlas(scene, sp, (hv, ht)))
     log('2/4 CAR.DAT')
     arc = gtarc.Arc(d.read('CAR.DAT'))
     new = {}
-    for code in cars:
+    made = {}
+    for code, t in cars.items():
+        sp, W, lods, atlas = models[t]
         i = ROADSTERS[code][0]
         tex, ftex, _, _ = B.build_texture(atlas, lods, arc[i])
         car, _ = B.build_car(arc[i + 1], lods, ftex, W, sp[:, 1].min())
@@ -94,14 +114,14 @@ def generate(chd, kn5, cars=('aminn',), top='closed', price=PRICE, log=print, ch
             new[k] = tex
         new[i + 1] = car
         new[i + 1 + NIGHT] = car
-        last_car, last_tex = car, tex
-        log('  %s : %s' % (code, ROADSTERS[code][1]))
+        made[code] = (car, tex)
+        log('  %s : %s, %s' % (code, ROADSTERS[code][1], 'décapotée' if t == 'open' else 'capotée'))
     files = {'CAR.DAT': gtarc.replace(arc, new)}
     log('3/4 noms, peintures, caractéristiques et prix (CARINF.DAT)')
     files['CARINF.DAT'] = carinf.patch(d.read('CARINF.DAT'), cars, [p for p, _ in B.PAINTS], price, log=log)
     log('4/4 les menus (nom, vignettes, prix)')
-    files['MENU_IMG.ARC'] = menus.patch(d.read('MENU_IMG.ARC'), d.read('CARINF.DAT'), cars, BADGE,
-                                        last_car, last_tex, price, log=log)
+    files['MENU_IMG.ARC'] = menus.patch(d.read('MENU_IMG.ARC'), d.read('CARINF.DAT'), list(cars), BADGE,
+                                        made, None, price, log=log)
     if cheat:
         log('+ le cheat GranTurismo1-OverlayCheat (SELECT : chrono des permis, crédits)')
         patcher = cheat_patcher()
@@ -119,8 +139,9 @@ def main():
                     help='your disc image of Gran Turismo (PAL, Europe, multi-language, SCES-00984): .chd, .cue or .bin')
     ap.add_argument('--kn5', required=True, help='mazda_mx5_rf.kn5 from the Assetto Corsa mod')
     ap.add_argument('--out', required=True, help='.bin to write (the .cue goes next to it)')
-    ap.add_argument('--car', action='append', choices=sorted(ROADSTERS), help='Roadster(s) to replace (default: all)')
-    ap.add_argument('--top', default='closed', choices=('closed', 'open'))
+    ap.add_argument('--car', action='append', metavar='CODE[=closed|open]',
+                    help='Roadster to replace, with its own roof if given (repeat; default: all, with --top)')
+    ap.add_argument('--top', default='closed', choices=('closed', 'open'), help='roof of the cars given without one')
     ap.add_argument('--price', type=int, default=PRICE, help='price at the dealer, Cr (100: from the first day)')
     ap.add_argument('--cheat', action='store_true', help='add the GranTurismo1-OverlayCheat menu (hold SELECT)')
     a = ap.parse_args()
@@ -128,7 +149,11 @@ def main():
     src = binimage.cue_bin(a.chd) if a.chd.lower().endswith('.cue') else a.chd
     if os.path.abspath(src).lower() == os.path.abspath(a.out).lower():
         raise SystemExit('--out would overwrite the source image: choose another name')
-    files, d = generate(a.chd, a.kn5, a.car or list(ROADSTERS), a.top, a.price, cheat=a.cheat)
+    cars = {}
+    for c in a.car or list(ROADSTERS):
+        code, _, t = c.partition('=')
+        cars[code] = t or a.top
+    files, d = generate(a.chd, a.kn5, cars, a.top, a.price, cheat=a.cheat)
     print('the disc image')
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     d.write_bin(a.out, files, progress=lambda i, n: print('  %d%%' % (100 * i // n), end='\r'))

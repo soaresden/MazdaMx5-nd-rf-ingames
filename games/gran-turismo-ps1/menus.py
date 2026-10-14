@@ -51,7 +51,9 @@ def patch(menu_img, carinf, codes, badge_path, car, tex, price, log=print):
     emb = emblem_alpha(badge_path)
     old_prices = spec_prices(carinf)
     page_prices = ['%d' % old_prices[c] for c in dealer.PAGE_CARS]
-    thumbs = {c: preview.render(car, tex, THUMB_PAINT[c], (236, 200), yaw=215, pitch=-20, bg=(66, 66, 66))
+    # car, tex: the MX-5's model and texture, or a dict code -> (model, texture) (one roof per car)
+    made = car if isinstance(car, dict) else {c: (car, tex) for c in codes}
+    thumbs = {c: preview.render(*made[c], THUMB_PAINT[c], (236, 200), yaw=215, pitch=-20, bg=(66, 66, 66))
               for c in codes if c in TILE_OF}
     new_outer = {}
     for lang in range(len(outer)):

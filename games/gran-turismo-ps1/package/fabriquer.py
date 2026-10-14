@@ -80,16 +80,33 @@ def main():
     print(T('Jeu    : ', 'Game   : ') + disc_in)
     print(T('Modèle : ', 'Model  : ') + kn5)
     print()
-    codes = list(make_car.ROADSTERS)
-    print(T('Quelles Roadster remplacer par la MX-5 ?', 'Which Roadsters should the MX-5 replace?'))
-    for i, c in enumerate(codes, 1):
-        print('  %2d. %s' % (i, make_car.ROADSTERS[c][1]))
-    a = ask(T('Numéros séparés par des virgules, ou Entrée pour toutes', 'Numbers separated by commas, or Enter for all'))
-    if a:
-        sel = [codes[int(x) - 1] for x in a.replace(' ', '').split(',') if x.isdigit() and 1 <= int(x) <= len(codes)]
-        codes = sel or codes
-    a = ask(T('Toit : 1 = capotée (fermé), 2 = décapotée', 'Roof: 1 = closed, 2 = open top'), '1')
-    top = 'open' if a.strip() == '2' else 'closed'
+    # the Roadsters of the game, each with its race version (it gets the same roof)
+    base = [c for c in make_car.ROADSTERS if not c.endswith('r') or c == 'arodn']
+    twin = {c: c[:-1] + 'r' for c in base if c[:-1] + 'r' in make_car.ROADSTERS}
+    print(T('Chaque Eunos Roadster peut devenir la MX-5 RF capotée ou décapotée (sa version course suit) :',
+            'Each Eunos Roadster can become the MX-5 RF closed or open (its race version follows):'))
+    print(T('  1 = toutes capotées   2 = toutes décapotées   3 = voiture par voiture',
+            '  1 = all closed   2 = all open   3 = car by car'))
+    a = ask(T('Choix', 'Choice'), '1').strip()
+    roof = {}
+    if a == '3':
+        print(T('Pour chaque voiture : C = capotée, D = décapotée, R = garder la Roadster.',
+                'For each car: C = closed, O = open, R = keep the Roadster.'))
+        for c in base:
+            r = ask('  ' + make_car.ROADSTERS[c][1], 'C').strip().upper()[:1]
+            if r in ('D', 'O'):
+                roof[c] = 'open'
+            elif r != 'R':
+                roof[c] = 'closed'
+    else:
+        roof = {c: 'open' if a == '2' else 'closed' for c in base}
+    for c in list(roof):
+        if c in twin:
+            roof[twin[c]] = roof[c]
+    if not roof:
+        raise SystemExit(T('Aucune Roadster à remplacer.', 'No Roadster to replace.'))
+    tops = set(roof.values())
+    top = tops.pop() if len(tops) == 1 else 'mixed'
     print(T('Prix chez Mazda, en crédits. Le prix réaliste est 29900 ; mets 100 pour l\'avoir dès le début du jeu.',
             'Price at the Mazda dealer, in credits. The realistic price is 29900; put 100 to have it from the start.'))
     a = ask(T('Prix', 'Price'), '29900')
@@ -99,7 +116,8 @@ def main():
         a = ask(T('Ajouter le cheat (maintenir SELECT : figer le chrono des permis, changer les crédits) ? o/n',
                   'Add the cheat (hold SELECT: freeze the licence timer, change the credits)? y/n'), 'n')
         cheat = a.strip().lower() in ('o', 'y', 'oui', 'yes')
-    out_dir = os.path.join(ROOT, 'MX5_RF_' + (T('decapotee', 'open') if top == 'open' else T('capotee', 'closed')))
+    out_dir = os.path.join(ROOT, 'MX5_RF_' + {'open': T('decapotee', 'open'), 'closed': T('capotee', 'closed'),
+                                             'mixed': T('capotee_et_decapotee', 'closed_and_open')}[top])
     os.makedirs(out_dir, exist_ok=True)
     out = os.path.join(out_dir, 'Gran Turismo MX-5 RF.bin')
     src = make_car.binimage.cue_bin(disc_in) if disc_in.lower().endswith('.cue') else disc_in
@@ -107,7 +125,7 @@ def main():
         raise SystemExit(T('Le résultat écraserait ton image du jeu : déplace-la.', 'The result would overwrite your game image: move it.'))
     print()
     t0 = time.time()
-    files, d = make_car.generate(disc_in, kn5, codes, top, price, cheat=cheat)
+    files, d = make_car.generate(disc_in, kn5, roof, price=price, cheat=cheat)
     print(T("L'image disque", 'The disc image'))
     d.write_bin(out, files, progress=lambda i, n: print('  %d%%' % (100 * i // n), end='\r'))
     print()
