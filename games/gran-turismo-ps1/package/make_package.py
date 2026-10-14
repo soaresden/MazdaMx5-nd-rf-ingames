@@ -35,6 +35,13 @@ def main():
             for f in sorted(os.listdir(os.path.join(REPO, d))):
                 if f.endswith('.py'):
                     z.write(os.path.join(REPO, d, f), top + 'outils/' + d + '/' + f)
+        # the cheat project, if it is next to this repository (its payload built)
+        cheat = os.path.join(os.path.dirname(REPO), 'GranTurismo1-OverlayCheat', 'gt1cheat')
+        if os.path.isfile(os.path.join(cheat, 'payload.py')):
+            for f in sorted(os.listdir(cheat)):
+                if f.endswith('.py'):
+                    z.write(os.path.join(cheat, f), top + 'outils/gt1cheat/' + f)
+            print('  + gt1cheat')
         for f in EXTRA:
             p = os.path.join(REPO, f)
             if os.path.exists(p):

@@ -56,7 +56,22 @@ def mx5(kn5, top, log=print):
     return sp, st, scene, W
 
 
-def generate(chd, kn5, cars=('aminn',), top='closed', price=PRICE, log=print):
+def cheat_patcher():
+    """gt1cheat.patcher of the GranTurismo1-OverlayCheat project (github.com/soaresden/
+    GranTurismo1-OverlayCheat): next to this script in the Windows package (outils/gt1cheat),
+    else the project's folder next to this repository, or GT1CHEAT_DIR."""
+    for base in (os.environ.get('GT1CHEAT_DIR', ''), os.path.join(HERE, '..', '..'),
+                 os.path.join(HERE, '..', '..', '..', 'GranTurismo1-OverlayCheat')):
+        if base and os.path.isfile(os.path.join(base, 'gt1cheat', 'patcher.py')):
+            if base not in sys.path:
+                sys.path.insert(0, base)
+            from gt1cheat import patcher
+            return patcher
+    raise ValueError('cheat introuvable : il faut le projet GranTurismo1-OverlayCheat '
+                     '(dossier gt1cheat), ou GT1CHEAT_DIR')
+
+
+def generate(chd, kn5, cars=('aminn',), top='closed', price=PRICE, log=print, cheat=False):
     """{file name on the disc: new bytes}, and the Disc."""
     d = disc.Disc(chd)
     cnf = d.read('SYSTEM.CNF').decode('latin-1')
@@ -87,6 +102,11 @@ def generate(chd, kn5, cars=('aminn',), top='closed', price=PRICE, log=print):
     log('4/4 les menus (nom, vignettes, prix)')
     files['MENU_IMG.ARC'] = menus.patch(d.read('MENU_IMG.ARC'), d.read('CARINF.DAT'), cars, BADGE,
                                         last_car, last_tex, price, log=log)
+    if cheat:
+        log('+ le cheat GranTurismo1-OverlayCheat (SELECT : chrono des permis, crédits)')
+        patcher = cheat_patcher()
+        for name in ('GTOS.EXE', 'GTMENU.EXE', 'GTMAIN.EXE'):
+            files[name] = patcher.patch_exe(name, d.read(name))
     for name, data in files.items():
         if len(data) > d.room(name):
             raise ValueError('%s : %d octets de trop' % (name, len(data) - d.room(name)))
@@ -102,12 +122,13 @@ def main():
     ap.add_argument('--car', action='append', choices=sorted(ROADSTERS), help='Roadster(s) to replace (default: all)')
     ap.add_argument('--top', default='closed', choices=('closed', 'open'))
     ap.add_argument('--price', type=int, default=PRICE, help='price at the dealer, Cr (100: from the first day)')
+    ap.add_argument('--cheat', action='store_true', help='add the GranTurismo1-OverlayCheat menu (hold SELECT)')
     a = ap.parse_args()
     t0 = time.time()
     src = binimage.cue_bin(a.chd) if a.chd.lower().endswith('.cue') else a.chd
     if os.path.abspath(src).lower() == os.path.abspath(a.out).lower():
         raise SystemExit('--out would overwrite the source image: choose another name')
-    files, d = generate(a.chd, a.kn5, a.car or list(ROADSTERS), a.top, a.price)
+    files, d = generate(a.chd, a.kn5, a.car or list(ROADSTERS), a.top, a.price, cheat=a.cheat)
     print('the disc image')
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     d.write_bin(a.out, files, progress=lambda i, n: print('  %d%%' % (100 * i // n), end='\r'))

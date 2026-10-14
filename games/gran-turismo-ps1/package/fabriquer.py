@@ -94,6 +94,11 @@ def main():
             'Price at the Mazda dealer, in credits. The realistic price is 29900; put 100 to have it from the start.'))
     a = ask(T('Prix', 'Price'), '29900')
     price = int(a) if a.isdigit() else 29900
+    cheat = False
+    if os.path.isdir(os.path.join(HERE, 'gt1cheat')):
+        a = ask(T('Ajouter le cheat (maintenir SELECT : figer le chrono des permis, changer les crédits) ? o/n',
+                  'Add the cheat (hold SELECT: freeze the licence timer, change the credits)? y/n'), 'n')
+        cheat = a.strip().lower() in ('o', 'y', 'oui', 'yes')
     out_dir = os.path.join(ROOT, 'MX5_RF_' + (T('decapotee', 'open') if top == 'open' else T('capotee', 'closed')))
     os.makedirs(out_dir, exist_ok=True)
     out = os.path.join(out_dir, 'Gran Turismo MX-5 RF.bin')
@@ -102,7 +107,7 @@ def main():
         raise SystemExit(T('Le résultat écraserait ton image du jeu : déplace-la.', 'The result would overwrite your game image: move it.'))
     print()
     t0 = time.time()
-    files, d = make_car.generate(disc_in, kn5, codes, top, price)
+    files, d = make_car.generate(disc_in, kn5, codes, top, price, cheat=cheat)
     print(T("L'image disque", 'The disc image'))
     d.write_bin(out, files, progress=lambda i, n: print('  %d%%' % (100 * i // n), end='\r'))
     print()
