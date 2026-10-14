@@ -122,6 +122,16 @@ def set_field(data, pack, cls, coll, name, value):
         struct.pack_into('>f', data, lay + o, value)
 
 
+def set_u32(data, pack, cls, coll, name, value):
+    """Write a 32-bit integer field (not an array) stored in the layout of collection cls/coll."""
+    lay = pack.collections()[(key(cls), key(coll))]
+    o, sz, mc, fl = pack.fields(cls)[key(name)]
+    assert fl & 2 and not fl & 1 and sz == 4, (cls, name, 'not a 32-bit value stored in the layout')
+    old, = struct.unpack_from('>I', data, lay + o)
+    struct.pack_into('>I', data, lay + o, value)
+    return old
+
+
 def set_refs(data, pack, cls, coll, field, ref_class, ref_keys):
     """Point the RefSpec array `field` of collection cls/coll (an optional field, stored in the
     collection's own table) at collections `ref_keys` of class `ref_class`. The array keeps its

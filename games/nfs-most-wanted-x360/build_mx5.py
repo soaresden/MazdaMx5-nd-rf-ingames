@@ -757,6 +757,12 @@ PERFORMANCE = {
 # recording (GIN_Mazda_Miata.gin + _DCL, 1510-7158 rpm), which no car of the game uses.
 ENGINE_SOUNDS = {'miata': 0x05725DDF}
 
+# What the police radio calls the car ("suspect vehicle is a blue Lexus"): pvehicle VerbalType, a
+# Csis::Type_car_type of the cop speech (COPSPEECH.hpp in the decompilation; read by
+# EAXDispatch::VehicleDescription and EAXCop). 'mazda' is the value of the game's RX-7 and RX-8;
+# the colour comes from the paint, not from the car.
+VERBAL_TYPES = {'mazda': 0x10000}
+
 MX5_ARCH_GAP = 0.029  # MX-5: wheel arch top - (wheel centre + radius), measured on the AC model
 
 
@@ -825,7 +831,7 @@ def rename_solid(s, name):
 
 
 def main(iso, kn5_path, out, car='ELISE', base_root=None, wheels='auto', only=None, keep=(),
-         mx5_wheels=False, perf='rf184', top='closed', sound='miata'):
+         mx5_wheels=False, perf='rf184', top='closed', sound='miata', verbal='mazda'):
     global CAR, BRAKE_MARKER_Y, OPEN_TOP
     OPEN_TOP = top == 'open'
     if not mx5_wheels:
@@ -957,13 +963,13 @@ def main(iso, kn5_path, out, car='ELISE', base_root=None, wheels='auto', only=No
     if DIAG_LOG:
         open(os.path.join(out, 'diag_groupes.txt'), 'w', encoding='utf-8').write(chr(10).join(DIAG_LOG) + chr(10))
         print('diagnostic colours: %d groups, see diag_groupes.txt' % len(DIAG_LOG))
-    if new_offs is not None or perf or sound:
+    if new_offs is not None or perf or sound or verbal:
         g = bytearray(gm)
         a0, asize = att_entry[0], att_entry[1]
         if new_offs is not None:
             struct.pack_into('>16f', g, a0 + toff, *new_offs.reshape(-1))
             print('GLOBAL/GLOBALMEMORYFILE.BIN: ecar/%s TireOffsets' % CAR.lower(), np.round(new_offs, 3).tolist())
-        if perf or sound:
+        if perf or sound or verbal:
             att = bytearray(g[a0:a0 + asize])
             pack = attrib360.Pack(bytes(att))
             for (cls, name), v in (PERFORMANCE[perf].items() if perf else ()):
@@ -972,6 +978,10 @@ def main(iso, kn5_path, out, car='ELISE', base_root=None, wheels='auto', only=No
                 n = attrib360.set_refs(att, pack, 'pvehicle', CAR.lower(), 'engineaudio', 'engineaudio',
                                        [ENGINE_SOUNDS[sound]])
                 print('GLOBAL/GLOBALMEMORYFILE.BIN: engine sound of %s -> %s (%d refs)' % (CAR.lower(), sound, n))
+            if verbal:
+                old = attrib360.set_u32(att, pack, 'pvehicle', CAR.lower(), 'VerbalType', VERBAL_TYPES[verbal])
+                print('GLOBAL/GLOBALMEMORYFILE.BIN: police radio name of %s -> %s (VerbalType %#x -> %#x)'
+                      % (CAR.lower(), verbal, old, VERBAL_TYPES[verbal]))
             g[a0:a0 + asize] = att
             if perf:
                 print('GLOBAL/GLOBALMEMORYFILE.BIN: performance of %s set to %s' % (CAR.lower(), perf))
@@ -1000,8 +1010,11 @@ if __name__ == '__main__':
                     help="performance written over the replaced car's (keep: leave the car's own)")
     ap.add_argument('--sound', default='miata', choices=sorted(ENGINE_SOUNDS) + ['keep'],
                     help="engine sound (keep: the replaced car's own)")
+    ap.add_argument('--police', default='mazda', choices=sorted(VERBAL_TYPES) + ['keep'],
+                    help="what the police radio calls the car (keep: the replaced car's make)")
     ap.add_argument('--top', default='closed', choices=('closed', 'open'),
                     help='open: roof panels and rear window stowed, side windows down')
     a = ap.parse_args()
     main(a.iso, a.kn5, a.out, a.car, a.base_root, a.wheels, a.only, tuple(a.keep), a.mx5_wheels,
-         None if a.perf == 'keep' else a.perf, a.top, None if a.sound == 'keep' else a.sound)
+         None if a.perf == 'keep' else a.perf, a.top, None if a.sound == 'keep' else a.sound,
+         None if a.police == 'keep' else a.police)

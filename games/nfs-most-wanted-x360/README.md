@@ -11,6 +11,7 @@ la version PC : la géométrie et les textures n'y sont pas au même format.
 - Toit fermé (RF) ou décapoté (`--top open`).
 - Logo Mazda et nom « MX-5 Miata » dans les menus ; capots et kits du tuning = ceux de la MX-5.
 - Performances d'une MX-5 RF 2.0 184 ch ; son moteur Miata du jeu.
+- La radio de la police l'appelle « Mazda » (`--police keep` : la marque de la voiture remplacée).
 - Jantes et freins : ceux de la voiture remplacée (les jantes de la MX-5 ne s'affichent pas encore).
 - Couleur : dans l'atelier du jeu ; la plus proche du Deep Crystal Blue est **Métallisé n° 75**.
 
