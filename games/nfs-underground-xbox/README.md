@@ -1,5 +1,7 @@
 # Need for Speed Underground et Underground 2 (Xbox USA)
 
+🇬🇧 [English version](README.en.md)
+
 ![La MX-5 RF décapotée dans le garage de Need for Speed Underground, phares allumés](../../docs/nfsu1_en_jeu.jpg)
 ![L'arrière de la MX-5 RF dans Underground, feux allumés](../../docs/nfsu1_arriere.jpg)
 
@@ -53,6 +55,8 @@ rien n'est écrit sur une carte déjà installée ni dans les images.
   carrière se figeait après sa première cinématique) et `ZDIR.BIN` qui y renvoie les noms
   anglais (l'original reste en `ZDIR_anglais.BIN`).
 
+
+## Ce que fait la conversion
 
 Le modèle vient du convertisseur de Most Wanted (`build_mx5.collect` : mêmes pièces, mêmes
 matériaux), déplacé pour que ses roues tombent où le jeu met celles de la Miata (CarTypeInfo de

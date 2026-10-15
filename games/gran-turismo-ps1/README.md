@@ -1,5 +1,7 @@
 # Gran Turismo (PS1, PAL SCES-00984)
 
+🇬🇧 [English version](README.en.md)
+
 La MX-5 RF remplace les Eunos Roadster du jeu (neuves chez Mazda, d'occasion, versions course),
 toit fermé ou décapoté. Le résultat est une image disque `.bin/.cue` pour DuckStation (et les
 autres émulateurs), faite à partir de **ton** image `.chd` du jeu. Testé en jeu dans DuckStation.

@@ -13,9 +13,11 @@ wheels and red Brembo calipers.
 ## Build the car in one click
 
 **➜ [soaresden.github.io/MazdaMx5-nd-rf-ingames](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/)**,
-the project hub, with one page per game (for now:
-[Need for Speed Most Wanted](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/nfsmw.html) and
-[Gran Turismo](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/gt1.html)).
+the project hub, with one page per game:
+[Need for Speed Most Wanted](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/nfsmw.html),
+[Gran Turismo](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/gt1.html),
+[NFS Underground](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/nfsu1.html) and
+[NFS Underground 2](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/nfsu2.html).
 The pages have a 🇫🇷 / 🇬🇧 switch.
 
 Each page builds the car **in your browser**, from **your** files. Nothing is sent over the
@@ -35,6 +37,12 @@ open) and the price at the Mazda dealer (**100 Cr to have it from the start**), 
 minute gives a `.bin` + `.cue` disc image to open in DuckStation. Without Python on the PC it
 downloads an official portable copy (python.org) into its own folder. Without Windows, the web
 page does the same in the browser, much more slowly (about twenty minutes).
+
+For **NFS Underground 1 and 2** (Xbox USA, Switch ports), the **Windows package**
+[MX5-RF_NFSUnderground.zip](https://github.com/soaresden/MazdaMx5-nd-rf-ingames/releases/download/nfsu-v1/MX5-RF_NFSUnderground.zip)
+makes the whole SD card folder: the port, your extracted disc, the French (or German, Italian)
+version from your Europe disc, and the MX-5 RF with its hardtop closed or open in place of the
+Miata. The extracted disc is several GB: this is done on the PC, not in the browser.
 
 ## The games
 

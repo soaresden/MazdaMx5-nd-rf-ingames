@@ -13,9 +13,11 @@ noir brillant, jantes sombres et étriers Brembo rouges.
 ## Fabriquer la voiture en un clic
 
 **➜ [soaresden.github.io/MazdaMx5-nd-rf-ingames](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/)**,
-le hub du projet, avec une page par jeu (pour l'instant :
-[Need for Speed Most Wanted](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/nfsmw.html) et
-[Gran Turismo](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/gt1.html)).
+le hub du projet, avec une page par jeu :
+[Need for Speed Most Wanted](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/nfsmw.html),
+[Gran Turismo](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/gt1.html),
+[NFS Underground](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/nfsu1.html) et
+[NFS Underground 2](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/nfsu2.html).
 Les pages ont un bouton 🇬🇧 / 🇫🇷.
 
 Chaque page fabrique la voiture **dans ton navigateur**, à partir de **tes** fichiers. Rien n'est
@@ -35,6 +37,12 @@ décapotée) et le prix chez Mazda (**100 Cr pour l'avoir dès le début**), et 
 environ une image disque `.bin` + `.cue` à ouvrir dans DuckStation. Sans Python sur le PC, il en
 télécharge une copie portable officielle (python.org) dans son dossier. Sans Windows, la page web
 fait la même chose dans le navigateur, en bien plus lent (une vingtaine de minutes).
+
+Pour **NFS Underground 1 et 2** (Xbox USA, portages Switch), le **paquet Windows**
+[MX5-RF_NFSUnderground.zip](https://github.com/soaresden/MazdaMx5-nd-rf-ingames/releases/download/nfsu-v1/MX5-RF_NFSUnderground.zip)
+fabrique tout le dossier de la carte SD : le portage, ton disque extrait, la version française (ou
+allemande, italienne) depuis ton disque Europe, et la MX-5 RF capotée ou décapotée à la place de la
+Miata. Le disque extrait fait plusieurs Go : ça se fait sur le PC, pas dans le navigateur.
 
 ## Les jeux
 

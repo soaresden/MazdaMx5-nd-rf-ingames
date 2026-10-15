@@ -1,5 +1,7 @@
 # Need for Speed: Most Wanted (2005), Xbox 360
 
+🇬🇧 [English version](README.en.md)
+
 La MX-5 RF remplace la voiture de ton choix (testé en jeu : la **Lexus IS 300**, la première
 voiture de la carrière). Fait pour la version **Xbox 360** du jeu, telle que la fait tourner le
 portage Switch [nfsmw-nx](https://github.com/StevensND/nfsmw-nx). Les fichiers ne conviennent pas à
@@ -160,6 +162,7 @@ Switch : les fichiers de la MX-5 restent des fichiers à part, vérifiés contre
 de côté (`--keep-pad` pour les garder) : 5,1 Go au lieu de 7,8. L'image est un XDVDFS simple
 (système de fichiers au secteur 32), relue à la fin. Testé dans Xenia le 15/10/2026 : VF, et la MX-5 à la place de la Lexus IS300.
 
+## Limites
 
 - Les vinyles sont dessinés pour la forme de la voiture remplacée.
 - Les jantes et freins restent ceux de la voiture remplacée.
