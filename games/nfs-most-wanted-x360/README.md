@@ -158,7 +158,7 @@ Le jeu ouvre un fichier en clair avant de le chercher dans les archives (plan A)
 Switch : les fichiers de la MX-5 restent des fichiers à part, vérifiés contre la taille que donne
 `ZDIR.BIN`. Les `NFS/PAD*.BIN` (remplissage qui place les données sur le vrai disque) sont laissés
 de côté (`--keep-pad` pour les garder) : 5,1 Go au lieu de 7,8. L'image est un XDVDFS simple
-(système de fichiers au secteur 32), relue à la fin : Xenia la lance (testé le 15/10/2026).
+(système de fichiers au secteur 32), relue à la fin. Testé dans Xenia le 15/10/2026 : VF, et la MX-5 à la place de la Lexus IS300.
 
 
 - Les vinyles sont dessinés pour la forme de la voiture remplacée.
