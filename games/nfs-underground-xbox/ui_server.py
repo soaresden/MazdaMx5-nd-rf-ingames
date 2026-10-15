@@ -2,7 +2,10 @@
 browser. It finds the files put next to the package, opens the Windows file dialogs, runs
 make_sd.py and shows its progress.
 
-python ui_server.py --dossier <package folder> [--port 0] [--no-browser]
+python ui_server.py --dossier <package folder> [--dossier <other folder> ...] [--port 0] [--no-browser]
+
+The files are looked for in each --dossier in turn (the first one found wins); the output
+folder offered is in the first.
 
   GET  /                      the page (package ui/index.html)
   GET  /ui/<file>             its pictures
@@ -127,7 +130,8 @@ def build_args(o):
     return a
 
 
-def make_handler(folder, ui_dir, job, server_box):
+def make_handler(folders, ui_dir, job, server_box):
+    folder = folders[0]
     class H(BaseHTTPRequestHandler):
         def log_message(self, *a):
             pass
@@ -165,7 +169,10 @@ def make_handler(folder, ui_dir, job, server_box):
                 return self._send(200, open(p, 'rb').read(), TYPES.get(os.path.splitext(p)[1], 'application/octet-stream'))
             if u.path == '/api/detect':
                 game = q.get('game', 'ug1')
-                g = fabriquer_sd.guess(folder, game)
+                g = {}
+                for f in folders:
+                    for k, v in fabriquer_sd.guess(f, game).items():
+                        g.setdefault(k, v)
                 return self._send(200, {'folder': folder, 'files': {k.lstrip('-'): v for k, v in g.items()}})
             if u.path == '/api/exists':
                 p = q.get('path', '')
@@ -218,17 +225,18 @@ def make_handler(folder, ui_dir, job, server_box):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument('--dossier', default=os.getcwd(), help='dossier du paquet (où sont posés les fichiers)')
+    ap.add_argument('--dossier', action='append', help='dossier du paquet (où sont posés les fichiers), plusieurs possibles')
     ap.add_argument('--ui', default=None, help='dossier de la page (défaut : <dossier>/outils/ui)')
     ap.add_argument('--port', type=int, default=0)
     ap.add_argument('--no-browser', action='store_true')
     a = ap.parse_args()
-    folder = os.path.abspath(a.dossier)
+    folders = [os.path.abspath(f) for f in (a.dossier or [os.getcwd()])]
+    folder = folders[0]
     ui_dir = a.ui or os.path.join(folder, 'outils', 'ui')
     if not os.path.isfile(os.path.join(ui_dir, 'index.html')):
         ui_dir = os.path.join(HERE, 'package', 'ui')
     job, box = Job(), [None]
-    srv = ThreadingHTTPServer(('127.0.0.1', a.port), make_handler(folder, ui_dir, job, box))
+    srv = ThreadingHTTPServer(('127.0.0.1', a.port), make_handler(folders, ui_dir, job, box))
     box[0] = srv
     url = 'http://127.0.0.1:%d/' % srv.server_address[1]
     print('MX-5 RF · NFS Underground : %s' % url)
