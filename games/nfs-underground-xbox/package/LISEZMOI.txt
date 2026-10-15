@@ -1,0 +1,34 @@
+La MX-5 RF dans Need for Speed Underground 1 et 2 (Xbox USA, sur Switch) - sur ton PC (Windows)
+==================================================================================================
+
+Ce paquet fabrique le dossier complet à copier sur la carte SD de la Switch : le portage, ton
+disque extrait, et au choix la version française (ou allemande, italienne), la MX-5 RF capotée
+ou décapotée à la place de la Mazda Miata, sa conduite et son nom dans les menus.
+
+Il te faut :
+  - TON disque Xbox USA du jeu, en image .iso (Need for Speed - Underground (USA).iso ou
+    Need for Speed - Underground 2 (USA).iso) : les portages tournent avec la version USA ;
+  - pour jouer en français (allemand, italien) : ton disque Xbox EUROPE du même jeu, en .iso ;
+  - le zip de la release du portage : nfsu1x.zip (github.com/antoxa2584x/nfsu1-sw/releases) ou
+    nfsu2x.zip (github.com/antoxa2584x/nfsu2-sw/releases) ;
+  - pour la MX-5 : le modèle Assetto Corsa mazda_mx5_rf.kn5 (mod gratuit, voir la page du projet).
+Aucun fichier du jeu ni du modèle n'est fourni ici.
+
+1. Mets ces fichiers dans ce dossier (à côté de FABRIQUER.bat) : ils sont trouvés tout seuls.
+2. Double-clique sur FABRIQUER.bat.
+   - Première fois sans Python : il télécharge une copie portable officielle de Python
+     (python.org, environ 30 Mo) dans outils\python. Rien n'est installé dans Windows.
+3. Réponds aux questions (Entrée = la réponse proposée) : le jeu, la langue, la MX-5 et son
+   toit, sa conduite et son nom (à essayer), le chargement automatique (Underground).
+4. Quelques minutes plus tard, le dossier est dans SD_nfsu1x (ou SD_nfsu2x).
+
+Copier sur la carte, jeu fermé : copie d'abord sdmc:/switch/nfsu1x/game/UDATA (ou nfsu2x) ailleurs
+si le jeu est déjà sur ta carte (ce sont tes sauvegardes). Puis copie le dossier switch de
+SD_nfsu1x à la racine de la carte, PAR-DESSUS (fusionner, remplacer les fichiers), sans jamais
+supprimer ni remplacer tout le dossier game/ de la carte.
+
+Underground en français : le portage doit connaître NFSU1_LANGUAGE ; sinon (version actuelle du
+portage) c'est le français par le default.xbe USA corrigé, testé sur Switch.
+Tes images de disque ne sont jamais modifiées.
+
+Projet : https://soaresden.github.io/MazdaMx5-nd-rf-ingames/  (code : GPL-3.0)

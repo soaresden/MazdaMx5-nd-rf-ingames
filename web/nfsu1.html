@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MX-5 RF · Underground</title>
+<script>
+  // Langue : choix mémorisé (sb.lang) sinon langue du navigateur ; les éléments data-en passent en anglais.
+  (function () {
+    var l = null; try { l = localStorage.getItem('sb.lang'); } catch (_) {}
+    if (l !== 'fr' && l !== 'en') l = /^fr/i.test(navigator.language || '') ? 'fr' : 'en';
+    window.SB_LANG = l; document.documentElement.lang = l;
+    document.addEventListener('DOMContentLoaded', function () {
+      if (l === 'en') document.querySelectorAll('[data-en]').forEach(function (e) { e.innerHTML = e.getAttribute('data-en'); });
+      var b = document.getElementById('lang');
+      b.textContent = l === 'en' ? '🇫🇷 FR' : '🇬🇧 EN';
+      b.onclick = function () { try { localStorage.setItem('sb.lang', l === 'en' ? 'fr' : 'en'); } catch (_) {} location.reload(); };
+    });
+  })();
+</script>
+<meta name="description" content="La Mazda MX-5 RF (ND) dans Need for Speed Underground (Xbox USA, Switch nfsu1-sw), en français, fabriquée sur ton PC à partir de tes disques.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Saira+Extra+Condensed:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  /* Underground's menus: blue-teal glass bars, light cyan italic titles, neon green stat bars */
+  :root {
+    --bg: #04090d; --panel: rgba(6, 22, 30, .84); --line: #16384a; --text: #e8f6fb; --muted: #93b3c0;
+    --cyan: #8fe3ff; --teal: #1d6f8c; --neon: #6ef0b0; --ok: #6ef0b0; --err: #ff6b5a; --code: #06141b;
+    --glass: linear-gradient(180deg, rgba(43, 132, 168, .55), rgba(13, 64, 86, .7));
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; color: var(--text); font: 500 17px/1.5 "Barlow Condensed", "Arial Narrow", sans-serif;
+         background:
+           radial-gradient(1100px 560px at 75% -10%, rgba(29, 111, 140, .38), transparent 62%),
+           radial-gradient(800px 480px at 0% 45%, rgba(110, 240, 176, .10), transparent 60%),
+           var(--bg);
+         min-height: 100vh; }
+  a { color: var(--cyan); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 16px 64px; }
+  nav { padding: 14px 0; font: 700 15px/1 "Barlow Condensed"; text-transform: uppercase; letter-spacing: .08em;
+        display: flex; justify-content: space-between; align-items: center; }
+  nav a { color: var(--muted); text-decoration: none; }
+  nav a:hover { color: var(--cyan); }
+  #lang { font: 700 14px "Barlow Condensed", sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--text);
+          background: var(--glass); border: 1px solid #2b6f8a; padding: 6px 12px; cursor: pointer; min-height: 36px; }
+  #lang:hover { border-color: var(--cyan); }
+
+  /* hero: the garage screenshot under the game's top bar, its stat bars at the bottom */
+  .hero { position: relative; border: 1px solid var(--line); overflow: hidden; margin-bottom: 22px; background: #000; }
+  .hero img { display: block; width: 100%; height: clamp(220px, 44vw, 420px); object-fit: cover; object-position: 50% 60%;
+              filter: saturate(1.08) contrast(1.04); }
+  .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 110px rgba(0, 0, 0, .7);
+                 background: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,0) 30%, rgba(0,0,0,0) 62%, rgba(0,0,0,.7)); }
+  .topbar { position: absolute; left: 0; right: 0; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 18px; background: linear-gradient(180deg, rgba(43, 132, 168, .75), rgba(10, 48, 66, .75));
+            border-bottom: 1px solid rgba(143, 227, 255, .45); }
+  .topbar span { font: italic 700 clamp(15px, 2.6vw, 22px)/1 "Barlow Condensed"; letter-spacing: .14em; color: var(--cyan);
+                 text-transform: uppercase; text-shadow: 0 0 10px rgba(143, 227, 255, .5); }
+  .topbar span + span { color: var(--text); letter-spacing: .08em; }
+  .title { position: absolute; left: 0; right: 0; bottom: 56px; z-index: 2; text-align: center; padding: 0 12px; }
+  .title h1 { margin: 0; font: italic 800 clamp(30px, 6vw, 62px)/1 "Saira Extra Condensed", sans-serif; text-transform: uppercase;
+              letter-spacing: .02em; text-shadow: 0 3px 0 #000, 0 0 26px rgba(0, 0, 0, .9); }
+  .title h1 small { display: block; font-size: .34em; letter-spacing: .26em; color: var(--cyan); margin-top: 6px; font-style: normal; }
+  .stats { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; display: grid; grid-template-columns: repeat(3, 1fr);
+           gap: 16px; padding: 10px 18px 12px; background: linear-gradient(180deg, rgba(10, 48, 66, .55), rgba(6, 26, 36, .85));
+           border-top: 1px solid rgba(143, 227, 255, .35); }
+  .stats div { font: italic 700 clamp(11px, 1.8vw, 15px)/1 "Barlow Condensed"; letter-spacing: .1em; text-transform: uppercase; }
+  .stats i { display: block; height: 6px; margin-top: 6px; background: rgba(0, 0, 0, .6); border: 1px solid #2b6f8a; position: relative; }
+  .stats i::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: var(--v); background: var(--neon);
+                    box-shadow: 0 0 8px var(--neon); }
+
+  .lead { color: var(--muted); font-size: 18px; margin: 0 0 22px; }
+  .lead strong { color: var(--text); }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); margin: 0 0 16px; }
+  .panel > h2 { margin: 0; padding: 9px 16px; background: var(--glass); border-bottom: 1px solid rgba(143, 227, 255, .3);
+                font: italic 700 21px/1.2 "Barlow Condensed"; text-transform: uppercase; letter-spacing: .14em; color: var(--cyan);
+                display: flex; align-items: center; gap: 12px; text-shadow: 0 0 10px rgba(143, 227, 255, .35); }
+  .panel > h2 b { font-style: normal; color: #04161e; background: var(--neon); font-size: 15px; padding: 1px 8px; letter-spacing: 0;
+                  text-shadow: none; box-shadow: 0 0 10px rgba(110, 240, 176, .6); }
+  .body { padding: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px 18px; }
+  .feat { display: flex; gap: 10px; align-items: flex-start; }
+  .feat::before { content: ""; flex: none; width: 10px; height: 10px; margin-top: 8px; background: var(--neon);
+                  box-shadow: 0 0 8px var(--neon); transform: skewX(-18deg); }
+  .feat.try::before { background: #e8c35a; box-shadow: 0 0 8px #e8c35a; }
+  .feat b { color: var(--text); }
+  .tag { display: inline-block; font: 700 12px "Barlow Condensed"; text-transform: uppercase; letter-spacing: .1em; padding: 0 7px;
+         margin-left: 6px; vertical-align: 2px; border: 1px solid; }
+  .tag.ok { color: var(--neon); border-color: rgba(110, 240, 176, .6); }
+  .tag.try { color: #e8c35a; border-color: rgba(232, 195, 90, .6); }
+  .need { margin: 0 0 14px; padding-left: 22px; } .need li { margin-bottom: 4px; }
+  .go { display: inline-flex; align-items: center; gap: 12px; font: italic 800 24px/1 "Saira Extra Condensed"; text-transform: uppercase;
+        letter-spacing: .08em; color: #04161e; background: var(--neon); padding: 14px 26px; text-decoration: none;
+        box-shadow: 0 0 18px rgba(110, 240, 176, .45); }
+  .go:hover { box-shadow: 0 0 0 2px #fff inset, 0 0 26px rgba(110, 240, 176, .7); }
+  .tip { margin: 12px 0 0; padding: 8px 10px; border-left: 3px solid var(--cyan); background: rgba(143, 227, 255, .07); font-size: 15px; }
+  .tip b { color: var(--cyan); }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .gallery figure { margin: 0; }
+  .gallery img { display: block; width: 100%; border: 1px solid var(--line); }
+  .gallery figcaption { font-size: 14px; color: var(--muted); margin-top: 5px; }
+  ol { margin: 0; padding-left: 22px; } li { margin-bottom: 6px; }
+  code { background: #000; border: 1px solid var(--line); padding: 0 5px; font-size: .9em; }
+  footer { color: var(--muted); font-size: 15px; margin-top: 26px; border-top: 1px solid var(--line); padding-top: 14px; }
+  @media (max-width: 560px) { .stats { gap: 8px; padding: 8px 10px; } .title { bottom: 48px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav><a href="../" data-en="‹ All games">‹ Tous les jeux</a><button id="lang" title="Français / English">🇬🇧 EN</button></nav>
+
+  <div class="hero">
+    <div class="topbar"><span data-en="Customize">Personnaliser</span><span>Mazda · MX-5 RF</span></div>
+    <img src="../docs/nfsu1_en_jeu.jpg" alt="MX-5 RF · Need for Speed Underground">
+    <div class="title"><h1>Mazda MX-5 RF<small>Need for Speed · Underground</small></h1></div>
+    <div class="stats">
+      <div data-en="Acceleration">Accélération<i style="--v:58%"></i></div>
+      <div data-en="Top speed">Vitesse maxi.<i style="--v:46%"></i></div>
+      <div data-en="Handling">Maniement<i style="--v:82%"></i></div>
+    </div>
+  </div>
+
+  <p class="lead" data-en="&lt;strong&gt;Xbox USA&lt;/strong&gt; version, played on the &lt;strong&gt;Nintendo Switch&lt;/strong&gt; with the &lt;a href=&quot;https://github.com/antoxa2584x/nfsu1-sw&quot;&gt;nfsu1-sw&lt;/a&gt; port. The MX-5 RF takes the place of the Mazda Miata, with its engine sound. Everything is made &lt;strong&gt;on your PC&lt;/strong&gt; from &lt;strong&gt;your&lt;/strong&gt; discs and the model: no game file is provided here.">Version <strong>Xbox USA</strong>, jouée sur <strong>Nintendo Switch</strong> avec le portage
+    <a href="https://github.com/antoxa2584x/nfsu1-sw">nfsu1-sw</a>. La MX-5 RF prend la place de la Mazda Miata, avec son son moteur.
+    Tout est fabriqué <strong>sur ton PC</strong> à partir de <strong>tes</strong> disques et du modèle : aucun fichier du jeu n'est fourni ici.</p>
+
+  <section class="panel">
+    <h2><b>01</b> <span data-en="What you get">Ce que tu obtiens</span></h2>
+    <div class="body grid">
+      <div class="feat"><div data-en="&lt;b&gt;The MX-5 RF&lt;/b&gt;, hardtop closed or open: black cockpit with its seats and dashboard, headlights lit with their halo, brake lights, Mazda logo. &lt;span class=&quot;tag ok&quot;&gt;tested&lt;/span&gt;"><b>La MX-5 RF</b>, capotée ou décapotée : habitacle noir avec ses sièges et son tableau de bord, phares allumés avec leur halo, feux arrière, logo Mazda. <span class="tag ok">testé</span></div></div>
+      <div class="feat"><div data-en="&lt;b&gt;In French&lt;/b&gt;: menus, voices and cut-scenes (these from your Europe disc). &lt;span class=&quot;tag ok&quot;&gt;tested&lt;/span&gt;"><b>En français</b> : menus, voix et cinématiques (celles-ci depuis ton disque Europe). <span class="tag ok">testé</span></div></div>
+      <div class="feat"><div data-en="&lt;b&gt;Your save loaded at start-up&lt;/b&gt;, without the four questions. &lt;span class=&quot;tag ok&quot;&gt;tested&lt;/span&gt;"><b>Ta sauvegarde chargée au démarrage</b>, sans les quatre questions. <span class="tag ok">testé</span></div></div>
+      <div class="feat"><div data-en="&lt;b&gt;The SD card folder made in one go&lt;/b&gt;: the port, your extracted disc and all of the above, ready to copy. &lt;span class=&quot;tag ok&quot;&gt;tested&lt;/span&gt;"><b>Le dossier de la carte SD fait en une fois</b> : le portage, ton disque extrait et tout ce qui précède, prêt à copier. <span class="tag ok">testé</span></div></div>
+      <div class="feat try"><div data-en="&lt;b&gt;MX-5 RF 2.0 184 hp handling&lt;/b&gt;: 1125 kg, 205 N·m, the ND's 6-speed gearbox, its wheelbase and tracks, more grip. &lt;span class=&quot;tag try&quot;&gt;to try&lt;/span&gt;"><b>La conduite d'une MX-5 RF 2.0 184 ch</b> : 1125 kg, 205 N·m, la boîte 6 de la ND, son empattement et ses voies, plus d'adhérence. <span class="tag try">à essayer</span></div></div>
+      <div class="feat try"><div data-en="&lt;b&gt;« MX-5 RF » in the menus&lt;/b&gt;, and German, Spanish or Italian instead of French. &lt;span class=&quot;tag try&quot;&gt;to try&lt;/span&gt;"><b>« MX-5 RF » dans les menus</b>, et l'allemand, l'espagnol ou l'italien au lieu du français. <span class="tag try">à essayer</span></div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>02</b> <span data-en="Make it on your PC (Windows)">Fabriquer sur ton PC (Windows)</span></h2>
+    <div class="body">
+      <p style="margin:0 0 10px" data-en="You need:">Il te faut :</p>
+      <ul class="need">
+        <li data-en="your Xbox &lt;b&gt;USA&lt;/b&gt; disc as an &lt;code&gt;.iso&lt;/code&gt; (the port runs this version);">ton disque Xbox <b>USA</b> en <code>.iso</code> (le portage tourne avec cette version) ;</li>
+        <li data-en="to play in French (German, Spanish, Italian): your Xbox &lt;b&gt;Europe&lt;/b&gt; disc too;">pour jouer en français (allemand, espagnol, italien) : ton disque Xbox <b>Europe</b> en plus ;</li>
+        <li data-en="the port's release zip, &lt;code&gt;nfsu1x.zip&lt;/code&gt; (&lt;a href=&quot;https://github.com/antoxa2584x/nfsu1-sw/releases/latest&quot;&gt;nfsu1-sw releases&lt;/a&gt;);">le zip de la release du portage, <code>nfsu1x.zip</code> (<a href="https://github.com/antoxa2584x/nfsu1-sw/releases/latest">releases de nfsu1-sw</a>) ;</li>
+        <li data-en="for the MX-5: &lt;code&gt;mazda_mx5_rf.kn5&lt;/code&gt; from the Assetto Corsa mod &lt;a href=&quot;https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html&quot;&gt;Mazda MX-5 RF Hardtop&lt;/a&gt;, extracted.">pour la MX-5 : <code>mazda_mx5_rf.kn5</code> du mod Assetto Corsa
+          <a href="https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html">Mazda MX-5 RF Hardtop</a>, à extraire.</li>
+      </ul>
+      <p style="margin:0 0 14px" data-en="Download the package, put these files in its folder, double-click &lt;code&gt;FABRIQUER.bat&lt;/code&gt; and answer its questions (game, language, roof…). A few minutes later the folder is in &lt;code&gt;SD_nfsu1x&lt;/code&gt;. Without Python on the PC it downloads an official portable copy (python.org) into its own folder: nothing is installed in Windows.">Télécharge le paquet, mets ces fichiers dans son dossier, double-clique sur <code>FABRIQUER.bat</code> et réponds à ses questions
+        (jeu, langue, toit…). Quelques minutes plus tard, le dossier est dans <code>SD_nfsu1x</code>. Sans Python sur le PC, il télécharge
+        une copie portable officielle (python.org) dans son propre dossier : rien n'est installé dans Windows.</p>
+      <p style="margin:0"><a class="go" href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames/releases/download/nfsu-v1/MX5-RF_NFSUnderground.zip" download><span data-en="Download the package">Télécharger le paquet</span></a></p>
+      <p class="tip" data-en="&lt;b&gt;One package for both games&lt;/b&gt;: the same one makes the &lt;a href=&quot;nfsu2.html&quot;&gt;Underground 2&lt;/a&gt; folder. The disc is several GB once extracted, which is why this is done on the PC and not in the browser."><b>Un seul paquet pour les deux jeux</b> : le même fabrique le dossier
+        d'<a href="nfsu2.html">Underground 2</a>. Le disque extrait fait plusieurs Go, c'est pour ça que ça se fait sur le PC et pas dans le navigateur.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>03</b> <span data-en="Copy to the Switch">Copier sur la Switch</span></h2>
+    <div class="body">
+      <ol>
+        <li data-en="Game closed. If the game is already on the card, first copy &lt;code&gt;sdmc:/switch/nfsu1x/game/UDATA&lt;/code&gt; somewhere else: &lt;b&gt;your saves are in there&lt;/b&gt;.">Jeu fermé. Si le jeu est déjà sur ta carte, copie d'abord <code>sdmc:/switch/nfsu1x/game/UDATA</code> ailleurs : <b>tes sauvegardes sont dedans</b>.</li>
+        <li data-en="Copy the &lt;code&gt;switch&lt;/code&gt; folder of &lt;code&gt;SD_nfsu1x&lt;/code&gt; to the root of the card, &lt;b&gt;over&lt;/b&gt; it (merge, replace the files). Never delete or replace the whole &lt;code&gt;game&lt;/code&gt; folder of the card.">Copie le dossier <code>switch</code> de <code>SD_nfsu1x</code> à la racine de la carte, <b>par-dessus</b> (fusionner, remplacer les fichiers). Ne supprime ni ne remplace jamais tout le dossier <code>game</code> de la carte.</li>
+        <li data-en="Start the game with &lt;b&gt;title takeover&lt;/b&gt; (hold R while launching a game), as the port asks. The MX-5 is in the dealer and in quick race, in place of the Miata.">Lance le jeu en <b>title takeover</b> (maintenir R en lançant un jeu), comme le demande le portage. La MX-5 est chez le concessionnaire et en course rapide, à la place de la Miata.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>04</b> <span data-en="In the game">En jeu</span></h2>
+    <div class="body gallery">
+      <figure><img src="../docs/nfsu1_en_jeu.jpg" alt="" loading="lazy"><figcaption data-en="In the garage, headlights on with their halo.">Au garage, phares allumés avec leur halo.</figcaption></figure>
+      <figure><img src="../docs/nfsu1_arriere.jpg" alt="" loading="lazy"><figcaption data-en="The rear, brake lights on.">L'arrière, feux allumés.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>05</b> <span data-en="For the curious">Pour les curieux</span></h2>
+    <div class="body">
+      <p style="margin:0" data-en="How it works (the game swaps the lamp textures for its lit ones, the French cut-scenes, the formats): &lt;a href=&quot;https://github.com/soaresden/MazdaMx5-nd-rf-ingames/tree/main/games/nfs-underground-xbox&quot;&gt;the README on GitHub&lt;/a&gt;. The language, auto-load and SD folder builder were also offered to the port: &lt;a href=&quot;https://github.com/antoxa2584x/nfsu1-sw/pull/8&quot;&gt;#8&lt;/a&gt;, &lt;a href=&quot;https://github.com/antoxa2584x/nfsu1-sw/pull/9&quot;&gt;#9&lt;/a&gt;, &lt;a href=&quot;https://github.com/antoxa2584x/nfsu1-sw/pull/10&quot;&gt;#10&lt;/a&gt;.">Comment ça marche (le jeu remplace les textures des feux par leur version allumée, les cinématiques françaises, les formats) :
+        <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames/tree/main/games/nfs-underground-xbox">le README sur GitHub</a>.
+        La langue, le chargement automatique et le builder du dossier de la carte ont aussi été proposés au portage :
+        <a href="https://github.com/antoxa2584x/nfsu1-sw/pull/8">#8</a>, <a href="https://github.com/antoxa2584x/nfsu1-sw/pull/9">#9</a>,
+        <a href="https://github.com/antoxa2584x/nfsu1-sw/pull/10">#10</a>.</p>
+    </div>
+  </section>
+
+  <footer data-en="Fan project, not affiliated with Mazda, EA or the port's author · no game or model file is provided · &lt;a href=&quot;https://github.com/soaresden/MazdaMx5-nd-rf-ingames&quot;&gt;code (GPL-3.0)&lt;/a&gt;">Projet de fan, sans lien avec Mazda, EA ni l'auteur du portage · aucun fichier du jeu ni du modèle n'est fourni ·
+    <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames">code (GPL-3.0)</a></footer>
+</div>
+</body>
+</html>

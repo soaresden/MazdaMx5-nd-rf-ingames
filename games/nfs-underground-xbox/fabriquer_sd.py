@@ -24,13 +24,47 @@ def ask_file(q, default=''):
         print('  introuvable : %s' % (a or '(rien)'))
 
 
+def guess(folder, game):
+    """Defaults from the files put next to FABRIQUER.bat: the game's discs (USA / Europe by name),
+    the port's release zip, the model; the output folder SD_<port>."""
+    port = {'ug1': 'nfsu1x', 'ug2': 'nfsu2x'}[game]
+    out = {'--out': os.path.join(folder, 'SD_' + port)}
+    try:
+        names = sorted(os.listdir(folder))
+    except OSError:
+        return out
+    for n in names:
+        low = n.lower()
+        two = 'underground 2' in low or 'underground2' in low or 'nfsu2' in low
+        if low.endswith('.iso') and ('underground' in low or 'nfsu' in low) and two == (game == 'ug2'):
+            if '(usa)' in low or 'ntsc' in low:
+                out.setdefault('--usa', os.path.join(folder, n))
+            elif 'europe' in low or 'pal' in low or '(fr' in low or 'fr,' in low:
+                out.setdefault('--europe', os.path.join(folder, n))
+        elif low == port + '.zip' or (low.startswith(port) and low.endswith('.zip')):
+            out.setdefault('--release', os.path.join(folder, n))
+        elif low.endswith('.kn5') and 'mx5' in low and 'collider' not in low:
+            out.setdefault('--kn5', os.path.join(folder, n))
+    return out
+
+
 def yes(q, default='o'):
     return ask(q + ' (o/n)', default).lower().startswith(('o', 'y'))
 
 
 def main():
-    game = sys.argv[1]
-    opts = dict(zip(sys.argv[2::2], sys.argv[3::2]))
+    if len(sys.argv) > 1 and sys.argv[1] in ('ug1', 'ug2'):
+        game, rest = sys.argv[1], sys.argv[2:]
+    else:
+        rest = sys.argv[1:]
+        game = ''
+        while game not in ('1', '2'):
+            game = ask('Quel jeu ? 1 = Need for Speed Underground, 2 = Underground 2')
+        game = 'ug' + game
+    opts = dict(zip(rest[0::2], rest[1::2]))
+    if '--dossier' in opts:
+        for k, v in guess(opts.pop('--dossier'), game).items():
+            opts.setdefault(k, v)
     title = 'Need for Speed Underground' + (' 2' if game == 'ug2' else '')
     print('=' * 60)
     print(' %s : dossier pour la carte SD de la Switch' % title)
