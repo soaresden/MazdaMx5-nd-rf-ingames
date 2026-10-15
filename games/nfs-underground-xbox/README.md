@@ -1,5 +1,8 @@
 # Need for Speed Underground et Underground 2 (Xbox USA)
 
+![La MX-5 RF décapotée dans le garage de Need for Speed Underground, phares allumés](../../docs/nfsu1_en_jeu.jpg)
+![L'arrière de la MX-5 RF dans Underground, feux allumés](../../docs/nfsu1_arriere.jpg)
+
 La MX-5 RF remplace la **Mazda Miata**, qui est dans les deux jeux : elle garde son son moteur, sa
 marque Mazda et sa place dans le jeu. Pour les portages Switch
 [nfsu1-sw](https://github.com/antoxa2584x/nfsu1-sw) et [nfsu2-sw](https://github.com/antoxa2584x/nfsu2-sw),
@@ -36,8 +39,19 @@ sur le fichier de la Miata :
 les budgets de triangles baissent tant qu'il ne l'est pas.
 
 Textures : les images de la MX-5 (planche habitacle / plastiques / détails, feux) prennent la
-place de textures de la Miata que la voiture n'utilise plus (moteurs), au même format (DXT1) ;
-peinture : celle du jeu (`MIATA_SKIN1`).
+place de textures de la Miata, au même format ; peinture : celle du jeu (`MIATA_SKIN1`).
+
+- **Underground 2** : planche dans `MIATA_ENGINE`, feux dans `MIATA_STYLE01_ENGINE` (DXT1) ;
+  les phares et feux arrière sur les textures communes du jeu (`HEADLIGHT_LEFT` / `RIGHT`…),
+  qu'il remplace quand les feux s'allument.
+- **Underground** ne dessine pas les textures moteur sur les autres pièces, ni tel quel ce qui
+  est dans les textures de feux de la voiture : il remplace `MIATA_KIT00_HEADLIGHT_LEFT` /
+  `RIGHT` par `HEADLIGHT_ON` (phares allumés, au garage comme en course) ou `HEADLIGHT_OFF`, et
+  les feux arrière par leur version allumée. La planche (moitié gauche) et les phares (moitié
+  droite) font donc une seule image 128x64, mise dans les quatre textures de phare (8 bits à
+  palette, swizzlées Xbox, aux couleurs de la palette d'origine de chacune) ; dans `ON`, les
+  phares sont éclaircis. Les vitres des phares prennent, comme sur la Miata, une texture du jeu
+  par côté en un seul point : le jeu les fait briller (le halo, à 3 cm devant la vitre).
 
 ## Les formats
 
