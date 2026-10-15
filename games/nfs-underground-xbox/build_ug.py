@@ -39,8 +39,28 @@ SH = {'CARSKIN': 0xD6D6080A, 'DULLPLASTIC': 0x0FEDEE40, 'WINDSHIELD': 0x471A1DCA
 SKIN = H(CAR + '_SKIN1')          # the paint (made by the game)
 WINDOW = 0x7B220DDF               # WINDOW_FRONT, the game's window glass
 HEADLIGHT_GLASS = 0xD17A8EBE      # the glass texture of the Miata's headlights
+# Underground: the Miata's right headlight glass has its own texture, and both glasses take one
+# spot of them (the game lights the glass up when the headlights are on: the halo)
+HEADLIGHT_GLASS_R_UG1 = 0x013B2E11
+GLASS_UV_UG1 = (0.062, 0.903)
 ATLAS_SLOT = CAR + '_ENGINE'      # 256x256 DXT1: cockpit, plastics, details
 LIGHTS_SLOT = CAR + '_STYLE01_ENGINE'   # 256x256 DXT1 (mips): the lamps
+# Underground (1) does not draw the car's engine textures on the other parts (the cockpit and the
+# lamps came out see-through, the Miata's own driver silhouette showing): the atlas goes in
+# MIATA_BADGING (128x128 DXT3, used by the Miata's BASE) and the lamps in the Miata's brake light
+# texture (128x64 DXT1), both drawn on the stock car.
+# MIATA_BADGING (DXT3) is drawn added onto what is behind (black = invisible, the cockpit came out
+# white): the atlas goes in another DXT1 brake light texture of the Miata, drawn opaque like the lamps
+# The Miata's three DXT1 brake light textures (128x64): 0x5BE44238 is drawn as it is (the cockpit
+# atlas), 0xD8DB50CB is tinted red by the game (the brake lights), 0xD103B06E the headlights.
+# The game draws none of these lamp textures as they are: it swaps HEADLIGHT_LEFT / RIGHT for
+# HEADLIGHT_ON (the lights are on in the garage: the cockpit came out as the lit headlight, cream
+# glass and orange indicator) or HEADLIGHT_OFF, and the brake lights for their lit ones (red).
+# So the cockpit atlas (left half) and the lamps (right half) make one 128x64 image, put in the
+# four headlight textures (8-bit paletted): whichever one the game draws, it is ours.
+SLOTS_UG1 = {'atlas': 0xABDC2305, 'lights': 0xABDC2305, 'brake': 0xD8DB50CB}
+HEADLIGHTS_UG1 = [H(CAR + '_KIT00_HEADLIGHT_' + x) for x in ('LEFT', 'RIGHT', 'ON', 'OFF')]
+LIT_UG1 = 0.4    # HEADLIGHT_ON: what is left of the lamps' darkness
 OPAQUE, BLENDED = 0x14180, 0x1C180
 # vertex layouts: Underground 36 bytes (position, colour, uv, normal), Underground 2 32 bytes
 # (position, uv, normal: no colour)
@@ -49,6 +69,7 @@ GAME = 'ug1'
 
 ATLAS = 'atlas'
 LIGHTS = 'lights'
+BRAKE = 'brake'
 # MW material -> (shader, texture, flags)
 MATS = {
     'paint': ('CARSKIN', SKIN, OPAQUE), 'int_paint': ('CARSKIN', SKIN, OPAQUE),
@@ -157,6 +178,10 @@ def material(mat):
                 shader, texture = LAMP_UG2, HEAD_UG2[side]
             elif shader == 'BRAKELIGHT':
                 shader, texture = BRAKE_UG2, BRAKE_TEX_UG2[side]
+        if GAME == 'ug1' and shader == 'BRAKELIGHT':
+            texture = BRAKE
+        if GAME == 'ug1' and shader == 'HEADLIGHTGLASS' and mat.endswith('_R'):
+            texture = HEADLIGHT_GLASS_R_UG1
         return shader, texture, flags
     return ('DULLPLASTIC', ATLAS, OPAQUE)
 
@@ -199,13 +224,27 @@ def make_mesh(subs, keys):
                 uv = MW.atlas_uv(sb.mat, sb.uv)
             elif texture == SKIN:
                 uv = np.tile(np.array(SKIN_UV, sb.uv.dtype), (len(sb.uv), 1))
+            elif GAME == 'ug1' and texture in (HEADLIGHT_GLASS, HEADLIGHT_GLASS_R_UG1):
+                uv = np.tile(np.array(GLASS_UV_UG1, sb.uv.dtype), (len(sb.uv), 1))
             else:
                 uv = sb.uv
+            if GAME == 'ug1' and texture in (ATLAS, LIGHTS):
+                # its half of the shared image (64 texels wide, half a texel in from the edges)
+                uv = np.array(uv, np.float32)
+                uv[:, 0] = (texture == LIGHTS) * 0.5 + (0.5 + np.clip(uv[:, 0], 0, 1) * 63) / 128
             used = np.unique(sb.tri)
             remap = np.full(len(sb.pos), -1, np.int64)
             remap[used] = np.arange(len(used)) + base
             p = sb.pos[used].astype(np.float32)
-            vb.append(pack_vertices(p, uv[used], sb.nrm[used], sb.col[used]))
+            col = sb.col[used]
+            if GAME == 'ug1' and texture == ATLAS:
+                # half the vertex colour on the cockpit (dark rather than too light); the lamps
+                # white, as the Miata's
+                col = np.asarray(col, np.uint32)
+                col = (col & 0xFF000000) | ((col >> 1) & 0x007F7F7F)
+            elif GAME == 'ug1' and texture == LIGHTS:
+                col = np.full(len(col), 0xFFFFFFFF, np.uint32)
+            vb.append(pack_vertices(p, uv[used], sb.nrm[used], col))
             ib.append(remap[sb.tri].astype(np.uint16).ravel())
             base += len(used)
             lo = p.min(0) if lo is None else np.minimum(lo, p.min(0))
@@ -348,9 +387,12 @@ def _build(geometry, textures_bin, kn5, top, game, log, scale):
     ac_tex, parts = collect(kn5, top)
     tpk = (tpk_ug.Tpk2 if game == 'ug2' else tpk_ug.Tpk)(textures_bin)
     slot = {t['name']: t for t in tpk.tex}
-    keys = {ATLAS: slot[ATLAS_SLOT]['hash'], LIGHTS: slot[LIGHTS_SLOT]['hash']}
+    if game == 'ug1':
+        keys = {ATLAS: SLOTS_UG1['atlas'], LIGHTS: SLOTS_UG1['lights'], BRAKE: SLOTS_UG1['brake']}
+    else:
+        keys = {ATLAS: slot[ATLAS_SLOT]['hash'], LIGHTS: slot[LIGHTS_SLOT]['hash']}
     # textures: the atlas of Most Wanted (same layout, 256 texels) and the lamps
-    n = 256
+    n = 256   # the atlas is drawn at 256 and reduced by put() to the slot's size
 
     def pic(name, size):
         im = Image.open(__import__('io').BytesIO(ac_tex[name])).convert('RGB').convert('RGBA')
@@ -363,8 +405,22 @@ def _build(geometry, textures_bin, kn5, top, game, log, scale):
     for (u, v), k in MW.INTERIOR_PATCHES.values():
         g = int(round(255 * k))
         atlas.paste((g, g, g, 255), (int(u * n) - 30, int(v * n) - 30, int(u * n) + 30, int(v * n) + 30))
-    tpk.put(keys[ATLAS], np.asarray(atlas))
-    tpk.put(keys[LIGHTS], np.asarray(pic('EXT_Lights.dds', (256, 256))))
+    if game == 'ug1':
+        both = Image.new('RGBA', (256, 128))
+        both.paste(atlas.resize((128, 128), Image.LANCZOS), (0, 0))
+        both.paste(pic('EXT_Lights.dds', (128, 128)), (128, 0))
+        lit = np.asarray(both).copy()
+        # HEADLIGHT_ON: the lamps lit up (lighter, slightly warm), as the Miata's lit headlight
+        lamps = lit[:, 128:, :3].astype(np.float32)
+        lit[:, 128:, :3] = (255 - (255 - lamps) * LIT_UG1).clip(0, 255).astype(np.uint8)
+        lit[:, 128:, 2] = (lit[:, 128:, 2] * 0.92).astype(np.uint8)
+        for h in HEADLIGHTS_UG1:
+            tpk.put(h, lit if h == HEADLIGHTS_UG1[2] else np.asarray(both))
+    else:
+        tpk.put(keys[ATLAS], np.asarray(atlas))
+        tpk.put(keys[LIGHTS], np.asarray(pic('EXT_Lights.dds', (256, 256))))
+    if BRAKE in keys:
+        tpk.put(keys[BRAKE], np.asarray(pic('EXT_Lights.dds', (256, 256))))
     # geometry
     d = geometry
     solids = geo_ug.read(d)
@@ -393,8 +449,25 @@ def _build(geometry, textures_bin, kn5, top, game, log, scale):
         p = p[(p[:, 1] > 0) == left]
         return p.mean(0) if len(p) else None
 
+    def headlight_halo(left):
+        """Underground: where the game draws the halo of a headlight. The centre of the whole lamp
+        sits low and back (the small lamps of the bumper pull it down) and the halo stays hidden
+        in the body: the halo goes 3 cm in front of the main lamp's glass."""
+        pts = [sb.pos[np.unique(sb.tri)] for sb in parts.get('KIT00_HEADLIGHT', []) if sb.mat.startswith('hlg')]
+        if not pts:
+            return lamp_centre('KIT00_HEADLIGHT', left)
+        p = np.concatenate(pts)
+        p = p[(p[:, 1] > 0) == left]
+        p = p[p[:, 2] > p[:, 2].max() - 0.15]          # the main lamp, not the bumper's
+        c = p.mean(0)
+        near = p[np.hypot(p[:, 1] - c[1], p[:, 2] - c[2]) < 0.05]
+        c[0] = (near if len(near) else p)[:, 0].max() + 0.03
+        return c
+
     lamps = {0x9DB90133: lamp_centre('KIT00_HEADLIGHT', True), 0xD09091C6: lamp_centre('KIT00_HEADLIGHT', False),
              0x31A66786: lamp_centre('KIT00_BRAKELIGHT', True), 0xBF700A79: lamp_centre('KIT00_BRAKELIGHT', False)}
+    if game == 'ug1':
+        lamps[0x9DB90133], lamps[0xD09091C6] = headlight_halo(True), headlight_halo(False)
 
     def where(key, xyz):
         if key in lamps and lamps[key] is not None:

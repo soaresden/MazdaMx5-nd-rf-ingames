@@ -29,6 +29,47 @@ def _find(d, cid, o=0, end=None):
     return None
 
 
+def xbox_swizzle(w, h):
+    """Offset of each texel (y, x) in an Xbox swizzled texture: the bits of x and y interleaved
+    (x first) while both have bits left, then the remaining ones."""
+    ys, xs = np.mgrid[0:h, 0:w]
+    off = np.zeros_like(xs)
+    bit = bx = by = 0
+    wb, hb = w.bit_length() - 1, h.bit_length() - 1
+    while bx < wb or by < hb:
+        if bx < wb:
+            off |= ((xs >> bx) & 1) << bit
+            bit += 1
+            bx += 1
+        if by < hb:
+            off |= ((ys >> by) & 1) << bit
+            bit += 1
+            by += 1
+    return off
+
+
+def _p8(im, t, stock):
+    """8-bit paletted texture data: swizzled indices of each mip level, then the 256-colour palette
+    (BGRA), as the Miata's headlight textures store them. The game keeps the texture's original
+    palette (a new one is ignored: the black cockpit came out cream and orange, the headlight's
+    colours), so the pixels take the nearest colours of the original palette, which is kept."""
+    from PIL import Image
+    w, h = t['w'], t['h']
+    pal = np.frombuffer(stock[-1024:], np.uint8).reshape(256, 4)
+    ref = Image.new('P', (1, 1))
+    ref.putpalette(pal[:, 2::-1].ravel().tolist())
+    q = im.convert('RGB').resize((w, h), Image.LANCZOS).quantize(palette=ref, dither=Image.Dither.NONE)
+    out = b''
+    for level in range(max(1, t['mips'])):
+        lw, lh = max(1, w >> level), max(1, h >> level)
+        idx = np.asarray(q if level == 0 else q.resize((lw, lh), Image.NEAREST), np.uint8)
+        flat = np.zeros(lw * lh, np.uint8)
+        flat[xbox_swizzle(lw, lh).ravel()] = idx.ravel()
+        out += flat.tobytes()
+    out = out[:t['size']].ljust(t['size'], b'\0')
+    return out + pal.tobytes()
+
+
 class Tpk:
     """0x33310003 gives, per texture: hash, file offset and size of its JDLZ-compressed pixels,
     flags; the streams follow each other in 0x33320001 (its payload padded with 0x11 to 0x80)."""
@@ -65,14 +106,18 @@ class Tpk:
         from PIL import Image
         import dxt
         t = self.by_hash[hash_]
-        if t['fmt'] != DXT1:
-            raise ValueError('%s: format %#x not supported' % (t['name'], t['fmt']))
         im = Image.fromarray(np.asarray(rgba, np.uint8), 'RGBA')
+        if t['fmt'] == P8:
+            self.new[hash_] = _p8(im, t, self.pixels(hash_))
+            return t
+        if t['fmt'] not in (DXT1, DXT3):
+            raise ValueError('%s: format %#x not supported' % (t['name'], t['fmt']))
+        kind = 'DXT1' if t['fmt'] == DXT1 else 'DXT3'
         out = b''
         w, h = t['w'], t['h']
         for level in range(max(1, t['mips'])):
             lw, lh = max(4, w >> level), max(4, h >> level)
-            out += dxt.encode(im.resize((lw, lh), Image.LANCZOS), 'DXT1')
+            out += dxt.encode(im.resize((lw, lh), Image.LANCZOS), kind)
         out = out[:t['size']].ljust(t['size'], b'\0')
         self.new[hash_] = out
         return t

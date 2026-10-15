@@ -72,11 +72,19 @@ def _alpha_blocks(a):
     return out
 
 
+def _alpha4_blocks(a):
+    """a: (n, 16) float -> (n, 8) uint8 DXT3 alpha blocks (4 bits per texel, first texel low)."""
+    q = np.clip(np.round(a / 17.0), 0, 15).astype(np.uint8)
+    return (q[:, 0::2] | (q[:, 1::2] << 4)).astype(np.uint8)
+
+
 def encode(img, fmt):
-    """PIL image (w, h multiples of 4) -> linear DXT1 or DXT5 blocks, little endian."""
+    """PIL image (w, h multiples of 4) -> linear DXT1, DXT3 or DXT5 blocks, little endian."""
     a = np.asarray(img.convert('RGBA'), np.float32)
     b = _blocks(a)
     colour = _colour_blocks(b[..., :3])
     if fmt == 'DXT1':
         return colour.tobytes()
+    if fmt == 'DXT3':
+        return np.concatenate([_alpha4_blocks(b[..., 3]), colour], 1).tobytes()
     return np.concatenate([_alpha_blocks(b[..., 3]), colour], 1).tobytes()
