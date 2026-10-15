@@ -40,10 +40,10 @@ page does the same in the browser, much more slowly (about twenty minutes).
 
 | Game | Platform | Car replaced | Status |
 |---|---|---|---|
-| [Need for Speed: Most Wanted (2005)](games/nfs-most-wanted-x360/) | Xbox 360, on Switch with [nfsmw-nx](https://github.com/StevensND/nfsmw-nx) | your choice (tested: Lexus IS 300) | **works** |
+| [Need for Speed: Most Wanted (2005)](games/nfs-most-wanted-x360/) | Xbox 360, on Switch with [nfsmw-nx](https://github.com/StevensND/nfsmw-nx) or in Xenia (disc image) | your choice (tested: Lexus IS 300) | **works** |
 | [Gran Turismo](games/gran-turismo-ps1/) | PS1 (PAL), .bin/.cue image for DuckStation | the Eunos Roadsters (new, used) | **works** (tested in game) |
-| [Need for Speed: Underground](games/nfs-underground-xbox/) | Xbox USA, on Switch with [nfsu1-sw](https://github.com/antoxa2584x/nfsu1-sw) | Mazda Miata | **testing** |
-| [Need for Speed: Underground 2](games/nfs-underground-xbox/) | Xbox USA, on Switch with [nfsu2-sw](https://github.com/antoxa2584x/nfsu2-sw) | Mazda Miata | **testing** |
+| [Need for Speed: Underground](games/nfs-underground-xbox/) | Xbox USA, on Switch with [nfsu1-sw](https://github.com/antoxa2584x/nfsu1-sw) | Mazda Miata | **works** (tested in game) |
+| [Need for Speed: Underground 2](games/nfs-underground-xbox/) | Xbox USA, on Switch with [nfsu2-sw](https://github.com/antoxa2584x/nfsu2-sw) | Mazda Miata | **works** (tested in game) |
 | Need for Speed: Carbon | to be decided | — | planned |
 | Gran Turismo 2 | PS1 | — | planned |
 
