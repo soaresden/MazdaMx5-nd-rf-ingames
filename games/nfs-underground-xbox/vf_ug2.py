@@ -1,7 +1,9 @@
-"""French version of NFS Underground 2 for nfsu2-sw (Xbox NTSC-U recompiled for Switch), port
-unchanged (mode A, tested on Switch 2026-10-12: career, French speech in races).
+"""French, German or Italian version of NFS Underground 2 for nfsu2-sw (Xbox NTSC-U recompiled
+for Switch), port unchanged (mode A; French tested on Switch 2026-10-12: career, French speech
+in races). The Europe disc has the speech and cut-scenes of these three (suffixes _FR, _GR, _IT),
+no Spanish, Dutch or Swedish speech.
 
-From the Europe disc, into the extracted USA game's NFSUNDER/:
+From the Europe disc, into the extracted USA game's NFSUNDER/ (French shown):
   ZZDATA10.BIN  the French text, speech (UG2_Speech_FR.*) and cut-scenes (*_FR.vp6)
   ZZDATA11.BIN  Global/FrontEndMemoryFile.bin and InGameMemoryFile.bin with the French speech
                 index, events and script (the game preloads a copy of them: with the English
@@ -27,6 +29,8 @@ MOVIES = ['ealogo', 'PSA', 'DriftTut', 'DragTut', 'StreetXTut'] + \
 UNNAMED_MOVIE_US = 0xA420FE8B   # MOVIES\<?>.vp6, a 4th tutorial-like movie (name unknown)
 MEMFILES = ['Global\\FrontEndMemoryFile.bin', 'Global\\InGameMemoryFile.bin']
 SPEECH = ['evt', 'idx', 'csi']
+# language -> (text file, suffix of its speech and cut-scenes on the Europe disc)
+LANGS = {'fr': ('FRENCH', 'FR'), 'de': ('GERMAN', 'GR'), 'it': ('ITALIAN', 'IT')}
 
 
 def bhash(name):
@@ -69,18 +73,18 @@ class EuDisc:
             return f.read(ln)
 
 
-def plan(with_thx=True):
-    """[(label, USA hash the port reads, Europe hash of the French data)]"""
-    p = [('LANGUAGES\\FRENCH.BIN', bhash('LANGUAGES\\ENGLISH.BIN'), bhash('LANGUAGES\\FRENCH.BIN'))]
+def plan(lang='fr', with_thx=True):
+    """[(label, USA hash the port reads, Europe hash of the language's data)]"""
+    text, c = LANGS[lang]
+    p = [('LANGUAGES\\%s.BIN' % text, bhash('LANGUAGES\\ENGLISH.BIN'), bhash('LANGUAGES\\%s.BIN' % text))]
     for ext in ('big', 'idx', 'evt', 'csi'):
-        p.append(('sound\\speech\\UG2_Speech_FR.' + ext, bhash('sound\\speech\\UG2_Speech.' + ext),
-                  bhash('sound\\speech\\UG2_Speech_FR.' + ext)))
+        p.append(('sound\\speech\\UG2_Speech_%s.%s' % (c, ext), bhash('sound\\speech\\UG2_Speech.' + ext),
+                  bhash('sound\\speech\\UG2_Speech_%s.%s' % (c, ext))))
     for m in MOVIES:
-        p.append(('MOVIES\\%s_FR.vp6' % m, bhash('MOVIES\\%s.vp6' % m), bhash('MOVIES\\%s_FR.vp6' % m)))
-    fr = _fwd(_back(UNNAMED_MOVIE_US, '.VP6'), '_FR.VP6')
-    p.append(('MOVIES\\<?>_FR.vp6', UNNAMED_MOVIE_US, fr))
+        p.append(('MOVIES\\%s_%s.vp6' % (m, c), bhash('MOVIES\\%s.vp6' % m), bhash('MOVIES\\%s_%s.vp6' % (m, c))))
+    p.append(('MOVIES\\<?>_%s.vp6' % c, UNNAMED_MOVIE_US, _fwd(_back(UNNAMED_MOVIE_US, '.VP6'), '_%s.VP6' % c)))
     if with_thx:
-        p.append(('MOVIES\\THX_logo_FR.vp6', bhash('MOVIES\\THX_logo.vp6'), bhash('MOVIES\\THX_logo_FR.vp6')))
+        p.append(('MOVIES\\THX_logo_%s.vp6' % c, bhash('MOVIES\\THX_logo.vp6'), bhash('MOVIES\\THX_logo_%s.vp6' % c)))
     return p
 
 
@@ -94,8 +98,10 @@ def _memfile_entries(b):
     return out
 
 
-def build(game_dir, eu_iso, with_thx=True, log=print):
-    """Writes ZZDATA10.BIN, ZZDATA11.BIN and the French ZDIR.BIN into game_dir/NFSUNDER."""
+def build(game_dir, eu_iso, lang='fr', log=print):
+    """Writes ZZDATA10.BIN, ZZDATA11.BIN and the ZDIR.BIN of `lang` (fr, de, it) into
+    game_dir/NFSUNDER."""
+    text, c = LANGS[lang]
     with open(os.path.join(game_dir, 'default.xbe'), 'rb') as f:
         if hashlib.sha256(f.read()).hexdigest() != US_XBE_SHA256:
             raise SystemExit("default.xbe n'est pas celui du disque USA (celui du portage)")
@@ -109,8 +115,9 @@ def build(game_dir, eu_iso, with_thx=True, log=print):
     sizes = [os.path.getsize(os.path.join(nfs, 'ZZDATA%d.BIN' % i)) for i in range(10)]
     base10 = sum(s // SECTOR for s in sizes)
     eu = EuDisc(eu_iso)
-    if bhash('sound\\speech\\UG2_Speech_FR.big') not in eu.e:
-        raise SystemExit("ce disque n'a pas les voix françaises (ce n'est pas le disque Europe)")
+    if bhash('sound\\speech\\UG2_Speech_%s.big' % c) not in eu.e:
+        raise SystemExit("ce disque n'a pas les voix de %s (ce n'est pas le disque Europe)" % text)
+    with_thx = bhash('MOVIES\\THX_logo_%s.vp6' % c) in eu.e     # French only
 
     def us_read(name):
         h = bhash(name)
@@ -122,15 +129,15 @@ def build(game_dir, eu_iso, with_thx=True, log=print):
     placed = {}                         # USA hash -> (pack, sector, length, checksum or None, label)
     sec = 0
     with open(os.path.join(nfs, 'ZZDATA10.BIN'), 'wb') as f:
-        for label, tgt, src in plan(with_thx):
+        for label, tgt, src in plan(lang, with_thx):
             data = eu.read(src)
             placed[tgt] = (10, sec, len(data), eu.e[src][5], label)
             f.write(data + bytes(-len(data) % SECTOR))
             sec += (len(data) + SECTOR - 1) // SECTOR
     base11 = base10 + sec
-    log('  ZZDATA10.BIN : %d fichiers français, %d Mo' % (len(placed), (sec * SECTOR) >> 20))
-    # the two preloaded bundles, with the French speech evt/idx/csi patched in place
-    fr = {ext: eu.read(bhash('sound\\speech\\UG2_Speech_FR.' + ext)) for ext in SPEECH}
+    log('  ZZDATA10.BIN : %d fichiers (%s), %d Mo' % (len(placed), text, (sec * SECTOR) >> 20))
+    # the two preloaded bundles, with the language's speech evt/idx/csi patched in place
+    fr = {ext: eu.read(bhash('sound\\speech\\UG2_Speech_%s.%s' % (c, ext))) for ext in SPEECH}
     zz11 = bytearray()
     for name in MEMFILES:
         b = bytearray(us_read(name))
@@ -160,10 +167,10 @@ def build(game_dir, eu_iso, with_thx=True, log=print):
         for r in rows:
             f.write(struct.pack('<6I', *r))
     # check: every redirected file read back
-    for label, tgt, src in plan(with_thx):
+    for label, tgt, src in plan(lang, with_thx):
         num, s, ln, _, _ = placed[tgt]
         with open(os.path.join(nfs, 'ZZDATA10.BIN'), 'rb') as f:
             f.seek(s * SECTOR)
             assert f.read(ln) == eu.read(src), label
-    log('  ZZDATA11.BIN : index des voix françaises dans les 2 fichiers préchargés ; ZDIR.BIN redirigé')
+    log('  ZZDATA11.BIN : index des voix (%s) dans les 2 fichiers préchargés ; ZDIR.BIN redirigé' % text)
     return placed

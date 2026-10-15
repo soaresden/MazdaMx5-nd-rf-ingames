@@ -3,7 +3,7 @@
 (from the Europe disc), the MX-5 RF in place of the Miata, its handling and its name.
 
 python make_sd.py --game ug1|ug2 --usa <USA ISO> --release <nfsu1x.zip|nfsu2x.zip> --out <folder>
-                  [--europe <Europe ISO>] [--nro <other NRO>] [--env <port>_env.txt] [--kn5 mazda_mx5_rf.kn5 --top closed|open]
+                  [--europe <Europe ISO> [--langue fr|de|it|es]] [--nro <other NRO>] [--env <port>_env.txt] [--kn5 mazda_mx5_rf.kn5 --top closed|open]
                   [--perf] [--names] [--no-autoload]
 
 Writes <folder>/switch/nfsu1x/ (or nfsu2x/): the NRO, <port>_env.txt, game/. Nothing is written
@@ -32,6 +32,7 @@ import vf_ug2      # noqa: E402
 import zdir_ug2    # noqa: E402
 
 PORT = {'ug1': 'nfsu1x', 'ug2': 'nfsu2x'}
+LANG_NAME = {'fr': 'français', 'de': 'allemand', 'it': 'italien', 'es': 'espagnol'}
 TITLE = {'ug1': 'Need for Speed Underground', 'ug2': 'Need for Speed Underground 2'}
 
 
@@ -150,7 +151,9 @@ def main():
     ap.add_argument('--usa', required=True, help='image du disque Xbox USA')
     ap.add_argument('--release', required=True, help='zip de la release du portage')
     ap.add_argument('--out', required=True, help='dossier de sortie (la racine de la carte SD)')
-    ap.add_argument('--europe', help='image du disque Xbox Europe : version française')
+    ap.add_argument('--europe', help='image du disque Xbox Europe : jeu dans la langue de --langue')
+    ap.add_argument('--langue', default='fr', choices=('fr', 'de', 'it', 'es'),
+                    help='avec --europe : fr, de, it (Underground 2 : pas es, sans voix espagnoles)')
     ap.add_argument('--nro', help='un autre NRO que celui du zip')
     ap.add_argument('--env', help='ton fichier de réglages (<port>_env.txt) à la place de celui du zip')
     ap.add_argument('--kn5', help='modèle Assetto Corsa de la MX-5 RF : la MX-5 à la place de la Miata')
@@ -161,6 +164,8 @@ def main():
     a = ap.parse_args()
     if (a.perf or a.names) and not a.kn5:
         ap.error('--perf et --names vont avec --kn5')
+    if a.game == 'ug2' and a.langue not in vf_ug2.LANGS:
+        ap.error("Underground 2 : --langue fr, de ou it (le disque Europe n'a pas de voix espagnoles)")
     port = PORT[a.game]
     dest = os.path.join(a.out, 'switch', port)
     game_dir = os.path.join(dest, 'game')
@@ -175,21 +180,25 @@ def main():
     env = os.path.join(dest, port + '_env.txt')
     settings = []
     if a.europe:
-        print('version française : %s' % a.europe)
+        name = LANG_NAME[a.langue]
+        print('langue %s : %s' % (name, a.europe))
         if a.game == 'ug1':
-            vf_ug1.french_movies(a.europe, a.usa, game_dir)
+            vf_ug1.dubbed_movies(a.europe, a.usa, game_dir, a.langue)
             if b'NFSU1_LANGUAGE' in nro:
-                settings.append('NFSU1_LANGUAGE=fr')
-                lines.append('- en français : NFSU1_LANGUAGE=fr + les cinématiques françaises du disque Europe')
-            else:
+                settings.append('NFSU1_LANGUAGE=' + a.langue)
+                lines.append('- en %s : NFSU1_LANGUAGE=%s + les cinématiques doublées du disque Europe' % (name, a.langue))
+            elif a.langue == 'fr':
                 xbe = on_disc(game_dir, t, 'default.xbe')
                 write(xbe, vf_ug1.patch_xbe(open(xbe, 'rb').read()))
                 lines.append('- en français : ce NRO ne connaît pas NFSU1_LANGUAGE, donc default.xbe USA '
                              'corrigé (plan B) + les cinématiques françaises du disque Europe')
+            else:
+                raise SystemExit("ce NRO ne connaît pas NFSU1_LANGUAGE (antoxa2584x/nfsu1-sw#8) : sans lui, "
+                                 "seul le français est possible (--nro pour en donner un autre)")
         else:
-            vf_ug2.build(game_dir, a.europe)
-            lines.append('- en français : NFSUNDER/ZZDATA10.BIN, ZZDATA11.BIN et ZDIR.BIN '
-                         '(retour à l\'anglais : remettre ZDIR_anglais.BIN à la place de ZDIR.BIN)')
+            vf_ug2.build(game_dir, a.europe, a.langue)
+            lines.append('- en %s : NFSUNDER/ZZDATA10.BIN, ZZDATA11.BIN et ZDIR.BIN '
+                         "(retour à l'anglais : remettre ZDIR_anglais.BIN à la place de ZDIR.BIN)" % name)
     if a.game == 'ug1' and not a.no_autoload:
         if b'NFSU1_AUTOLOAD' in nro:
             settings.append('NFSU1_AUTOLOAD=1')

@@ -43,8 +43,10 @@ def main():
         args += ['--nro', opts['--nro']]
     if opts.get('--env') and yes('Reprendre tes réglages : %s' % opts['--env']):
         args += ['--env', opts['--env']]
-    if yes('En français ? (il faut le disque Europe)'):
-        args += ['--europe', ask_file('Disque Xbox Europe (.iso)', opts.get('--europe', ''))]
+    langs = 'fr, de, it' + (', es' if game == 'ug1' else '')
+    lang = ask('Langue : en = anglais (disque USA seul), ou %s (il faut le disque Europe)' % langs, 'fr').lower()
+    if lang in langs.split(', '):
+        args += ['--europe', ask_file('Disque Xbox Europe (.iso)', opts.get('--europe', '')), '--langue', lang]
     top = ask('La MX-5 RF à la place de la Miata : C = capotée, D = décapotée, N = non', 'D').upper()
     if top in ('C', 'D'):
         args += ['--kn5', ask_file('Modèle de la MX-5 (mazda_mx5_rf.kn5)', opts.get('--kn5', '')),

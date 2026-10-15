@@ -1,10 +1,12 @@
-"""French version of NFS Underground for nfsu1-sw (Xbox NTSC-U recompiled for Switch).
+"""French (or German, Spanish, Italian) version of NFS Underground for nfsu1-sw (Xbox NTSC-U
+recompiled for Switch).
 
-The French text and speech are already on the USA disc; only the dubbed cut-scenes are not:
-MOVIES/FR*.MAD of the Europe disc (only their sound differs from the USA ones). The port picks
-the language with NFSU1_LANGUAGE (antoxa2584x/nfsu1-sw#8). For a port without it, plan B: the USA
-default.xbe with data tables swapped so that language 0 is French (code untouched, so the
-lifted C still matches; tested on Switch 2026-10-12).
+The text and speech of these languages are already on the USA disc; only the dubbed cut-scenes
+are not: MOVIES/FR*.MAD (GR*, SP*, and two IT*) of the Europe disc, whose sound only differs from
+the USA ones. The port picks the language with NFSU1_LANGUAGE (antoxa2584x/nfsu1-sw#8) and plays
+the English cut-scene when a dubbed one is missing. For a port without it, plan B (French only):
+the USA default.xbe with data tables swapped so that language 0 is French (code untouched, so
+the lifted C still matches; tested on Switch 2026-10-12).
 """
 import hashlib
 import os
@@ -22,9 +24,14 @@ STREAMS = 0x24B438         # 9 x {.ast stream, .abk bank}; 4 English, 5 French
 LOCALE_EN = 0x1F4874       # "memcard\XBOX_LOCALE_ENGLISH.loc" (32 bytes)
 
 
-def french_movies(eu_iso, usa_iso, game_dir, log=print):
-    """MOVIES/FR*.MAD of the Europe disc into game_dir/MOVIES; FR04GUME.MAD, asked for in French
-    but on neither disc, is the English 04_GUM_E. Returns how many."""
+# NFSU1_LANGUAGE code -> prefix of the dubbed cut-scenes on the Europe disc
+MOVIE_PREFIX = {'fr': 'FR', 'de': 'GR', 'es': 'SP', 'it': 'IT'}
+
+
+def dubbed_movies(eu_iso, usa_iso, game_dir, lang='fr', log=print):
+    """MOVIES/<prefix>*.MAD of the Europe disc into game_dir/MOVIES. In French, FR04GUME.MAD, asked
+    for but on neither disc, is the English 04_GUM_E (needed by plan B). Returns how many."""
+    prefix = MOVIE_PREFIX[lang]
     te, tu = disc_ug.tree(eu_iso), disc_ug.tree(usa_iso)
     ke = disc_ug.find(te, 'default.xbe')
     if not ke or hashlib.sha1(disc_ug.read(eu_iso, te[ke])).hexdigest() != EUR_XBE_SHA1:
@@ -32,15 +39,15 @@ def french_movies(eu_iso, usa_iso, game_dir, log=print):
     n = 0
     for k in sorted(te):
         up = k.upper()
-        if up.startswith('MOVIES/FR') and up.endswith('.MAD'):
+        if up.startswith('MOVIES/' + prefix) and up.endswith('.MAD'):
             disc_ug.copy(eu_iso, te[k], os.path.join(game_dir, *k.split('/')))
             n += 1
     if not n:
-        raise SystemExit("pas de cinématiques françaises : ce n'est pas le disque Europe de NFS Underground")
-    if not disc_ug.find(te, 'MOVIES/FR04GUME.MAD'):
+        raise SystemExit("pas de cinématiques %s* : ce n'est pas le disque Europe de NFS Underground" % prefix)
+    if lang == 'fr' and not disc_ug.find(te, 'MOVIES/FR04GUME.MAD'):
         k = disc_ug.find(tu, 'MOVIES/04_GUM_E.MAD')
         disc_ug.copy(usa_iso, tu[k], os.path.join(game_dir, 'MOVIES', 'FR04GUME.MAD'))
-    log('  %d cinématiques françaises (disque Europe)' % n)
+    log('  %d cinématiques doublées %s* (disque Europe)' % (n, prefix))
     return n
 
 

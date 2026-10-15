@@ -35,7 +35,9 @@ carte, avec en option la version française (disque Europe) et la MX-5 RF :
 python make_sd.py --game ug1 --usa "Need for Speed - Underground (USA).iso" --release nfsu1x.zip --out SD                   --europe "Need for Speed - Underground (Europe) (En,Fr,De).iso" --kn5 mazda_mx5_rf.kn5 --top open
 ```
 
-`fabriquer_sd.py ug1|ug2` pose les questions une par une. Options : `--nro` (un autre NRO),
+`--langue fr|de|it|es` choisit la langue avec `--europe` (français par défaut ; Underground 2 :
+fr, de, it, le disque Europe n'a pas de voix espagnoles ; l'allemand et l'italien sont à essayer en
+jeu). `fabriquer_sd.py ug1|ug2` pose les questions une par une. Options : `--nro` (un autre NRO),
 `--env` (tes réglages), `--perf`, `--names`, `--no-autoload`. Le dossier de sortie doit être vide :
 rien n'est écrit sur une carte déjà installée ni dans les images.
 
