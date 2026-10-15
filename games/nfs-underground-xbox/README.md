@@ -3,6 +3,12 @@
 ![La MX-5 RF décapotée dans le garage de Need for Speed Underground, phares allumés](../../docs/nfsu1_en_jeu.jpg)
 ![L'arrière de la MX-5 RF dans Underground, feux allumés](../../docs/nfsu1_arriere.jpg)
 
+**Underground 2** (la voiture est rouge : c'est la couleur de base de la Miata) :
+
+![La MX-5 RF décapotée chez le concessionnaire de Need for Speed Underground 2](../../docs/nfsu2_en_jeu.jpg)
+![L'arrière de la MX-5 RF dans Underground 2](../../docs/nfsu2_arriere.jpg)
+![« Mazda MX-5 RF » dans le menu du concessionnaire, en français](../../docs/nfsu2_nom.jpg)
+
 La MX-5 RF remplace la **Mazda Miata**, qui est dans les deux jeux : elle garde son son moteur, sa
 marque Mazda et sa place dans le jeu. Pour les portages Switch
 [nfsu1-sw](https://github.com/antoxa2584x/nfsu1-sw) et [nfsu2-sw](https://github.com/antoxa2584x/nfsu2-sw),
