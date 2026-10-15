@@ -20,7 +20,31 @@ python make_car.py --game ug2 --iso "Need for Speed - Underground 2 (USA).iso" -
   `ZZDATA2.BIN` du jeu avec la MX-5 à la place de la Miata (mêmes secteurs : les nouveaux
   fichiers sont plus petits) et le `ZDIR.BIN` avec leurs nouvelles tailles.
 
-## Ce que fait la conversion
+## Dossier tout prêt pour la carte SD (`make_sd.py`)
+
+Le zip de la release du portage + ton disque USA donnent le dossier `switch/` à copier sur la
+carte, avec en option la version française (disque Europe) et la MX-5 RF :
+
+```bash
+python make_sd.py --game ug1 --usa "Need for Speed - Underground (USA).iso" --release nfsu1x.zip --out SD                   --europe "Need for Speed - Underground (Europe) (En,Fr,De).iso" --kn5 mazda_mx5_rf.kn5 --top open
+```
+
+`fabriquer_sd.py ug1|ug2` pose les questions une par une. Options : `--nro` (un autre NRO),
+`--env` (tes réglages), `--perf`, `--names`, `--no-autoload`. Le dossier de sortie doit être vide :
+rien n'est écrit sur une carte déjà installée ni dans les images.
+
+- **Underground** en français : les textes et les voix sont déjà sur le disque USA, il manque
+  seulement les cinématiques doublées (`MOVIES/FR*.MAD` du disque Europe). Avec un NRO qui connaît
+  `NFSU1_LANGUAGE` ([antoxa2584x/nfsu1-sw#8](https://github.com/antoxa2584x/nfsu1-sw/pull/8)) :
+  `NFSU1_LANGUAGE=fr` ; sinon le `default.xbe` USA dont des tables de données font du français
+  la langue 0 (`vf_ug1.py`, le code n'est pas touché). `NFSU1_AUTOLOAD=1`
+  ([#9](https://github.com/antoxa2584x/nfsu1-sw/pull/9)) quand le NRO le connaît.
+- **Underground 2** en français, portage inchangé (`vf_ug2.py`) : `ZZDATA10.BIN` (textes, voix et
+  cinématiques françaises du disque Europe), `ZZDATA11.BIN` (les deux fichiers préchargés
+  `FrontEndMemoryFile` / `InGameMemoryFile` avec l'index des voix français : avec l'anglais, la
+  carrière se figeait après sa première cinématique) et `ZDIR.BIN` qui y renvoie les noms
+  anglais (l'original reste en `ZDIR_anglais.BIN`).
+
 
 Le modèle vient du convertisseur de Most Wanted (`build_mx5.collect` : mêmes pièces, mêmes
 matériaux), déplacé pour que ses roues tombent où le jeu met celles de la Miata (CarTypeInfo de
