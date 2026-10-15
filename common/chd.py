@@ -10,6 +10,7 @@ hunks. A CD hunk holds `hunkbytes / 2448` frames of 2352 bytes of sector + 96 by
 the cdlz / cdzl / cdfl codecs compress the sectors and the subcodes separately, and may strip the
 sync pattern and the ECC of sectors whose ECC could be rebuilt (flag bit per frame).
 """
+import binascii
 import lzma
 import struct
 import zlib
@@ -92,14 +93,8 @@ class Huffman:
 
 
 def crc16(data):
-    """CRC-16/CCITT (poly 0x1021, init 0xFFFF), used for the hunks."""
-    crc = 0xFFFF
-    for b in data:
-        crc ^= b << 8
-        for _ in range(8):
-            crc = ((crc << 1) ^ 0x1021) if crc & 0x8000 else crc << 1
-        crc &= 0xFFFF
-    return crc
+    """CRC-16/CCITT (poly 0x1021, init 0xFFFF), used for the hunks: binascii's crc_hqx, in C."""
+    return binascii.crc_hqx(data, 0xFFFF)
 
 
 def _lzma_props(size):
