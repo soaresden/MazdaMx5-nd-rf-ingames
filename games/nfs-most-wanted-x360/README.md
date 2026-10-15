@@ -145,7 +145,21 @@ Si tu as déjà modifié ton `ZDIR.BIN`, par exemple avec la
 [VF de nfsmw-nx](https://github.com/StevensND/nfsmw-nx/tree/main/tools/french-dub), passe-le avec
 `--zdir` pour garder ces modifications.
 
-## Limites
+## Image disque pour Xenia (`make_iso.py`)
+
+Une nouvelle image Xbox 360 avec des dossiers posés par-dessus les fichiers du disque (le dernier
+gagne, noms sans casse), par exemple la VF de nfsmw-nx puis la MX-5 :
+
+```bash
+python make_iso.py --iso "Need for Speed - Most Wanted (Europe).iso" --add "Patch VF/game_root"                    --add "MX5 RF/FINAL/game_root" --add "MX5 RF/FINAL/variante_decapotee/game_root"                    --out "Need for Speed - Most Wanted (Europe) VF MX-5 RF.iso"
+```
+
+Le jeu ouvre un fichier en clair avant de le chercher dans les archives (plan A), comme sur la
+Switch : les fichiers de la MX-5 restent des fichiers à part, vérifiés contre la taille que donne
+`ZDIR.BIN`. Les `NFS/PAD*.BIN` (remplissage qui place les données sur le vrai disque) sont laissés
+de côté (`--keep-pad` pour les garder) : 5,1 Go au lieu de 7,8. L'image est un XDVDFS simple
+(système de fichiers au secteur 32), relue à la fin : Xenia la lance (testé le 15/10/2026).
+
 
 - Les vinyles sont dessinés pour la forme de la voiture remplacée.
 - Les jantes et freins restent ceux de la voiture remplacée.
