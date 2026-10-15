@@ -39,7 +39,7 @@ python make_sd.py --game ug1 --usa "Need for Speed - Underground (USA).iso" --re
 
 `--langue fr|de|it|es` picks the language with `--europe` (French by default; Underground 2:
 fr, de, it, the Europe disc has no Spanish voices; German and Italian still need to be tried in
-game). `fabriquer_sd.py ug1|ug2` asks the questions one by one. Options: `--nro` (another NRO),
+game). The Windows package (`package/`, `make_package.py`) opens a local page (`ui_server.py`, `package/ui/index.html`: 127.0.0.1 only, FR/EN) that finds the files, opens the Windows dialogs and follows the build; `fabriquer_sd.py ug1|ug2` asks the same questions in the console. Options: `--nro` (another NRO),
 `--env` (your settings), `--perf`, `--names`, `--no-autoload`. The output folder must be empty:
 nothing is written to an already installed card or to the images.
 

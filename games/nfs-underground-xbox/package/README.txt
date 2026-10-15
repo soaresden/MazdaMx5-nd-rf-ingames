@@ -14,13 +14,15 @@ You need:
   - for the MX-5: the Assetto Corsa model mazda_mx5_rf.kn5 (free mod, see the project page).
 No game or model file is included here.
 
-1. Put these files in this folder (next to FABRIQUER.bat): they are found on their own.
-2. Double-click FABRIQUER.bat.
+1. Put these files in this folder (next to FABRIQUER.cmd): they are found on their own.
+2. Double-click FABRIQUER.cmd (or right-click FABRIQUER.ps1 > Run with PowerShell).
    - First time without Python: it downloads an official portable Python (python.org, about
      30 MB) into outils\python. Nothing is installed in Windows.
-3. Answer the questions (Enter = the answer offered; they are in French): the game, the
-   language, the MX-5 and its roof, its handling and name (to try), the save auto-load.
-4. A few minutes later the folder is in SD_nfsu1x (or SD_nfsu2x).
+   - A page opens in your browser (it runs on this PC only, in English or French). Keep the
+     black window open while you use it.
+3. On the page: pick the game, check your files ("Choose…" opens the Windows window), the
+   language, the MX-5 and its roof, then click Build. The bar shows how far it has got.
+4. A few minutes later the folder is in SD_nfsu1x (or SD_nfsu2x): "Open the folder".
 
 Copying to the card, game closed: if the game is already on the card, first copy
 sdmc:/switch/nfsu1x/game/UDATA (or nfsu2x) somewhere else (your saves). Then copy the switch

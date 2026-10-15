@@ -14,13 +14,15 @@ Il te faut :
   - pour la MX-5 : le modèle Assetto Corsa mazda_mx5_rf.kn5 (mod gratuit, voir la page du projet).
 Aucun fichier du jeu ni du modèle n'est fourni ici.
 
-1. Mets ces fichiers dans ce dossier (à côté de FABRIQUER.bat) : ils sont trouvés tout seuls.
-2. Double-clique sur FABRIQUER.bat.
+1. Mets ces fichiers dans ce dossier (à côté de FABRIQUER.cmd) : ils sont trouvés tout seuls.
+2. Double-clique sur FABRIQUER.cmd (ou clic droit sur FABRIQUER.ps1 > Exécuter avec PowerShell).
    - Première fois sans Python : il télécharge une copie portable officielle de Python
      (python.org, environ 30 Mo) dans outils\python. Rien n'est installé dans Windows.
-3. Réponds aux questions (Entrée = la réponse proposée) : le jeu, la langue, la MX-5 et son
-   toit, sa conduite et son nom (à essayer), le chargement automatique (Underground).
-4. Quelques minutes plus tard, le dossier est dans SD_nfsu1x (ou SD_nfsu2x).
+   - Une page s'ouvre dans ton navigateur (elle tourne sur ce PC seulement, en français ou en
+     anglais). Laisse la fenêtre noire ouverte tant que tu t'en sers.
+3. Sur la page : choisis le jeu, vérifie tes fichiers (« Choisir… » ouvre la fenêtre de Windows),
+   la langue, la MX-5 et son toit, puis clique sur Fabriquer. La barre montre où ça en est.
+4. Quelques minutes plus tard, le dossier est dans SD_nfsu1x (ou SD_nfsu2x) : « Ouvrir le dossier ».
 
 Copier sur la carte, jeu fermé : copie d'abord sdmc:/switch/nfsu1x/game/UDATA (ou nfsu2x) ailleurs
 si le jeu est déjà sur ta carte (ce sont tes sauvegardes). Puis copie le dossier switch de

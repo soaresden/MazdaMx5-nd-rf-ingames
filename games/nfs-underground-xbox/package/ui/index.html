@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MX-5 RF · NFS Underground</title>
+<script>
+  // Langue : choix mémorisé (sb.lang) sinon langue du navigateur ; les éléments data-en passent en anglais.
+  (function () {
+    var l = null; try { l = localStorage.getItem('sb.lang'); } catch (_) {}
+    if (l !== 'fr' && l !== 'en') l = /^fr/i.test(navigator.language || '') ? 'fr' : 'en';
+    window.SB_LANG = l; document.documentElement.lang = l;
+    window.T = function (fr, en) { return l === 'en' ? en : fr; };
+    document.addEventListener('DOMContentLoaded', function () {
+      if (l === 'en') document.querySelectorAll('[data-en]').forEach(function (e) { e.innerHTML = e.getAttribute('data-en'); });
+      var b = document.getElementById('lang');
+      b.textContent = l === 'en' ? '🇫🇷 FR' : '🇬🇧 EN';
+      b.onclick = function () { try { localStorage.setItem('sb.lang', l === 'en' ? 'fr' : 'en'); } catch (_) {} location.reload(); };
+    });
+  })();
+</script>
+<style>
+  /* each game in its own menu colours: Underground's teal glass, Underground 2's grey glass and purple neon */
+  :root, body[data-game=ug1] {
+    --bg: #04090d; --panel: rgba(6, 22, 30, .86); --line: #16384a; --text: #e8f6fb; --muted: #93b3c0;
+    --accent: #8fe3ff; --go: #6ef0b0; --go-text: #04161e; --glow1: rgba(29, 111, 140, .38); --glow2: rgba(110, 240, 176, .10);
+    --head: linear-gradient(180deg, rgba(43, 132, 168, .55), rgba(13, 64, 86, .7)); --radius: 0px; --title-style: italic;
+  }
+  body[data-game=ug2] {
+    --bg: #07050c; --panel: rgba(28, 26, 34, .84); --line: #3a3644; --text: #f0eef4; --muted: #b0aabd;
+    --accent: #c6ef4f; --go: #c6ef4f; --go-text: #1a1a20; --glow1: rgba(195, 92, 255, .28); --glow2: rgba(240, 107, 215, .13);
+    --head: linear-gradient(180deg, rgba(120, 118, 130, .45), rgba(60, 58, 70, .55)); --radius: 6px;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; color: var(--text); font: 500 17px/1.5 "Barlow Condensed", "Bahnschrift", "Arial Narrow", sans-serif;
+         background: radial-gradient(1100px 560px at 78% -10%, var(--glow1), transparent 62%),
+                     radial-gradient(800px 480px at 0% 40%, var(--glow2), transparent 60%), var(--bg);
+         min-height: 100vh; transition: background .3s; }
+  a { color: var(--accent); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 16px 48px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 10px; gap: 12px; }
+  header h1 { margin: 0; font: italic 800 clamp(24px, 4.4vw, 38px)/1 "Bahnschrift", "Arial Narrow", sans-serif; text-transform: uppercase;
+              letter-spacing: .02em; }
+  header h1 small { display: block; font: 600 .42em/1.3 inherit; letter-spacing: .2em; color: var(--accent); font-style: normal; }
+  .btn { font: 700 15px "Bahnschrift", sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--text);
+         background: var(--head); border: 1px solid var(--line); padding: 7px 14px; cursor: pointer; border-radius: var(--radius); min-height: 38px; }
+  .btn:hover:not(:disabled) { border-color: var(--accent); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .panel { background: var(--panel); border: 1px solid var(--line); margin: 0 0 14px; border-radius: var(--radius); overflow: hidden; }
+  .panel > h2 { margin: 0; padding: 9px 16px; background: var(--head); border-bottom: 1px solid var(--line); color: var(--accent);
+                font: italic 700 21px/1.2 "Bahnschrift", sans-serif; text-transform: uppercase; letter-spacing: .1em;
+                display: flex; align-items: center; gap: 12px; }
+  .panel > h2 b { font-style: normal; color: var(--go-text); background: var(--go); font-size: 15px; padding: 1px 8px; border-radius: 3px; }
+  .body { padding: 14px 16px; }
+  .games { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .game { position: relative; border: 2px solid var(--line); border-radius: var(--radius); overflow: hidden; cursor: pointer; background: #000;
+          text-align: left; padding: 0; color: var(--text); font: inherit; }
+  .game img { display: block; width: 100%; height: 130px; object-fit: cover; opacity: .75; transition: opacity .2s; }
+  .game span { position: absolute; left: 12px; bottom: 8px; font: italic 800 24px/1 "Bahnschrift", sans-serif; text-transform: uppercase;
+               text-shadow: 0 2px 4px #000; }
+  .game:hover img, .game[aria-pressed=true] img { opacity: 1; }
+  .game[aria-pressed=true] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 18px var(--glow1); }
+  .row { display: grid; grid-template-columns: minmax(150px, 210px) 1fr auto; gap: 8px 12px; align-items: center; padding: 8px 0;
+         border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row label { font-weight: 700; text-transform: uppercase; letter-spacing: .05em; font-size: 15px; }
+  .row label small { display: block; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--muted); font-size: 14px; }
+  .path { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .path input { flex: 1; min-width: 0; font: 15px Consolas, ui-monospace, monospace; color: var(--text); background: #000; border: 1px solid var(--line);
+                border-left: 3px solid var(--line); padding: 7px 8px; border-radius: var(--radius); }
+  .path input.ok { border-left-color: #6ee08f; } .path input.bad { border-left-color: #ff6b5a; }
+  .pill { flex: none; font: 700 12px "Bahnschrift", sans-serif; text-transform: uppercase; letter-spacing: .08em; padding: 1px 7px;
+          border-radius: 3px; border: 1px solid; }
+  .pill.ok { color: #6ee08f; border-color: rgba(110, 224, 143, .6); } .pill.bad { color: #ff8b7d; border-color: rgba(255, 107, 90, .6); }
+  .pill.opt { color: var(--muted); border-color: var(--line); }
+  .opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px 22px; }
+  .opts .lbl { font-weight: 700; text-transform: uppercase; letter-spacing: .05em; font-size: 15px; margin-bottom: 6px; }
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+  .seg button { font: 600 16px "Bahnschrift", sans-serif; color: var(--text); background: #000; border: 1px solid var(--line); padding: 6px 12px;
+                cursor: pointer; border-radius: var(--radius); }
+  .seg button[aria-pressed=true] { background: var(--go); color: var(--go-text); border-color: var(--go); }
+  .seg button:disabled { opacity: .35; cursor: default; }
+  .check { display: flex; gap: 9px; align-items: flex-start; margin: 4px 0; cursor: pointer; }
+  .check input { accent-color: var(--go); width: 17px; height: 17px; margin-top: 4px; flex: none; }
+  .try { font: 700 11px "Bahnschrift", sans-serif; text-transform: uppercase; letter-spacing: .08em; color: #e8c35a;
+         border: 1px solid rgba(232, 195, 90, .6); border-radius: 3px; padding: 0 5px; margin-left: 4px; vertical-align: 1px; }
+  .note { color: var(--muted); font-size: 15px; margin: 6px 0 0; }
+  details { margin-top: 10px; } summary { cursor: pointer; color: var(--muted); }
+  .go { font: italic 800 26px/1 "Bahnschrift", sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--go-text);
+        background: var(--go); border: 0; padding: 14px 30px; cursor: pointer; border-radius: var(--radius); box-shadow: 0 0 20px var(--glow1); }
+  .go:disabled { opacity: .4; cursor: default; box-shadow: none; }
+  .why { color: #ff8b7d; margin: 8px 0 0; font-size: 15px; }
+  .stages { list-style: none; padding: 0; margin: 14px 0 8px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px; }
+  .stages li { padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--muted); font-size: 15px; }
+  .stages li.now { color: var(--text); border-color: var(--accent); }
+  .stages li.done { color: var(--go); border-color: var(--go); }
+  .stages li.done::before { content: "✓ "; } .stages li.now::before { content: "› "; }
+  .bar { height: 14px; background: #000; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--go); transition: width .4s; box-shadow: 0 0 10px var(--go); }
+  .pct { font-size: 14px; color: var(--muted); margin-top: 4px; }
+  pre#log { background: #000; border: 1px solid var(--line); padding: 8px 10px; max-height: 240px; overflow: auto; font: 13px/1.4 Consolas, monospace;
+            color: var(--muted); white-space: pre-wrap; margin: 8px 0 0; border-radius: var(--radius); }
+  .result { margin-top: 12px; padding: 12px 14px; border-left: 4px solid var(--go); background: rgba(255, 255, 255, .04); }
+  .result.err { border-left-color: #ff6b5a; }
+  .result h3 { margin: 0 0 6px; font: italic 800 22px "Bahnschrift", sans-serif; text-transform: uppercase; }
+  .result ol { margin: 6px 0 10px; padding-left: 22px; }
+  code { background: #000; border: 1px solid var(--line); padding: 0 5px; font-size: .9em; }
+  footer { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 14px; margin-top: 18px; align-items: center; }
+  [hidden] { display: none !important; }
+  @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body data-game="ug1">
+<div class="wrap">
+  <header>
+    <h1>Mazda MX-5 RF<small data-en="SD card folder · Switch">Dossier de la carte SD · Switch</small></h1>
+    <button id="lang" class="btn" title="Français / English">🇬🇧 EN</button>
+  </header>
+
+  <section class="panel">
+    <h2><b>01</b> <span data-en="The game">Le jeu</span></h2>
+    <div class="body games">
+      <button class="game" data-game="ug1" aria-pressed="true"><img src="ui/nfsu1.jpg" alt=""><span>NFS Underground</span></button>
+      <button class="game" data-game="ug2" aria-pressed="false"><img src="ui/nfsu2.jpg" alt=""><span>NFS Underground 2</span></button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>02</b> <span data-en="Your files">Tes fichiers</span></h2>
+    <div class="body">
+      <p class="note" style="margin:0 0 6px" data-en="Those put next to FABRIQUER.ps1 are found on their own; &lt;b&gt;Choose…&lt;/b&gt; opens the Windows window.">Ceux posés à côté de FABRIQUER.ps1 sont trouvés tout seuls ; <b>Choisir…</b> ouvre la fenêtre de Windows.</p>
+      <div class="row" data-key="usa" data-kind="iso"><label data-en="USA disc &lt;small&gt;Xbox .iso, the one the port runs&lt;/small&gt;">Disque USA <small>.iso Xbox, celui du portage</small></label><div class="path"><input><span class="pill"></span></div><button class="btn pick" data-en="Choose…">Choisir…</button></div>
+      <div class="row" data-key="release" data-kind="zip"><label><span data-en="Port release">Release du portage</span> <small><a id="rel" href="#" target="_blank" rel="noopener">nfsu1x.zip</a></small></label><div class="path"><input><span class="pill"></span></div><button class="btn pick" data-en="Choose…">Choisir…</button></div>
+      <div class="row" data-key="europe" data-kind="iso"><label data-en="Europe disc &lt;small&gt;for French, German, Italian…&lt;/small&gt;">Disque Europe <small>pour le français, l'allemand, l'italien…</small></label><div class="path"><input><span class="pill"></span></div><button class="btn pick" data-en="Choose…">Choisir…</button></div>
+      <div class="row" data-key="kn5" data-kind="kn5"><label data-en="MX-5 model &lt;small&gt;&lt;a href=&quot;https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;mazda_mx5_rf.kn5&lt;/a&gt;, for the MX-5&lt;/small&gt;">Modèle de la MX-5 <small><a href="https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html" target="_blank" rel="noopener">mazda_mx5_rf.kn5</a>, pour la MX-5</small></label><div class="path"><input><span class="pill"></span></div><button class="btn pick" data-en="Choose…">Choisir…</button></div>
+      <details>
+        <summary data-en="More: another NRO, your settings">Plus : un autre NRO, tes réglages</summary>
+        <div class="row" data-key="nro" data-kind="nro"><label data-en="Other NRO &lt;small&gt;instead of the zip's&lt;/small&gt;">Autre NRO <small>à la place de celui du zip</small></label><div class="path"><input><span class="pill"></span></div><button class="btn pick" data-en="Choose…">Choisir…</button></div>
+        <div class="row" data-key="env" data-kind="env"><label data-en="Your settings &lt;small&gt;your _env.txt&lt;/small&gt;">Tes réglages <small>ton _env.txt</small></label><div class="path"><input><span class="pill"></span></div><button class="btn pick" data-en="Choose…">Choisir…</button></div>
+      </details>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>03</b> <span data-en="What you want">Ce que tu veux</span></h2>
+    <div class="body">
+      <div class="opts">
+        <div><div class="lbl" data-en="Language">Langue</div>
+          <div class="seg" id="lang-seg">
+            <button data-v="en">English</button><button data-v="fr" aria-pressed="true">Français</button><button data-v="de">Deutsch</button>
+            <button data-v="it">Italiano</button><button data-v="es">Español</button>
+          </div>
+          <p class="note" id="lang-note"></p></div>
+        <div><div class="lbl" data-en="The MX-5 RF in place of the Miata">La MX-5 RF à la place de la Miata</div>
+          <div class="seg" id="top-seg">
+            <button data-v="no" data-en="No">Non</button><button data-v="closed" data-en="Hardtop closed">Capotée</button><button data-v="open" aria-pressed="true" data-en="Top down">Décapotée</button>
+          </div>
+          <label class="check"><input type="checkbox" id="perf"><span data-en="MX-5 RF 184 hp handling &lt;span class=&quot;try&quot;&gt;to try&lt;/span&gt;">Conduite de la MX-5 RF 184 ch <span class="try">à essayer</span></span></label>
+          <label class="check"><input type="checkbox" id="names"><span data-en="« MX-5 RF » in the menus">« MX-5 RF » dans les menus</span> <span class="try" id="names-try" data-en="to try">à essayer</span></label></div>
+        <div id="auto-box"><div class="lbl" data-en="Save">Sauvegarde</div>
+          <label class="check"><input type="checkbox" id="autoload" checked><span data-en="Load it at start-up, without the questions (needs a port that knows NFSU1_AUTOLOAD)">La charger au démarrage, sans les questions (il faut un portage qui connaît NFSU1_AUTOLOAD)</span></label></div>
+      </div>
+      <div class="row" data-key="out" data-kind="folder" style="margin-top:10px; border-top:1px solid var(--line)"><label data-en="Folder to create &lt;small&gt;empty: never your SD card&lt;/small&gt;">Dossier à créer <small>vide : jamais ta carte SD</small></label><div class="path"><input><span class="pill"></span></div><button class="btn pick" data-en="Choose…">Choisir…</button></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><b>04</b> <span data-en="Build">Fabriquer</span></h2>
+    <div class="body">
+      <button class="go" id="go" data-en="Build">Fabriquer</button>
+      <p class="why" id="why"></p>
+      <div id="run" hidden>
+        <ul class="stages">
+          <li data-s="port" data-en="Port">Portage</li><li data-s="disc" data-en="USA disc">Disque USA</li>
+          <li data-s="lang" data-en="Language">Langue</li><li data-s="mx5">MX-5 RF</li><li data-s="end" data-en="Done">Fini</li>
+        </ul>
+        <div class="bar"><i id="bar"></i></div>
+        <div class="pct" id="pct"></div>
+        <details><summary data-en="Details">Détails</summary><pre id="log"></pre></details>
+        <div class="result" id="ok" hidden>
+          <h3 data-en="Ready">C'est prêt</h3>
+          <ol>
+            <li data-en="Game closed, copy &lt;code&gt;sdmc:/switch/…/game/UDATA&lt;/code&gt; somewhere else if the game is already on the card: &lt;b&gt;your saves&lt;/b&gt;.">Jeu fermé, copie <code>sdmc:/switch/…/game/UDATA</code> ailleurs si le jeu est déjà sur la carte : <b>tes sauvegardes</b>.</li>
+            <li data-en="Copy the &lt;code&gt;switch&lt;/code&gt; folder to the root of the card, &lt;b&gt;over it&lt;/b&gt; (merge, replace the files), never replacing the whole &lt;code&gt;game&lt;/code&gt; folder.">Copie le dossier <code>switch</code> à la racine de la carte, <b>par-dessus</b> (fusionner, remplacer les fichiers), sans jamais remplacer tout le dossier <code>game</code>.</li>
+            <li data-en="Start the game with title takeover (hold R while launching a game).">Lance le jeu en title takeover (maintenir R en lançant un jeu).</li>
+          </ol>
+          <button class="btn" id="openout" data-en="Open the folder">Ouvrir le dossier</button>
+        </div>
+        <div class="result err" id="ko" hidden><h3 data-en="It stopped">Ça s'est arrêté</h3><p id="kotext" style="margin:0"></p></div>
+      </div>
+    </div>
+  </section>
+
+  <footer><span data-en="Runs on this PC only · your disc images are never changed · github.com/soaresden/MazdaMx5-nd-rf-ingames">Tourne seulement sur ce PC · tes images de disque ne sont jamais modifiées · github.com/soaresden/MazdaMx5-nd-rf-ingames</span>
+    <button class="btn" id="quit" data-en="Quit">Quitter</button></footer>
+</div>
+<script>
+  var S = { game: 'ug1', lang: 'fr', top: 'open', files: {}, auto: {}, folder: '', next: 0, timer: null };
+  var KEYS = ['usa', 'release', 'europe', 'kn5', 'nro', 'env', 'out'];
+  function $(s) { return document.querySelector(s); }
+  function row(k) { return document.querySelector('.row[data-key=' + k + ']'); }
+  function api(path, body) {
+    return fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {})
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || r.status); return j; }); });
+  }
+  function needed(k) {
+    if (k === 'usa' || k === 'release' || k === 'out') return 'req';
+    if (k === 'europe') return S.lang !== 'en' ? 'req' : 'opt';
+    if (k === 'kn5') return S.top !== 'no' ? 'req' : 'opt';
+    return 'opt';
+  }
+  function check(k) {
+    var inp = row(k).querySelector('input'), pill = row(k).querySelector('.pill'), v = inp.value.trim();
+    S.files[k] = v;
+    if (!v) {
+      var n = needed(k);
+      inp.className = n === 'req' ? 'bad' : ''; pill.className = 'pill ' + (n === 'req' ? 'bad' : 'opt');
+      pill.textContent = n === 'req' ? T('manquant', 'missing') : T('facultatif', 'optional');
+      S.files['_' + k] = n !== 'req';
+      return validate();
+    }
+    return api('/api/exists?path=' + encodeURIComponent(v)).then(function (e) {
+      var good = k === 'out' ? (!e.file && (!e.dir || e.empty)) : e.file;
+      inp.className = good ? 'ok' : 'bad'; pill.className = 'pill ' + (good ? 'ok' : 'bad');
+      pill.textContent = good ? (k === 'out' ? (e.dir ? T('vide', 'empty') : T('à créer', 'to create')) : T('trouvé', 'found'))
+                              : (k === 'out' ? T('pas vide', 'not empty') : T('introuvable', 'not found'));
+      S.files['_' + k] = good;
+      validate();
+    });
+  }
+  function validate() {
+    var why = [];
+    KEYS.forEach(function (k) { if (needed(k) === 'req' && !S.files['_' + k]) why.push(row(k).querySelector('label').firstChild.textContent.trim()); });
+    if (S.game === 'ug2' && S.lang === 'es') why.push(T('pas d\'espagnol dans Underground 2', 'no Spanish in Underground 2'));
+    $('#go').disabled = why.length > 0 || (S.job === 'running');
+    $('#why').textContent = why.length ? T('Il manque : ', 'Missing: ') + why.join(', ') : '';
+  }
+  function setGame(g) {
+    S.game = g; document.body.dataset.game = g;
+    document.querySelectorAll('.game').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.game === g); });
+    var port = g === 'ug1' ? 'nfsu1x' : 'nfsu2x';
+    $('#rel').textContent = port + '.zip';
+    $('#rel').href = 'https://github.com/antoxa2584x/' + (g === 'ug1' ? 'nfsu1-sw' : 'nfsu2-sw') + '/releases/latest';
+    $('#auto-box').hidden = g !== 'ug1';
+    document.querySelector('#lang-seg [data-v=es]').disabled = g === 'ug2';
+    if (g === 'ug2' && S.lang === 'es') setSeg('lang', 'fr');
+    $('#names-try').hidden = g === 'ug2';
+    langNote();
+    api('/api/detect?game=' + g).then(function (d) {
+      S.folder = d.folder;
+      KEYS.forEach(function (k) {
+        var inp = row(k).querySelector('input');
+        if (!inp.value || S.auto[k] === inp.value) { inp.value = d.files[k] || ''; S.auto[k] = inp.value; }
+        check(k);
+      });
+    });
+  }
+  function setSeg(which, v) {
+    S[which] = v;
+    document.querySelectorAll('#' + which + '-seg button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.v === v); });
+    if (which === 'lang') { langNote(); check('europe'); }
+    if (which === 'top') { $('#perf').disabled = $('#names').disabled = v === 'no'; check('kn5'); }
+  }
+  function langNote() {
+    var n = { en: T('Le jeu reste en anglais : le disque Europe n\'est pas utile.', 'The game stays in English: no Europe disc needed.'),
+              fr: T('Textes, voix et cinématiques en français, depuis ton disque Europe.', 'French text, voices and cut-scenes, from your Europe disc.'),
+              de: T('Allemand : voix et cinématiques du disque Europe. À essayer.', 'German: voices and cut-scenes from the Europe disc. To try.'),
+              it: T('Italien : voix et cinématiques du disque Europe. À essayer.', 'Italian: voices and cut-scenes from the Europe disc. To try.'),
+              es: T('Espagnol (Underground seulement). À essayer.', 'Spanish (Underground only). To try.') };
+    $('#lang-note').textContent = n[S.lang];
+  }
+  function stage(s) {
+    var order = ['port', 'disc', 'lang', 'mx5', 'end'], i = order.indexOf(s);
+    document.querySelectorAll('.stages li').forEach(function (li) {
+      var j = order.indexOf(li.dataset.s);
+      li.className = j < i ? 'done' : (j === i ? (s === 'end' ? 'done' : 'now') : '');
+    });
+  }
+  function progress(p, label) { $('#bar').style.width = Math.max(0, Math.min(100, p)) + '%'; $('#pct').textContent = Math.round(p) + ' % · ' + label; }
+  function readLines(lines) {
+    var log = $('#log');
+    lines.forEach(function (l) {
+      log.textContent += l + '\n';
+      var m = l.match(/disque : (\d+)\/(\d+) fichiers, (\d+) Mo sur (\d+)/);
+      if (/^portage :/.test(l)) { stage('port'); progress(2, T('le portage', 'the port')); }
+      else if (/^disque USA :/.test(l)) { stage('disc'); progress(3, T('le disque USA', 'the USA disc')); }
+      else if (m) { stage('disc'); progress(3 + 72 * (+m[3]) / Math.max(1, +m[4]), T('disque : ', 'disc: ') + m[3] + ' / ' + m[4] + T(' Mo', ' MB')); }
+      else if (/^langue /.test(l)) { stage('lang'); progress(76, T('la langue', 'the language')); }
+      else if (/^MX-5 RF \(/.test(l)) { stage('mx5'); progress(88, T('la MX-5 (une à deux minutes)', 'the MX-5 (one or two minutes)')); }
+      else if (/^fini :/.test(l)) { stage('end'); progress(100, T('fini', 'done')); }
+    });
+    log.scrollTop = log.scrollHeight;
+  }
+  function poll() {
+    api('/api/status?from=' + S.next).then(function (s) {
+      S.next = s.next; readLines(s.lines);
+      if (s.running) { S.timer = setTimeout(poll, 700); return; }
+      S.job = 'done'; validate();
+      if (s.code === 0) { $('#ok').hidden = false; S.outSwitch = s.out; }
+      else {
+        var last = $('#log').textContent.trim().split('\n').slice(-3).join(' — ');
+        $('#ko').hidden = false; $('#kotext').textContent = last || (T('code ', 'code ') + s.code);
+      }
+    }).catch(function () { S.timer = setTimeout(poll, 1500); });
+  }
+  function run() {
+    var o = { game: S.game, lang: S.lang, top: S.top === 'no' ? null : S.top, perf: $('#perf').checked, names: $('#names').checked,
+              autoload: $('#autoload').checked };
+    KEYS.forEach(function (k) { o[k] = S.files[k] || ''; });
+    $('#run').hidden = false; $('#ok').hidden = $('#ko').hidden = true; $('#log').textContent = ''; S.next = 0;
+    stage('port'); progress(1, T('démarrage', 'starting'));
+    api('/api/run', o).then(function () { S.job = 'running'; validate(); poll(); })
+      .catch(function (e) { $('#ko').hidden = false; $('#kotext').textContent = e.message; });
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.game').forEach(function (b) { b.onclick = function () { setGame(b.dataset.game); }; });
+    document.querySelectorAll('#lang-seg button').forEach(function (b) { b.onclick = function () { setSeg('lang', b.dataset.v); }; });
+    document.querySelectorAll('#top-seg button').forEach(function (b) { b.onclick = function () { setSeg('top', b.dataset.v); }; });
+    document.querySelectorAll('.row').forEach(function (r) {
+      var k = r.dataset.key, inp = r.querySelector('input'), t = null;
+      inp.addEventListener('input', function () { clearTimeout(t); t = setTimeout(function () { check(k); }, 350); });
+      r.querySelector('.pick').onclick = function () {
+        api('/api/pick', { kind: r.dataset.kind, start: inp.value || S.folder + '\\x' }).then(function (p) { if (p.path) { inp.value = p.path; check(k); } });
+      };
+    });
+    $('#go').onclick = run;
+    $('#openout').onclick = function () { api('/api/open', { path: S.files.out }); };
+    $('#quit').onclick = function () { api('/api/quit', {}).finally(function () { document.body.innerHTML = '<div class="wrap"><h1 style="margin:40px 0">' + T('Tu peux fermer cet onglet.', 'You can close this tab.') + '</h1></div>'; }); };
+    setGame('ug1');
+  });
+</script>
+</body>
+</html>
