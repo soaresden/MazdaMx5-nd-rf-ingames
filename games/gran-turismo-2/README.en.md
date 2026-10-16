@@ -37,8 +37,8 @@ Plus**. It makes the image from all three. The in-game tests were done on the GT
   - the (i) button opens two pages describing the RF, in the 5 languages, laid out as the
     game's own.
 - **Start screens**: a banner in the style of the GT logo, on the language screen and both title
-  screens. On GT2 Plus it shows "HD PLUS" with "beta 7 · MX-5 RF" under it; on the other discs,
-  "MX-5 RF".
+  screens (under the copyright: the game scrolls its mode list under the logo). On GT2 Plus it
+  shows "HD PLUS" with "beta 7 · MX-5 RF" under it; on the other discs, "MX-5 RF".
 
 ## Making the image
 
@@ -52,6 +52,10 @@ python make_gt2.py --disc "Gran Turismo 2 Plus Combined (Europe).chd" --kn5 mazd
 - `--car CODE=closed|open`: which MX-5 to replace, and with which roof. Repeat the option for
   several cars. Default: `aminn=closed`, `amivn=open`.
 - `--version` / `--version-sub`: the text of the start screen banner (`--version ""` for none).
+- `--cheat`: adds the cheat menu of
+  [GranTurismo2-OverlayCheat](https://github.com/soaresden/GranTurismo2-OverlayCheat) (hold
+  SELECT, or L1 + R1 + L2 + R2 in Batocera: licence timer frozen, credits live). The project must be next to this repository, or
+  its folder given by `GT2CHEAT_DIR`.
 - `--out` ending in `.bin` gives a `.bin` + `.cue`; ending in `.chd`, a CHD directly.
 
 ## How it is made

@@ -467,12 +467,13 @@ def move_used_car(d, car, price, new_car, letter):
 # letters, dark panel behind)
 VERSION_PLACES = {
     'arcade/l-sel.tim.gz': (22, 196, 164, 22, True),         # under "Select Language"
-    'arcade/title_gtmode.tim.gz': (176, 296, None, 28, False),  # the title screens: under the logo
-    'arcade/title_gtmode_jp.tim.gz': (176, 296, None, 28, False),
-    'arcade/title_gtmode_us.tim.gz': (176, 296, None, 28, False),
-    'arcade/title_arcade.tim.gz': (176, 286, None, 28, False),
-    'arcade/title_arcade_jp.tim.gz': (176, 286, None, 28, False),
-    'arcade/title_arcade_us.tim.gz': (176, 286, None, 28, False),
+    'arcade/title_gtmode.tim.gz': (176, 443, None, 18, False),  # the title screens: under the copyright (the game
+                                                             # scrolls its mode list under the logo)
+    'arcade/title_gtmode_jp.tim.gz': (176, 443, None, 18, False),
+    'arcade/title_gtmode_us.tim.gz': (176, 443, None, 18, False),
+    'arcade/title_arcade.tim.gz': (176, 443, None, 18, False),
+    'arcade/title_arcade_jp.tim.gz': (176, 443, None, 18, False),
+    'arcade/title_arcade_us.tim.gz': (176, 443, None, 18, False),
 }
 GT_BLUE, GT_RED = (40, 72, 168), (214, 30, 42)
 

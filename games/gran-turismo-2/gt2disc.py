@@ -61,8 +61,9 @@ class Gt2Disc(disc.Disc):
         old = (self.vol_size + 2047) // 2048
         return size, max(0, size // 2048 - old) if size > self.room(VOL) else 0
 
-    def bin_chunks(self, replace, progress=None):
-        """The new image, raw 2352-byte sectors, a chunk at a time; replace: {VOL path: bytes}."""
+    def bin_chunks(self, replace, progress=None, files=None):
+        """The new image, raw 2352-byte sectors, a chunk at a time; replace: {VOL path: bytes};
+        files: {disc file before GT2.VOL (SCES_123.80, GT2.OVL): bytes}, each within its room."""
         size, delta = self.plan(replace)
         n_vol = size // 2048
         vol_end = self.vol_lba + n_vol
@@ -79,6 +80,15 @@ class Gt2Disc(disc.Disc):
                 records.setdefault(dlba, []).append((doff, lba, size))
             elif delta and lba >= old_end:
                 records.setdefault(dlba, []).append((doff, lba + delta, fsize))
+        own = {}
+        for name, data in (files or {}).items():
+            lba, fsize, dlba, doff = self.files[name]
+            if lba >= self.vol_lba or len(data) > self.room(name):
+                raise ValueError('%s : %d octets, place pour %d' % (name, len(data), self.room(name)))
+            for i in range((len(data) + 2047) // 2048):
+                own[lba + i] = data[i * 2048:(i + 1) * 2048].ljust(2048, bytes(1))
+            if len(data) != fsize:
+                records.setdefault(dlba, []).append((doff, lba, len(data)))
         new_vol = self.vol.sectors(replace, CHUNK)
         pending = b''
 
@@ -110,7 +120,10 @@ class Gt2Disc(disc.Disc):
                     continue
                 raw = self.c.sector(s)
                 raws.append(raw)
-                if s == 16 and delta:
+                if s in own:
+                    todo.append(k)
+                    datas.append(own[s])
+                elif s == 16 and delta:
                     d = bytearray(raw[24:24 + 2048])
                     struct.pack_into('<I', d, 80, total)
                     struct.pack_into('>I', d, 84, total)
@@ -139,10 +152,10 @@ class Gt2Disc(disc.Disc):
             if progress:
                 progress(stop, total)
 
-    def write_bin(self, path, replace, progress=None):
+    def write_bin(self, path, replace, progress=None, files=None):
         part = path + '.part'
         with open(part, 'wb') as f:
-            for b in self.bin_chunks(replace, progress=progress):
+            for b in self.bin_chunks(replace, progress=progress, files=files):
                 f.write(b)
         os.replace(part, path)
         with open(os.path.splitext(path)[0] + '.cue', 'w', newline='') as f:

@@ -211,6 +211,32 @@ def menus(vol, todo, cars, new, log=print):
                 log('  %s : %d annonce(s) à %d Cr -> la RF décapotée' % (p, n, USED_OPEN))
 
 
+def cheat_patcher():
+    """gt2cheat.patcher of the GranTurismo2-OverlayCheat project (github.com/soaresden/
+    GranTurismo2-OverlayCheat): next to this script in the Windows package (outils/gt2cheat),
+    else the project's folder next to this repository, or GT2CHEAT_DIR."""
+    for base in (os.environ.get('GT2CHEAT_DIR', ''), os.path.join(HERE, '..', '..'),
+                 os.path.join(HERE, '..', '..', '..', 'GranTurismo2-OverlayCheat')):
+        if base and os.path.isfile(os.path.join(base, 'gt2cheat', 'patcher.py')):
+            if base not in sys.path:
+                sys.path.insert(0, base)
+            from gt2cheat import patcher
+            return patcher
+    raise SystemExit('cheat introuvable : il faut le projet GranTurismo2-OverlayCheat '
+                     '(dossier gt2cheat), ou GT2CHEAT_DIR')
+
+
+def cheat_files(d, log=print):
+    """{disc file: new bytes} of the overlay cheat (SELECT: freeze the licence timer, credits)."""
+    patcher = cheat_patcher()
+    log('+ le cheat GranTurismo2-OverlayCheat (SELECT : chrono des permis, crédits)')
+    try:
+        return {'SCES_123.80': patcher.patch_exe(d.read('SCES_123.80')),
+                'GT2.OVL': patcher.patch_ovl(d.read('GT2.OVL'))}
+    except patcher.PatchError as e:
+        raise SystemExit('cheat : %s' % e)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument('--disc', required=True, help='your Gran Turismo 2 disc image (Simulation, combined or GT2 Plus): .chd, .cue or .bin')
@@ -222,6 +248,8 @@ def main():
                     help='the line under it (default: "beta 7 · MX-5 RF" on GT2 Plus, else none)')
     ap.add_argument('--car', action='append', metavar='CODE=closed|open',
                     help='MX-5 to replace and its roof (repeat; default: aminn=closed, amivn=open)')
+    ap.add_argument('--cheat', action='store_true',
+                    help='add the GranTurismo2-OverlayCheat menu (hold SELECT: licence timer, credits)')
     a = ap.parse_args()
     t0 = time.time()
     cars = {}
@@ -236,6 +264,7 @@ def main():
     if src.lower() == os.path.abspath(a.out).lower():
         raise SystemExit('--out écraserait ton image : choisis un autre nom')
     d, new = generate(a.disc, a.kn5, cars, version=a.version, sub=a.version_sub)
+    files = cheat_files(d) if a.cheat else None
     size, delta = d.plan(new)
     print('4/4 l\'image du disque (GT2.VOL %d Mo%s)' % (
         size >> 20, ', %d secteurs de plus : les fichiers suivants décalés' % delta if delta else ''))
@@ -246,7 +275,7 @@ def main():
         # roms folder, Batocera opened the .bin while the .chd was being made)
         part = out + '.bin.part'
         with open(part, 'wb') as f:
-            for b in d.bin_chunks(new, progress=progress):
+            for b in d.bin_chunks(new, progress=progress, files=files):
                 f.write(b)
         chdmake.write(part, out, 'MODE2_RAW')
         try:
@@ -254,7 +283,7 @@ def main():
         except OSError as e:
             print('(%s reste à effacer : %s)' % (part, e.strerror))
     else:
-        d.write_bin(out, new, progress=progress)
+        d.write_bin(out, new, progress=progress, files=files)
     print('écrit', out, 'en %.0f s' % (time.time() - t0))
 
 

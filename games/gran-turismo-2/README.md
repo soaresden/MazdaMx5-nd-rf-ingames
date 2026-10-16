@@ -38,8 +38,9 @@ pez2k. Il fabrique l'image sur les trois. Les essais en jeu ont été faits sur 
   - le bouton (i) ouvre deux pages de description de la RF, dans les 5 langues, mises en page
     comme celles du jeu.
 - **Écrans de démarrage** : un bandeau dans le style du logo GT, sur l'écran des langues et sur
-  les deux écrans titre. Sur GT2 Plus, il affiche « HD PLUS » avec « beta 7 · MX-5 RF » en
-  dessous ; sur les autres disques, « MX-5 RF ».
+  les deux écrans titre (sous le copyright, le jeu faisant défiler son choix de mode sous le
+  logo). Sur GT2 Plus, il affiche « HD PLUS » avec « beta 7 · MX-5 RF » en dessous ; sur les
+  autres disques, « MX-5 RF ».
 
 ## Fabriquer l'image
 
@@ -54,6 +55,10 @@ python make_gt2.py --disc "Gran Turismo 2 Plus Combined (Europe).chd" --kn5 mazd
   plusieurs voitures. Par défaut : `aminn=closed`, `amivn=open`.
 - `--version` / `--version-sub` : le texte du bandeau des écrans de démarrage (`--version ""`
   pour ne rien écrire).
+- `--cheat` : ajoute le menu de triche de
+  [GranTurismo2-OverlayCheat](https://github.com/soaresden/GranTurismo2-OverlayCheat) (SELECT
+  maintenu, ou L1 + R1 + L2 + R2 dans Batocera : chrono des permis figé, crédits en direct). Le projet doit être à côté de ce dépôt,
+  ou son dossier donné par `GT2CHEAT_DIR`.
 - `--out` en `.bin` donne un `.bin` + `.cue` ; en `.chd`, un CHD directement.
 
 ## Comment c'est fait
