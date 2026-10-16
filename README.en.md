@@ -53,7 +53,7 @@ Miata. The extracted disc is several GB: this is done on the PC, not in the brow
 | [Need for Speed: Underground](games/nfs-underground-xbox/) | Xbox USA, on Switch with [nfsu1-sw](https://github.com/antoxa2584x/nfsu1-sw) | Mazda Miata | **works** (tested in game) |
 | [Need for Speed: Underground 2](games/nfs-underground-xbox/) | Xbox USA, on Switch with [nfsu2-sw](https://github.com/antoxa2584x/nfsu2-sw) | Mazda Miata | **works** (tested in game) |
 | Need for Speed: Carbon | to be decided | — | planned |
-| Gran Turismo 2 | PS1 | — | planned |
+| [Gran Turismo 2](games/gran-turismo-2/README.en.md) | PS1 (PAL): Simulation, combined or GT2 Plus disc | the MX-5s of your choice (default: the used '93 and V-Special '93) | **works** (tested on GT2 Plus) |
 
 ### Need for Speed: Most Wanted, what the conversion does
 

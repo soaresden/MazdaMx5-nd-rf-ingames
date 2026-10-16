@@ -14,6 +14,7 @@
     if (l === 'en') document.title = 'The MX-5 RF in my games';
     document.addEventListener('DOMContentLoaded', function () {
       if (l === 'en') document.querySelectorAll('[data-en]').forEach(function (e) { e.innerHTML = e.getAttribute('data-en'); });
+      if (l === 'en') document.querySelectorAll('[data-en-href]').forEach(function (e) { e.href = e.getAttribute('data-en-href'); });
       var b = document.getElementById('lang');
       b.textContent = l === 'en' ? '🇫🇷 FR' : '🇬🇧 EN';
       b.onclick = function () { try { localStorage.setItem('sb.lang', l === 'en' ? 'fr' : 'en'); } catch (_) {} location.reload(); };
@@ -62,7 +63,7 @@
   .u2 .art { background: linear-gradient(0deg, rgba(75, 20, 112, .35), rgba(75, 20, 112, 0) 60%), url(docs/nfsu2_en_jeu.jpg) 50% 55% / cover; }
   .carbon .art { background: repeating-linear-gradient(45deg, #121212 0 6px, #1d1d1d 6px 12px); }
   .carbon h2 { color: #ff7a2b; }
-  .gt2 .art { background: linear-gradient(135deg, #222, #555 55%, #d81e2c 55.5%, #d81e2c 60%, #222 60.5%); }
+  .gt2 .art { background: linear-gradient(0deg, rgba(10, 36, 99, .35), rgba(10, 36, 99, 0) 55%), url(docs/gt2_en_jeu.jpg) 50% 45% / cover; }
   #lang { position: absolute; top: 14px; right: 16px; border: 1px solid var(--line); background: var(--card); color: var(--text);
           padding: 7px 12px; font: 700 15px "Barlow Condensed", sans-serif; cursor: pointer; min-height: 38px; }
   #lang:hover { border-color: var(--accent); }
@@ -110,11 +111,12 @@
       <div class="art"></div>
       <div class="txt"><h2>NFS Carbon</h2><div class="plat" data-en="to be decided · 2006">à définir · 2006</div></div>
     </div>
-    <div class="game gt2">
-      <span class="badge later" data-en="Planned">Prévu</span>
+    <a class="game gt2" href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames/tree/main/games/gran-turismo-2" data-en-href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames/blob/main/games/gran-turismo-2/README.en.md">
+      <span class="badge ready" data-en="Available">Disponible</span>
       <div class="art"></div>
-      <div class="txt"><h2>Gran Turismo 2</h2><div class="plat">PlayStation · 1999</div></div>
-    </div>
+      <div class="txt"><h2>Gran Turismo 2</h2><div class="plat" data-en="PlayStation (PAL: Simulation, combined or GT2 Plus) · 1999">PlayStation (PAL : Simulation, combiné ou GT2 Plus) · 1999</div>
+        <p data-en="In place of the MX-5s of your choice, hardtop closed or top down. Round arches, night lights, its description in five languages, Mazda's paints.">À la place des MX-5 de ton choix, capotée ou décapotée. Passages de roue ronds, phares la nuit, sa description en cinq langues, les peintures Mazda.</p></div>
+    </a>
   </div>
 
   <footer data-en="Code and write-ups: <a href=&quot;https://github.com/soaresden/MazdaMx5-nd-rf-ingames&quot;>github.com/soaresden/MazdaMx5-nd-rf-ingames</a> · no game or model file is provided · fan project, not affiliated with Mazda or the publishers.">Le code et les explications : <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames">github.com/soaresden/MazdaMx5-nd-rf-ingames</a>

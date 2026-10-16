@@ -168,15 +168,18 @@ LIGHTS = {'side': (0.35, 0.85, 0.4), 'top': (0.35, 0.85, 0.4), 'front': (0.35, 0
 class Atlas:
     """Where each view goes in the texture, and the pictures."""
 
-    def __init__(self, scene, sp, hull):
+    def __init__(self, scene, sp, hull, v0=TEX_V0, v1=TEX_V1, side_v=WHEEL_TEXELS[3]):
+        """v0, v1: the rows the faces can use; side_v: first row of the side picture (under the
+        wheel picture in GT1)."""
+        self.v0, self.v1 = v0, v1
         lo, hi = sp.min(0), sp.max(0)
         hw = np.abs(sp[:, 0]).max()
         L, Hh = hi[2] - lo[2], hi[1] - lo[1]
-        rows = TEX_V1 - TEX_V0
+        rows = v1 - v0
         # front and rear pictures in a column on the right, side and top pictures to their left
         r_fr = 0.68 * (rows / 2) / Hh
         col = int(np.ceil(hw * r_fr))
-        r_main = min((256 - col) / L, (rows - (WHEEL_TEXELS[3] - TEX_V0)) / (Hh + hw))
+        r_main = min((256 - col) / L, (rows - (side_v - v0)) / (Hh + hw))
         self.boxes = {
             'side': ((lo[2], hi[2]), (-hi[1], -lo[1])),
             'top': ((lo[2], hi[2]), (0, hw)),
@@ -185,10 +188,10 @@ class Atlas:
         }
         side_h = int(np.ceil(Hh * r_main))
         self.place = {  # view: (u origin, v origin, texels per metre)
-            'side': (0, WHEEL_TEXELS[3], r_main),
-            'top': (0, WHEEL_TEXELS[3] + side_h, r_main),
-            'front': (256 - col, TEX_V0, r_fr),
-            'rear': (256 - col, TEX_V0 + int(np.ceil(Hh * r_fr)), r_fr),
+            'side': (0, side_v, r_main),
+            'top': (0, side_v + side_h, r_main),
+            'front': (256 - col, v0, r_fr),
+            'rear': (256 - col, v0 + int(np.ceil(Hh * r_fr)), r_fr),
         }
         # pictures at 4x the texel density, reduced later. The light comes from in front of each
         # picture's camera (and from above): with one light from the front of the car, the rear
@@ -244,7 +247,7 @@ class Atlas:
             pm = (flat == V.PAINT)
             shb = blk(sh).transpose(0, 2, 1, 3).reshape(h, w, 16)
             tsh = (shb * pm).sum(2) / np.maximum(pm.sum(2), 1)
-            u1, v1 = min(256, ou + w), min(TEX_V1, ov + h)
+            u1, v1 = min(256, ou + w), min(self.v1, ov + h)
             cls[ov:v1, ou:u1] = tc[:v1 - ov, :u1 - ou]
             rgb[ov:v1, ou:u1] = col4[:v1 - ov, :u1 - ou]
             shade[ov:v1, ou:u1] = tsh[:v1 - ov, :u1 - ou]
@@ -325,6 +328,35 @@ def kmeans(x, k, iters=12, seed=0):
 
 def build_texture(atlas, lods, template_tex, night=False):
     """(tex bytes, per LOD: per face (clut, uv list or None)). Faces: lists of (verts, faces, normals)."""
+    index, cluts, faces_out = texture_layout(atlas, lods)
+    # bytes: template header, index image, CLUTs (CLUT 0, 12 and 13 from the template)
+    t = bytearray(template_tex)
+    old = np.frombuffer(bytes(t[0x8060:]), '<u2').reshape(-1, 16, 16)
+    tidx = np.zeros((256, 256), np.uint8)
+    o = np.frombuffer(bytes(t[0x60:0x8060]), np.uint8)
+    tidx[:, 0::2] = (o & 15).reshape(256, 128)
+    tidx[:, 1::2] = (o >> 4).reshape(256, 128)
+    u0, v0, u1, v1 = WHEEL_TEXELS
+    index[v0:v1, u0:u1] = tidx[v0:v1, u0:u1]
+    packed = (index[:, 0::2] | (index[:, 1::2] << 4)).astype(np.uint8)
+    t[0x60:0x8060] = packed.tobytes()
+    words = ps1(cluts)
+    words[:, :, 0] = 0               # colour 0: transparent (no texel uses it)
+    # as many palettes as the template has paints (the eight MX-5 paints over and over)
+    words = words[np.arange(len(old)) % len(PAINTS)].copy()
+    for p in range(len(old)):
+        for k in (0, 12, 13):
+            words[p, k] = old[p, k]
+    t[0x8060:0x8060 + len(old) * 0x200] = words.astype('<u2').tobytes()
+    return bytes(t), faces_out, index, cluts
+
+
+def texture_layout(atlas, lods, body_groups=11, front_lamps=None, paints=PAINTS):
+    """The texture of the LODs (lists of (verts, faces, normals)) on the atlas: (index image 256 x
+    256, CLUTs (paints x 16 x 16 x rgb 0..1), {(lod, face): (clut or None, uv)}).
+    CLUTs: 1..body_groups for the body, 14 the rear lamps and 15 the same lit (brakes);
+    front_lamps: a CLUT of its own for the faces of the front lamps (None: with the body);
+    paints: (name, sRGB) of the paints, one set of CLUTs each."""
     cls, rgb, shade = atlas.texels()
     # every face of every LOD: its view, its uv, its texels
     info = []
@@ -338,7 +370,7 @@ def build_texture(atlas, lods, template_tex, night=False):
                 continue
             uv = atlas.uv(view, p)
             uv = np.clip(np.round(uv), 0, 255)
-            uv[:, 1] = np.clip(uv[:, 1], TEX_V0, TEX_V1 - 1)
+            uv[:, 1] = np.clip(uv[:, 1], atlas.v0, atlas.v1 - 1)
             m = raster_mask(uv)
             info.append((li, fi, view, uv, m))
     # the CLUT of each face of LOD 0: rear lamp faces -> 14; the others in 11 groups by their
@@ -355,12 +387,15 @@ def build_texture(atlas, lods, template_tex, night=False):
         if (c == V.LAMP_R).mean() > 0.04:
             groups[idx] = 14
             continue
+        if front_lamps is not None and (c == V.LAMP_F).mean() > 0.04:
+            groups[idx] = front_lamps
+            continue
         non = rgb[m][c != V.PAINT]
         feats.append(np.r_[non.mean(0) if len(non) else [0.5, 0.5, 0.5], (c == V.PAINT).mean() * 0.6,
                            (c == V.LAMP_F).mean() * 0.8, (c == V.GLASS).mean() * 0.5])
         body.append(idx)
     if body:
-        cent = kmeans(np.array(feats), min(11, len(body)))
+        cent = kmeans(np.array(feats), min(body_groups, len(body)))
         a_ = ((np.array(feats)[:, None] - cent[None]) ** 2).sum(2).argmin(1)
         for idx, g in zip(body, a_):
             groups[idx] = 1 + int(g)
@@ -376,7 +411,7 @@ def build_texture(atlas, lods, template_tex, night=False):
         gmap[m & (gmap == 0)] = groups[idx]
     # palettes: per group, paint levels + fixed colours
     index = np.zeros((256, 256), np.uint8)
-    cluts = np.zeros((len(PAINTS), 16, 16, 3), np.float32)
+    cluts = np.zeros((len(paints), 16, 16, 3), np.float32)
     paint_slots = {}
     for g in range(1, 16):
         sel = gmap == g
@@ -398,7 +433,7 @@ def build_texture(atlas, lods, template_tex, night=False):
             dd = ((col[~is_p][:, None] - fixed[None]) ** 2).sum(2)
             ix[~is_p] = 1 + np_ + dd.argmin(1)
         index[sel] = ix
-        for p, (_, base) in enumerate(PAINTS):
+        for p, (_, base) in enumerate(paints):
             pal = np.zeros((16, 3), np.float32)
             if np_:
                 pal[1:1 + np_] = paint_rgb(base, levels)
@@ -407,39 +442,17 @@ def build_texture(atlas, lods, template_tex, night=False):
         paint_slots[g] = np_
     # 15: the rear lamp CLUT with the lamps lit (red and amber brighter)
     lit = cluts[:, 14].copy()
-    for p in range(len(PAINTS)):
+    for p in range(len(paints)):
         npl = paint_slots.get(14, 0)
         f = lit[p, 1 + npl:]
         red = (f[:, 0] > f[:, 1] * 1.4) & (f[:, 0] > 0.15)
         f[red] = np.clip(f[red] * 1.9 + [0.15, 0.02, 0.02], 0, 1)
         lit[p, 1 + npl:] = f
     cluts[:, 15] = lit
-    if night:
-        # front lamps glow at night: the bright texels of the lamp faces brighter still
-        pass
-    # bytes: template header, index image, CLUTs (CLUT 0, 12 and 13 from the template)
-    t = bytearray(template_tex)
-    old = np.frombuffer(bytes(t[0x8060:]), '<u2').reshape(-1, 16, 16)
-    tidx = np.zeros((256, 256), np.uint8)
-    o = np.frombuffer(bytes(t[0x60:0x8060]), np.uint8)
-    tidx[:, 0::2] = (o & 15).reshape(256, 128)
-    tidx[:, 1::2] = (o >> 4).reshape(256, 128)
-    u0, v0, u1, v1 = WHEEL_TEXELS
-    index[v0:v1, u0:u1] = tidx[v0:v1, u0:u1]
-    packed = (index[:, 0::2] | (index[:, 1::2] << 4)).astype(np.uint8)
-    t[0x60:0x8060] = packed.tobytes()
-    words = ps1(cluts)
-    words[:, :, 0] = 0               # colour 0: transparent (no texel uses it)
-    # as many palettes as the template has paints (the eight MX-5 paints over and over)
-    words = words[np.arange(len(old)) % len(PAINTS)].copy()
-    for p in range(len(old)):
-        for k in (0, 12, 13):
-            words[p, k] = old[p, k]
-    t[0x8060:0x8060 + len(old) * 0x200] = words.astype('<u2').tobytes()
     faces_out = {}
     for idx, (li, fi, view, uv, m) in enumerate(info):
         faces_out[(li, fi)] = (groups.get(idx), uv)
-    return bytes(t), faces_out, index, cluts
+    return index, cluts, faces_out
 
 
 # ---------------------------------------------------------------------------------------------
