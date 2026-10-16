@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MX-5 RF · Gran Turismo 2</title>
+<script>
+  // Langue : choix mémorisé (sb.lang) sinon langue du navigateur ; les éléments data-en passent en anglais.
+  (function () {
+    var l = null; try { l = localStorage.getItem('sb.lang'); } catch (_) {}
+    if (l !== 'fr' && l !== 'en') l = /^fr/i.test(navigator.language || '') ? 'fr' : 'en';
+    window.SB_LANG = l; document.documentElement.lang = l;
+    document.addEventListener('DOMContentLoaded', function () {
+      if (l === 'en') document.querySelectorAll('[data-en]').forEach(function (e) { e.innerHTML = e.getAttribute('data-en'); });
+      var b = document.getElementById('lang');
+      b.textContent = l === 'en' ? '🇫🇷 FR' : '🇬🇧 EN';
+      b.onclick = function () { try { localStorage.setItem('sb.lang', l === 'en' ? 'fr' : 'en'); } catch (_) {} location.reload(); };
+    });
+  })();
+</script>
+<meta name="description" content="La Mazda MX-5 RF (ND) dans Gran Turismo 2 (PlayStation, Europe : disque Simulation, combiné ou GT2 Plus), capotée ou décapotée, fabriquée à partir de ta copie du jeu.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Barlow+Condensed:wght@500;600;700&family=Saira+Extra+Condensed:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  /* Gran Turismo 2's dealer screens: black, orange icons and dots, grey tabs (the open one orange),
+     white car names, the round orange « ACHETER » button */
+  :root {
+    --bg: #000; --panel: #0b0b0b; --line: #2a2a2a; --text: #f4f4f4; --muted: #a9a9a9;
+    --orange: #f39200; --orange-dk: #b86a00; --tab: #9a9a9a; --tab-dk: #5c5c5c; --ok: #f7b955; --code: #111;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; color: var(--text); font: 500 17px/1.5 "Barlow Condensed", "Arial Narrow", sans-serif;
+         background: radial-gradient(900px 420px at 50% 0%, rgba(255, 255, 255, .07), transparent 70%), var(--bg); min-height: 100vh; }
+  a { color: var(--orange); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 16px 64px; }
+  nav { padding: 14px 0; font: 700 15px/1 "Barlow Condensed"; text-transform: uppercase; letter-spacing: .08em;
+        display: flex; justify-content: space-between; align-items: center; }
+  nav a { color: var(--muted); text-decoration: none; }
+  nav a:hover { color: var(--orange); }
+  #lang { font: 700 14px "Barlow Condensed", sans-serif; text-transform: uppercase; letter-spacing: .06em; color: #111;
+          background: var(--orange); border: 0; border-radius: 3px; padding: 6px 12px; cursor: pointer; min-height: 36px; }
+  #lang:hover { background: #ffad33; }
+
+  /* icônes carrées orange du jeu */
+  .ico { display: inline-grid; place-items: center; width: 30px; height: 30px; flex: none; border-radius: 3px; background: var(--orange);
+         color: #111; font: 800 15px/1 Archivo, sans-serif; box-shadow: inset 0 -3px 0 var(--orange-dk); }
+
+  /* onglets du jeu : pilules grises en biseau, l'onglet ouvert en orange */
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tabs span { font: 700 clamp(11px, 1.9vw, 14px)/1 Archivo, sans-serif; text-transform: uppercase; color: #111; letter-spacing: .02em;
+               background: linear-gradient(180deg, #c9c9c9, var(--tab)); padding: 6px 18px 6px 22px; border-radius: 14px 3px 3px 14px;
+               box-shadow: inset 0 -2px 0 var(--tab-dk); white-space: nowrap; }
+  .tabs span.on { background: linear-gradient(180deg, #ffab3d, var(--orange)); color: #fff; box-shadow: inset 0 -2px 0 var(--orange-dk); }
+
+  /* en-tête : la fiche du concessionnaire, comme dans le jeu */
+  .dealer { position: relative; border: 1px solid var(--line); background: radial-gradient(60% 55% at 50% 58%, #2a2a2a, #000 75%);
+            padding: 16px clamp(14px, 3vw, 28px) 22px; margin-bottom: 22px; overflow: hidden; }
+  .dealer .bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .dealer .icons { display: flex; gap: 3px; }
+  .dealer .icons .ico { width: 26px; height: 26px; font-size: 13px; }
+  .dealer h1 { margin: 16px 0 0; text-align: center; font: 800 clamp(34px, 7vw, 60px)/1 Archivo, Arial, sans-serif; letter-spacing: .01em; }
+  .dealer h1 small { display: block; font-size: .42em; font-weight: 600; margin-bottom: 2px; }
+  .dealer .car { display: block; margin: 8px auto 0; width: min(560px, 100%); aspect-ratio: 437 / 140; object-fit: cover;
+                 image-rendering: auto; -webkit-mask-image: radial-gradient(50% 50% at 50% 52%, #000 55%, transparent 100%);
+                          mask-image: radial-gradient(50% 50% at 50% 52%, #000 55%, transparent 100%); }
+  .dealer .paint { text-align: center; font: 700 clamp(14px, 2.4vw, 19px) Archivo, sans-serif; letter-spacing: .12em; margin-top: 4px; }
+  .dealer .paint::before { content: "➘"; color: var(--orange); margin-right: 6px; }
+  .sheet { display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center; margin-top: 14px; }
+  .specs { list-style: none; margin: 0; padding: 0; font: 700 clamp(15px, 2.4vw, 20px)/1.45 Archivo, sans-serif; }
+  .specs li::before { content: ""; display: inline-block; width: .7em; height: .7em; border-radius: 50%; background: var(--orange);
+                      margin-right: .5em; vertical-align: -.05em; box-shadow: inset 0 -2px 0 var(--orange-dk); }
+  .price { display: flex; align-items: center; gap: 10px; font: 800 clamp(22px, 4vw, 32px)/1 Archivo, sans-serif; justify-self: center; }
+  .price i { display: inline-grid; place-items: center; width: 1.4em; height: 1.4em; border-radius: 50%; border: 3px solid var(--orange);
+             color: var(--orange); font: italic 800 .6em/1 Archivo, sans-serif; }
+  .buy { display: grid; place-items: center; width: clamp(84px, 14vw, 112px); aspect-ratio: 1; border-radius: 50%; text-decoration: none;
+         border: 5px solid var(--orange); border-left-color: transparent; color: #fff; font: italic 800 clamp(15px, 2.6vw, 21px)/1 "Saira Extra Condensed";
+         letter-spacing: .04em; text-transform: uppercase; transform: rotate(-12deg); transition: transform .2s; }
+  .buy span { transform: rotate(12deg) scaleY(1.25); }
+  .buy:hover { transform: rotate(18deg); }
+  @media (max-width: 560px) { .sheet { grid-template-columns: 1fr auto; } .price { grid-column: 1 / -1; grid-row: 2; justify-self: start; } }
+
+  .lead { color: var(--muted); font-size: 18px; margin: 0 0 22px; }
+  .lead strong { color: var(--text); }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); margin: 0 0 16px; }
+  .panel > h2 { margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px;
+                background: linear-gradient(180deg, #1c1c1c, #0e0e0e); }
+  .panel > h2 .tabs span { font-size: 14px; }
+  .body { padding: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px 20px; }
+  .feat { display: flex; gap: 10px; align-items: flex-start; }
+  .feat::before { content: ""; flex: none; width: 13px; height: 13px; margin-top: 6px; border-radius: 50%; background: var(--orange);
+                  box-shadow: inset 0 -2px 0 var(--orange-dk); }
+  .feat b { color: #fff; }
+  .need { margin: 0 0 14px; padding-left: 22px; } .need li { margin-bottom: 4px; }
+  .need li::marker { color: var(--orange); }
+  pre { margin: 10px 0; padding: 12px 14px; background: var(--code); border: 1px solid var(--line); border-left: 4px solid var(--orange);
+        overflow-x: auto; font: 14px/1.5 ui-monospace, Consolas, monospace; color: #ffd08a; }
+  .opts { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 16px; }
+  .opts td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .opts td:first-child { white-space: nowrap; color: #ffd08a; font-family: ui-monospace, Consolas, monospace; font-size: 14px; }
+  .tip { margin: 12px 0 0; padding: 8px 10px; border-left: 3px solid var(--orange); background: rgba(243, 146, 0, .08); font-size: 15px; }
+  .tip b { color: var(--orange); }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .gallery figure { margin: 0; }
+  .gallery img { display: block; width: 100%; border: 1px solid var(--line); }
+  .gallery figcaption { font-size: 14px; color: var(--muted); margin-top: 5px; }
+  .cheat { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .cheat img { width: min(300px, 100%); border: 1px solid var(--line); }
+  .cheat div { flex: 1 1 260px; }
+  ol { margin: 0; padding-left: 22px; } li { margin-bottom: 6px; }
+  ol li::marker { color: var(--orange); font-weight: 700; }
+  code { background: var(--code); border: 1px solid var(--line); padding: 0 5px; font-size: .9em; color: #ffd08a; }
+  .opts code { color: inherit; }
+  footer { color: var(--muted); font-size: 15px; margin-top: 26px; border-top: 1px solid var(--line); padding-top: 14px; }
+  @media (prefers-reduced-motion: reduce) { .buy { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav><a href="../" data-en="‹ All games">‹ Tous les jeux</a><button id="lang" title="Français / English">🇬🇧 EN</button></nav>
+
+  <header class="dealer">
+    <div class="bar">
+      <div class="icons" aria-hidden="true"><span class="ico">▦</span><span class="ico">⌂</span><span class="ico">▚</span><span class="ico">♛</span></div>
+      <div class="tabs"><span>Mazda</span><span data-en="Used">Occasion</span><span class="on" data-en="Information">Informations</span></div>
+    </div>
+    <h1><small>Mazda</small>MX-5 RF</h1>
+    <img class="car" src="../docs/gt2_voiture.jpg" alt="La MX-5 RF Deep Crystal Blue chez le concessionnaire de Gran Turismo 2">
+    <div class="paint">Deep Crystal Blue Mica</div>
+    <div class="sheet">
+      <ul class="specs"><li>'18</li><li>184hp</li><li>1125kg</li></ul>
+      <div class="price"><i>Cr</i>8,084</div>
+      <a class="buy" href="#fabriquer"><span data-en="Build">Acheter</span></a>
+    </div>
+  </header>
+
+  <p class="lead" data-en="&lt;strong&gt;Gran Turismo 2&lt;/strong&gt; on PlayStation, European version: the original &lt;strong&gt;Simulation&lt;/strong&gt; disc (SCES-12380), the &lt;a href=&quot;https://github.com/CookiePLMonster/GT2-Combined-Disc&quot;&gt;combined disc&lt;/a&gt; or pez2k's &lt;strong&gt;GT2 Plus&lt;/strong&gt;. The MX-5 RF takes the place of the MX-5s of your choice, hardtop closed or top down, and you get a new disc image built from &lt;strong&gt;your&lt;/strong&gt; copy of the game: no game file is provided here."><strong>Gran Turismo 2</strong> sur PlayStation, version européenne : le disque <strong>Simulation</strong> d'origine (SCES-12380),
+    le <a href="https://github.com/CookiePLMonster/GT2-Combined-Disc">disque combiné</a> ou <strong>GT2 Plus</strong> de pez2k. La MX-5 RF prend la place des MX-5 de ton choix,
+    capotée ou décapotée, et tu obtiens une nouvelle image disque fabriquée à partir de <strong>ta</strong> copie du jeu : aucun fichier du jeu n'est fourni ici.</p>
+
+  <section class="panel">
+    <h2><span class="ico">01</span><span class="tabs"><span class="on" data-en="What you get">Ce que tu obtiens</span></span></h2>
+    <div class="body grid">
+      <div class="feat"><div data-en="&lt;b&gt;Two RFs by default&lt;/b&gt;: closed in place of the '93 Eunos Roadster (used, 7,735 Cr), top down in place of the '93 V-Special (used, 8,084 Cr). Their race versions are RFs too."><b>Deux RF par défaut</b> : capotée à la place de l'Eunos Roadster '93 (occasion, 7 735 Cr), décapotée à la place de la V-Special '93 (occasion, 8 084 Cr). Leurs versions course sont des RF aussi.</div></div>
+      <div class="feat"><div data-en="&lt;b&gt;A model made for GT2&lt;/b&gt;: 3 levels of detail, a day and a night model (headlights on, tail lights, brake lights), round wheel arches like the game's cars."><b>Un modèle fait pour GT2</b> : 3 niveaux de détail, un modèle de jour et un de nuit (phares allumés, feux arrière, feux stop), passages de roue ronds comme les voitures du jeu.</div></div>
+      <div class="feat"><div data-en="&lt;b&gt;Its real data&lt;/b&gt;: 2.0, 184 hp at 7,000 rpm, 20.9 mkg, 1,125 kg, 6-speed gearbox; tuning parts add up on top."><b>Ses vraies données</b> : 2.0 de 184 ch à 7 000 tr/mn, 20,9 mkg, 1 125 kg, boîte 6 ; les pièces de préparation s'ajoutent dessus.</div></div>
+      <div class="feat"><div data-en="&lt;b&gt;9 Mazda paints&lt;/b&gt; with their names (Deep Crystal Blue Mica first, Soul Red Crystal…) and their colour chips in the menus."><b>9 peintures Mazda</b> avec leurs noms (Deep Crystal Blue Mica en premier, Soul Red Crystal…) et leurs pastilles dans les menus.</div></div>
+      <div class="feat"><div data-en="&lt;b&gt;Its menus&lt;/b&gt;: « Mazda / MX-5 RF » at the dealer, and the (i) button opens two pages describing the RF, in the 5 languages, laid out like the game's."><b>Ses menus</b> : « Mazda / MX-5 RF » chez le concessionnaire, et le bouton (i) ouvre deux pages de description de la RF, dans les 5 langues, mises en page comme celles du jeu.</div></div>
+      <div class="feat"><div data-en="&lt;b&gt;A band on the start screens&lt;/b&gt;, in the style of the GT logo: « MX-5 RF », or « HD PLUS · beta 7 · MX-5 RF » on GT2 Plus."><b>Un bandeau sur les écrans de démarrage</b>, dans le style du logo GT : « MX-5 RF », ou « HD PLUS · beta 7 · MX-5 RF » sur GT2 Plus.</div></div>
+    </div>
+  </section>
+
+  <section class="panel" id="fabriquer">
+    <h2><span class="ico">02</span><span class="tabs"><span class="on" data-en="Build it on your PC">Fabriquer sur ton PC</span></span></h2>
+    <div class="body">
+      <p style="margin:0 0 10px" data-en="You need:">Il te faut :</p>
+      <ul class="need">
+        <li data-en="your Gran Turismo 2 disc image, &lt;b&gt;Europe&lt;/b&gt;: Simulation, combined or GT2 Plus (&lt;code&gt;.chd&lt;/code&gt;, &lt;code&gt;.cue&lt;/code&gt; or &lt;code&gt;.bin&lt;/code&gt;);">ton image du disque Gran Turismo 2 <b>Europe</b> : Simulation, combiné ou GT2 Plus (<code>.chd</code>, <code>.cue</code> ou <code>.bin</code>) ;</li>
+        <li data-en="&lt;code&gt;mazda_mx5_rf.kn5&lt;/code&gt; from the Assetto Corsa mod &lt;a href=&quot;https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html&quot;&gt;Mazda MX-5 RF Hardtop&lt;/a&gt;, extracted;"><code>mazda_mx5_rf.kn5</code> du mod Assetto Corsa
+          <a href="https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html">Mazda MX-5 RF Hardtop</a>, à extraire ;</li>
+        <li data-en="Python 3 with &lt;code&gt;numpy&lt;/code&gt; and &lt;code&gt;Pillow&lt;/code&gt;, and &lt;a href=&quot;https://github.com/soaresden/MazdaMx5-nd-rf-ingames&quot;&gt;this repository&lt;/a&gt;.">Python 3 avec <code>numpy</code> et <code>Pillow</code>, et <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames">ce dépôt</a>.</li>
+      </ul>
+      <pre>cd games/gran-turismo-2
+python make_gt2.py --disc "Gran Turismo 2 Plus Combined (Europe).chd" --kn5 mazda_mx5_rf.kn5 --out "GT2 MX-5 RF.chd"</pre>
+      <table class="opts">
+        <tr><td>--car CODE=closed|open</td><td data-en="which MX-5 to replace, and with which roof; repeat it for several cars. Default: &lt;code&gt;aminn=closed&lt;/code&gt; and &lt;code&gt;amivn=open&lt;/code&gt;.">quelle MX-5 remplacer, et avec quel toit ; à répéter pour plusieurs voitures. Par défaut : <code>aminn=closed</code> et <code>amivn=open</code>.</td></tr>
+        <tr><td>--cheat</td><td data-en="adds the cheat menu (see below).">ajoute le menu de triche (voir plus bas).</td></tr>
+        <tr><td>--version, --version-sub</td><td data-en="the text of the start screen band (&lt;code&gt;--version &quot;&quot;&lt;/code&gt; writes nothing).">le texte du bandeau des écrans de démarrage (<code>--version ""</code> pour ne rien écrire).</td></tr>
+        <tr><td>--out</td><td data-en="ending in &lt;code&gt;.chd&lt;/code&gt;: a CHD straight away; ending in &lt;code&gt;.bin&lt;/code&gt;: a &lt;code&gt;.bin&lt;/code&gt; and its &lt;code&gt;.cue&lt;/code&gt;.">en <code>.chd</code> : un CHD directement ; en <code>.bin</code> : un <code>.bin</code> et son <code>.cue</code>.</td></tr>
+      </table>
+      <p class="tip" data-en="&lt;b&gt;No chdman needed&lt;/b&gt;: the tool reads and writes CHD files itself, so the result goes straight into Batocera or DuckStation."><b>Pas besoin de chdman</b> : l'outil lit et écrit lui-même les CHD, le résultat va directement dans Batocera ou DuckStation.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><span class="ico">03</span><span class="tabs"><span class="on" data-en="Play">Jouer</span></span></h2>
+    <div class="body"><ol>
+      <li data-en="Open the new image in DuckStation, Batocera or another PlayStation emulator (for a &lt;code&gt;.bin&lt;/code&gt;, open its &lt;code&gt;.cue&lt;/code&gt;).">Ouvre la nouvelle image dans DuckStation, Batocera ou un autre émulateur PlayStation (pour un <code>.bin</code>, ouvre son <code>.cue</code>).</li>
+      <li data-en="In GT mode, the RFs are at the &lt;b&gt;Mazda used car dealer&lt;/b&gt;, in place of the MX-5s you chose.">En mode GT, les RF sont chez le <b>concessionnaire d'occasion Mazda</b>, à la place des MX-5 choisies.</li>
+      <li data-en="Your original image is not changed: to go back, play it again.">Ton image d'origine n'est pas modifiée : pour revenir en arrière, il suffit de la relancer.</li>
+    </ol></div>
+  </section>
+
+  <section class="panel">
+    <h2><span class="ico">04</span><span class="tabs"><span class="on" data-en="In the game">En jeu</span></span></h2>
+    <div class="body gallery">
+      <figure><img src="../docs/gt2_en_jeu.jpg" alt="" loading="lazy"><figcaption data-en="The top-down RF at the used car dealer.">La RF décapotée chez le concessionnaire d'occasion.</figcaption></figure>
+      <figure><img src="../docs/gt2_trois_quarts.jpg" alt="" loading="lazy"><figcaption data-en="Three-quarter rear view.">De trois quarts arrière.</figcaption></figure>
+      <figure><img src="../docs/gt2_avant.jpg" alt="" loading="lazy"><figcaption data-en="Three-quarter front view.">De trois quarts avant.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><span class="ico">05</span><span class="tabs"><span class="on" data-en="Cheat menu">Menu de triche</span></span></h2>
+    <div class="body cheat">
+      <img src="https://raw.githubusercontent.com/soaresden/GranTurismo2-OverlayCheat/main/docs/menu_permis.png" alt="Le menu GT2 CHEAT pendant un permis" loading="lazy">
+      <div><p style="margin:0" data-en="With &lt;code&gt;--cheat&lt;/code&gt;, the disc also gets &lt;a href=&quot;https://github.com/soaresden/GranTurismo2-OverlayCheat&quot;&gt;GranTurismo2-OverlayCheat&lt;/a&gt;: hold &lt;b&gt;SELECT&lt;/b&gt; (or L1 + R1 + L2 + R2 in Batocera) and a small menu appears over the game, to &lt;b&gt;freeze the licence timer&lt;/b&gt; and &lt;b&gt;change the credits&lt;/b&gt; live. The project must sit next to this repository, or its folder be given by &lt;code&gt;GT2CHEAT_DIR&lt;/code&gt;. It also exists on its own as a &lt;code&gt;.ppf&lt;/code&gt; / &lt;code&gt;.xdelta&lt;/code&gt; patch.">Avec <code>--cheat</code>, le disque reçoit aussi
+        <a href="https://github.com/soaresden/GranTurismo2-OverlayCheat">GranTurismo2-OverlayCheat</a> : maintiens <b>SELECT</b> (ou L1 + R1 + L2 + R2 dans Batocera)
+        et un petit menu apparaît par-dessus le jeu, pour <b>figer le chrono des permis</b> et <b>changer les crédits</b> en direct.
+        Le projet doit être à côté de ce dépôt, ou son dossier donné par <code>GT2CHEAT_DIR</code>. Il existe aussi seul, en patch <code>.ppf</code> / <code>.xdelta</code>.</p></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><span class="ico">06</span><span class="tabs"><span class="on" data-en="For the curious">Pour les curieux</span></span></h2>
+    <div class="body">
+      <p style="margin:0" data-en="The disc archive GT2.VOL rewritten in place, the &lt;code&gt;.cdo&lt;/code&gt; / &lt;code&gt;.cno&lt;/code&gt; models and their textures, the data, menu and start screen formats: &lt;a href=&quot;https://github.com/soaresden/MazdaMx5-nd-rf-ingames/blob/main/games/gran-turismo-2/README.en.md&quot;&gt;the README on GitHub&lt;/a&gt;. The RF reuses the shell, images and texture of the &lt;a href=&quot;gt1.html&quot;&gt;Gran Turismo&lt;/a&gt; version.">L'archive du disque GT2.VOL réécrite en place, les modèles <code>.cdo</code> / <code>.cno</code> et leurs textures, les formats des données, des menus et des écrans de démarrage :
+        <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames/tree/main/games/gran-turismo-2">le README sur GitHub</a>.
+        La RF reprend la coque, les images et la texture de la version <a href="gt1.html">Gran Turismo</a>.</p>
+    </div>
+  </section>
+
+  <footer data-en="Thanks to &lt;a href=&quot;https://github.com/pez2k/gt2tools&quot;&gt;pez2k&lt;/a&gt; (gt2tools, GT2 Plus), &lt;a href=&quot;https://github.com/CookiePLMonster/GT2-Combined-Disc&quot;&gt;CookiePLMonster&lt;/a&gt; (combined disc), Kunos Simulazioni and &lt;a href=&quot;https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html&quot;&gt;Modland&lt;/a&gt; (Assetto Corsa model).&lt;br&gt;Gran Turismo is a trademark of Sony Interactive Entertainment; Mazda and MX-5 are trademarks of Mazda. Fan project · no game or model file is provided · &lt;a href=&quot;https://github.com/soaresden/MazdaMx5-nd-rf-ingames&quot;&gt;code (GPL-3.0)&lt;/a&gt;">Merci à <a href="https://github.com/pez2k/gt2tools">pez2k</a> (gt2tools, GT2 Plus),
+    <a href="https://github.com/CookiePLMonster/GT2-Combined-Disc">CookiePLMonster</a> (disque combiné),
+    Kunos Simulazioni et <a href="https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html">Modland</a> (modèle Assetto Corsa).<br>
+    Gran Turismo est une marque de Sony Interactive Entertainment ; Mazda et MX-5 sont des marques de Mazda. Projet de fan · aucun fichier du jeu ni du modèle n'est fourni ·
+    <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames">code (GPL-3.0)</a></footer>
+</div>
+</body>
+</html>
