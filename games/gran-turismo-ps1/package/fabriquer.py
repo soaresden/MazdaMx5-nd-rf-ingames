@@ -113,8 +113,8 @@ def main():
     price = int(a) if a.isdigit() else 29900
     cheat = False
     if os.path.isdir(os.path.join(HERE, 'gt1cheat')):
-        a = ask(T('Ajouter le cheat (maintenir SELECT : figer le chrono des permis, changer les crédits) ? o/n',
-                  'Add the cheat (hold SELECT: freeze the licence timer, change the credits)? y/n'), 'n')
+        a = ask(T('Ajouter le cheat (maintenir SELECT ou L1+R1+L2+R2 : figer le chrono des permis, changer les crédits) ? o/n',
+                  'Add the cheat (hold SELECT or L1+R1+L2+R2: freeze the licence timer, change the credits)? y/n'), 'n')
         cheat = a.strip().lower() in ('o', 'y', 'oui', 'yes')
     out_dir = os.path.join(ROOT, 'MX5_RF_' + {'open': T('decapotee', 'open'), 'closed': T('capotee', 'closed'),
                                              'mixed': T('capotee_et_decapotee', 'closed_and_open')}[top])
