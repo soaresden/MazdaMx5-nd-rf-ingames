@@ -33,6 +33,7 @@ import zdir_ug2    # noqa: E402
 
 PORT = {'ug1': 'nfsu1x', 'ug2': 'nfsu2x'}
 LANG_NAME = {'fr': 'français', 'de': 'allemand', 'it': 'italien', 'es': 'espagnol'}
+LANG_VERSION = {'fr': 'française', 'de': 'allemande', 'it': 'italienne', 'es': 'espagnole'}
 TITLE = {'ug1': 'Need for Speed Underground', 'ug2': 'Need for Speed Underground 2'}
 
 
@@ -87,6 +88,45 @@ def write(path, data):
         os.remove(path)             # a fresh file, never through a link
     with open(path, 'wb') as f:
         f.write(data)
+
+
+def snapshot(root):
+    """{path in root: (size, mtime)}: write() makes a fresh file, so a changed file shows."""
+    out = {}
+    for d, _, files in os.walk(root):
+        for n in files:
+            p = os.path.join(d, n)
+            s = os.stat(p)
+            out[os.path.relpath(p, root).replace(os.sep, '/')] = (s.st_size, s.st_mtime_ns)
+    return out
+
+
+def changed(before, after, backups=False):
+    """The files new or changed; without backups=True, not vf_ug2's copy of the English ZDIR."""
+    return sorted(k for k, v in after.items()
+                  if before.get(k) != v and (backups or not k.endswith('_anglais.BIN')))
+
+
+def copy_to_mod(game_dir, mod_dir, files, log):
+    for k in files:
+        dst = os.path.join(mod_dir, *k.split('/'))
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        shutil.copyfile(os.path.join(game_dir, *k.split('/')), dst)
+    log('  %s : %s' % (os.path.relpath(mod_dir, os.path.dirname(os.path.dirname(mod_dir))), ', '.join(files)))
+
+
+def restore_disc(game_dir, files, iso, t, stock):
+    """game/ back as on the disc: its own file again (with its date of the extraction, so that it
+    shows as unchanged), or no file where the disc has none."""
+    for k in files:
+        p = os.path.join(game_dir, *k.split('/'))
+        os.remove(p)
+        entry = disc_ug.find(t, k)
+        if entry and t[entry][0] is not None:
+            disc_ug.copy(iso, t[entry], p)
+            if disc_ug.read(iso, t[entry]) != open(p, 'rb').read():
+                raise SystemExit('%s : la copie du disque ne correspond pas' % k)
+            os.utime(p, ns=(stock[k][1], stock[k][1]))
 
 
 def mx5_ug1(a, game_dir, t, log):
@@ -161,6 +201,9 @@ def main():
     ap.add_argument('--perf', action='store_true', help='conduite et performances de la MX-5 RF 184 ch')
     ap.add_argument('--names', action='store_true', help='« MX-5 RF » dans les menus')
     ap.add_argument('--no-autoload', action='store_true', help='pas de chargement automatique (Underground)')
+    ap.add_argument('--mods', action='store_true',
+                    help="game/ reste le disque d'origine ; la VF va dans mods/vf, la MX-5 dans mods/mx5 "
+                         '(il faut un NRO qui lit mods/)')
     a = ap.parse_args()
     if (a.perf or a.names) and not a.kn5:
         ap.error('--perf et --names vont avec --kn5')
@@ -174,9 +217,15 @@ def main():
                          'game/UDATA, je ne veux pas risquer de les écraser)' % game_dir)
     lines = []
     nro = unzip_release(a.release, dest, port, a.nro, a.env, print)
+    if a.mods and b'load-order.txt' not in nro:
+        raise SystemExit('--mods : ce NRO ne lit pas le dossier mods/ (donne le bon avec --nro)')
     print('disque USA : %s' % a.usa)
     t = disc_ug.extract(a.usa, game_dir)
-    lines.append('- le portage (%s) et le disque USA extrait dans game/' % os.path.basename(a.release))
+    lines.append('- le portage (%s) et le disque USA extrait dans game/%s' % (
+        os.path.basename(a.release), ", sans rien d'autre (le jeu d'origine)" if a.mods else ''))
+    mods_dir = os.path.join(dest, 'mods')
+    stock = snapshot(game_dir) if a.mods else None
+    vf_files = []
     env = os.path.join(dest, port + '_env.txt')
     settings = []
     if a.europe:
@@ -207,14 +256,39 @@ def main():
             print('  ce NRO ne connaît pas NFSU1_AUTOLOAD : pas de chargement automatique')
     if settings:
         add_env(env, settings, print)
+    order = []
+    if a.mods:
+        after_vf = snapshot(game_dir)
+        vf_files = changed(stock, after_vf)
+        if vf_files:
+            copy_to_mod(game_dir, os.path.join(mods_dir, 'vf'), vf_files, print)
+            order.append('vf')
+            lines.append('- mods/vf : la version %s (%d fichiers)' % (LANG_VERSION[a.langue], len(vf_files)))
     if a.kn5:
         if a.game == 'ug1':
             mx5_ug1(a, game_dir, t, print)
         else:
             mx5_ug2(a, game_dir, print)
-        lines.append('- la MX-5 RF %s à la place de la Miata%s%s' % (
-            'décapotée' if a.top == 'open' else 'capotée',
+        lines.append('- %sla MX-5 RF %s à la place de la Miata%s%s' % (
+            'mods/mx5 : ' if a.mods else '', 'décapotée' if a.top == 'open' else 'capotée',
             ', conduite MX-5 RF 184 ch' if a.perf else '', ', nom « MX-5 RF » dans les menus' if a.names else ''))
+        if a.mods:
+            mx5_files = changed(after_vf, snapshot(game_dir))
+            copy_to_mod(game_dir, os.path.join(mods_dir, 'mx5'), mx5_files, print)
+            order.append('mx5')
+            if set(mx5_files) & set(vf_files):
+                lines.append('  (faite par-dessus la version %s : elle reprend ses fichiers %s)'
+                             % (LANG_VERSION[a.langue], ', '.join(sorted(set(mx5_files) & set(vf_files)))))
+    if a.mods:
+        restore_disc(game_dir, changed(stock, snapshot(game_dir), True), a.usa, t, stock)
+        if changed(stock, snapshot(game_dir), True):
+            raise SystemExit("game/ n'est pas revenu au disque d'origine")
+        os.makedirs(mods_dir, exist_ok=True)
+        with open(os.path.join(mods_dir, 'load-order.txt'), 'w', encoding='utf-8', newline='\n') as f:
+            f.write('# Les mods chargés, un dossier par ligne, dans l\'ordre (le dernier gagne).\n'
+                    '# Un # devant une ligne la désactive.\n' + ''.join(m + '\n' for m in order))
+        lines.append('- mods/load-order.txt : %s. Enlever un mod : un # devant sa ligne, ou supprimer son dossier.'
+                     % (', '.join(order) or '(aucun)'))
     with open(os.path.join(a.out, 'LISEZMOI_%s.txt' % port), 'w', encoding='utf-8') as f:
         f.write(README.format(title=TITLE[a.game], port=port, lines='\n'.join(lines)))
     print('fini :', dest)
