@@ -6,13 +6,19 @@
 
 La MX-5 RF (ND2) remplace les MX-5 de ton choix. Par défaut :
 - **capotée** à la place de l'Eunos Roadster '93, celle d'occasion à 7 735 Cr ;
-- **décapotée** à la place de la V-Special '93. L'annonce d'occasion à 8 084 Cr devient cette décapotée.
+- **décapotée** à la place de la V-Special '93. L'annonce d'occasion à 8 084 Cr (7 971 Cr dans la liste américaine) devient cette décapotée.
 
 Les versions course (après la modification course) sont des RF aussi.
 
-L'outil prend le disque **Simulation** d'origine (Europe), le **disque combiné**
+L'outil prend le disque **Simulation** d'origine (Europe ou USA), le **disque combiné**
 ([GT2-Combined-Disc](https://github.com/CookiePLMonster/GT2-Combined-Disc)) ou **GT2 Plus** de
-pez2k. Il fabrique l'image sur les trois. Les essais en jeu ont été faits sur GT2 Plus combiné.
+pez2k. Il fabrique l'image sur tous. Les essais en jeu ont été faits sur GT2 Plus combiné.
+Il fabrique aussi, au choix, un fichier pour [gt-2-pc](https://github.com/dubrovskiy-yevhen-stakelogic/gt-2-pc),
+le portage PC du jeu (voir plus bas).
+
+**Dans le navigateur** : [la page Gran Turismo 2](https://soaresden.github.io/MazdaMx5-nd-rf-ingames/web/gt2.html)
+(`web/gt2.html`) fait tourner ces mêmes outils avec [Pyodide](https://pyodide.org), pour l'image
+disque comme pour le fichier gt-2-pc.
 
 ![De trois quarts arrière](../../docs/gt2_trois_quarts.jpg) ![De trois quarts avant](../../docs/gt2_avant.jpg)
 
@@ -60,6 +66,21 @@ python make_gt2.py --disc "Gran Turismo 2 Plus Combined (Europe).chd" --kn5 mazd
   maintenu, ou L1 + R1 + L2 + R2 dans Batocera : chrono des permis figé, crédits en direct). Le projet doit être à côté de ce dépôt,
   ou son dossier donné par `GT2CHEAT_DIR`.
 - `--out` en `.bin` donne un `.bin` + `.cue` ; en `.chd`, un CHD directement.
+
+### Pour gt-2-pc (le portage PC)
+
+```
+python make_gt2_mods.py --disc "Gran Turismo 2 (USA) (Simulation Mode) (Rev 2).chd" --kn5 mazda_mx5_rf.kn5 --out gt2pc_mx5.zip
+```
+
+Mêmes `--car`. Le zip contient `mods/mx5/`, une extension de voitures de gt-2-pc
+(`catalogue.version` + `assets/` avec les fichiers de GT2.VOL changés), `JOUER_MX5.bat` qui lance
+le jeu avec `GT2_CAR_EXPANSION` pointé dessus, et `LISEZMOI.txt` / `README.txt`. On le
+décompresse dans le dossier de données de gt-2-pc (celui de `gt2game.exe`) : le jeu installé
+n'est pas modifié, `PLAY.bat` lance toujours l'original. La couche voitures de gt-2-pc ne prend
+que `carobj/`, `carparam/`, `.carinfo*`, `.carcolor` et `.cclatain` : les images de titre et la
+description du concessionnaire restent celles d'origine. Disque de référence de gt-2-pc :
+Simulation USA v1.2 ; les disques européens marchent aussi.
 
 ## Comment c'est fait
 

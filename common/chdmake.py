@@ -14,7 +14,6 @@ import os
 import struct
 import sys
 import zlib
-from concurrent.futures import ProcessPoolExecutor
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import chd  # noqa: E402
@@ -219,6 +218,8 @@ def write(bin_path, out_path, track_type='MODE2_RAW', log=print, workers=None):
     entries = []
     step = 256
     jobs = [(bin_path, h, min(step, hunks - h), frames) for h in range(0, hunks, step)]
+    # imported here: the browser (Pyodide, web/gt2-worker.js) has no multiprocessing
+    from concurrent.futures import ProcessPoolExecutor
     with open(tmp, 'wb') as o, ProcessPoolExecutor(max_workers=workers) as ex:
         o.write(bytes(124))
         o.write(meta_entry)

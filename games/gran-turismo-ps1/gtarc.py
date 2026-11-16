@@ -211,6 +211,56 @@ class Arc:
         return self.entries[i][1] != self.entries[i][2]
 
 
+def _stored(arc, i, data, done):
+    """How the new bytes of entry i are stored: compressed if the entry was (the game decompresses
+    some files whatever the sizes say: a menu page stored 21102 bytes compressed for 20276),
+    raw only if it was. done: the same bytes are compressed once (CAR.DAT: day and night copies)."""
+    if not arc.compressed(i):
+        return bytes(data)
+    key = bytes(data)
+    if key not in done:
+        done[key] = compress(key)
+    stored = done[key]
+    if len(stored) == len(key):
+        stored += b'\0'          # stored == size would read as "not compressed"
+    return stored
+
+
+def replace_in_place(arc, new, align=0x800, room=None):
+    """Like replace(), but every entry that does not change stays where it is: a new entry goes
+    in its old place when it fits there, else after the last one, on an `align` boundary. The
+    archive then only differs where something changes (a .psxmod of gran-turismo-recomp only
+    holds those sectors). None if the archive would grow past `room` bytes, or if it is
+    compressed as a whole."""
+    if arc.data[:10] != MAGIC or not new:
+        return None if new else arc.data
+    done = {}
+    stored = {i: _stored(arc, i, d, done) for i, d in new.items()}
+    starts = sorted({off for off, _, _ in arc.entries} | {len(arc.data)})
+    out = bytearray(arc.data)
+    entries = list(arc.entries)
+    end = len(out)
+    for i in sorted(new):
+        off = entries[i][0]
+        nxt = starts[starts.index(off) + 1]
+        # another entry in the same place (an offset shared by two entries) must not be
+        # overwritten, unless it gets the same bytes
+        shared = any(j != i and stored.get(j) != stored[i] and arc.entries[j][0] < off + len(stored[i]) and
+                     arc.entries[j][0] + arc.entries[j][1] > off for j in range(len(arc)))
+        if len(stored[i]) <= nxt - off and not shared:
+            out[off:off + len(stored[i])] = stored[i]
+        else:
+            off = (end + align - 1) // align * align
+            out += b'\0' * (off - len(out)) + stored[i]
+            end = len(out)
+        entries[i] = (off, len(stored[i]), len(new[i]))
+    if room is not None and len(out) > room:
+        return None
+    for i, e in enumerate(entries):
+        struct.pack_into('<III', out, 16 + 12 * i, *e)
+    return bytes(out)
+
+
 def replace(arc, new, align=0x800):
     """The archive with some entries replaced ({index: uncompressed bytes}, stored compressed);
     the other entries are copied as they are stored. Entries start on `align` boundaries."""
@@ -218,21 +268,10 @@ def replace(arc, new, align=0x800):
     off = (16 + 12 * count + align - 1) // align * align
     table = bytearray()
     body = bytearray()
-    done = {}          # the same bytes are compressed once (CAR.DAT: day and night copies)
+    done = {}
     for i in range(count):
         if i in new:
-            size = len(new[i])
-            # compressed if the entry was: the game decompresses some files whatever the sizes
-            # say (a menu page stored 21102 bytes compressed for 20276); stored raw only if it was
-            if arc.compressed(i):
-                key = bytes(new[i])
-                if key not in done:
-                    done[key] = compress(key)
-                stored = done[key]
-            else:
-                stored = new[i]
-            if len(stored) == size and arc.compressed(i):
-                stored += b'\0'          # stored == size would read as "not compressed"
+            stored, size = _stored(arc, i, new[i], done), len(new[i])
         else:
             stored, size = arc.raw(i), arc.entries[i][2]
         table += struct.pack('<III', off + len(body), len(stored), size)

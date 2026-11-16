@@ -34,7 +34,8 @@ TEXT_LEFT, TEXT_RIGHT, TEXT_WIDTH = 29, 262, 224
 FIRST, PITCH, LEFT_LINES, RIGHT_LINES = 111, 20, 15, 9
 TEXT_HEIGHT = 14          # from the top of an accented capital to the bottom of a 'p'
 CONDENSE = 0.97           # the game's letters are a little narrower than Arial's
-LANGS = ('eng', 'fra', 'ger', 'ita', 'spa')
+# gtmenu/<lang>/: the European discs; 'usa', the American disc's English
+LANGS = ('eng', 'fra', 'ger', 'ita', 'spa', 'usa')
 
 TEXTS = {
     'fra': (
@@ -114,6 +115,8 @@ TEXTS = {
         "más potente de su categoría, pero es uno de los coches más divertidos de conducir, desde la "
         "primera curva hasta el circuito."),
 }
+# the American disc: the same English, in American spelling
+TEXTS['usa'] = TEXTS['eng'].replace('litre', 'liter')
 
 
 def _font_path(paths):
@@ -444,6 +447,18 @@ def title_tim(original, small=False, suffix=''):
 
 
 # ---------------------------------------------------------------------------------------------
+def used_prices(d, car):
+    """The prices of `car`'s ads in a .usedcar (raw), in their order."""
+    a = struct.pack('<I', car)
+    out = []
+    k = d.find(a)
+    while k >= 0:
+        if k % 4 == 0:
+            out.append(int.from_bytes(d[k + 4:k + 7], 'little'))
+        k = d.find(a, k + 1)
+    return out
+
+
 def move_used_car(d, car, price, new_car, letter):
     """.usedcar (raw, not gzipped) with the records of `car` at `price` given to `new_car` and the
     paint `letter`. Returns (data, records changed)."""
@@ -495,7 +510,7 @@ def version_screen(tim, text, place, sub=''):
     left, top, width, size, panel = place
     ss = 4
     bold = ImageFont.truetype(_font_path([WINFONTS + 'arialbi.ttf', WINFONTS + 'arialbd.ttf', FONTS[1]]), size * ss)
-    light = ImageFont.truetype(_font_path([WINFONTS + 'ariali.ttf', FONTS[0]]), max(9, int(size * 0.5)) * ss)
+    light = ImageFont.truetype(_font_path([WINFONTS + 'ariali.ttf', FONTS[0], FONTS[1]]), max(9, int(size * 0.5)) * ss)
     bh = int(size * (1.95 if sub else 1.35))
     need = int((6 + 2 * (0.55 * size + 1) + 4 + 6) + bold.getlength(text) / ss + 0.18 * size) + 2
     if width is None:

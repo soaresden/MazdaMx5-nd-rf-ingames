@@ -85,6 +85,12 @@
   .check { display: flex; gap: 10px; align-items: flex-start; text-transform: none; letter-spacing: 0; font-weight: 600; margin: 0; }
   .check input { accent-color: var(--blue); margin-top: 5px; width: 17px; height: 17px; flex: none; }
   .check.off { opacity: .55; }
+  .outputs { display: grid; gap: 8px; margin-bottom: 16px; }
+  .out { display: flex; gap: 10px; align-items: flex-start; text-transform: none; letter-spacing: 0; font-weight: 500; margin: 0;
+         border: 1px solid var(--line); padding: 10px 12px; cursor: pointer; }
+  .out:has(input:checked) { border-color: var(--blue); background: rgba(231, 235, 244, .06); }
+  .out b { color: var(--white); }
+  .out input { accent-color: var(--blue); margin-top: 5px; width: 17px; height: 17px; flex: none; }
   .carrow { display: grid; grid-template-columns: 1fr minmax(150px, 46%); gap: 10px; align-items: center; text-transform: none; letter-spacing: 0; font-weight: 600; margin: 0; }
   .carrow select { padding: 6px 8px; font-size: 15px; }
   .cars { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 8px 18px; margin-top: 8px; }
@@ -115,6 +121,7 @@
   .downloads { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
   .download { display: inline-block; font: 800 20px "Saira Extra Condensed"; text-transform: uppercase; letter-spacing: .08em;
               color: #0a1d4f; background: var(--white); padding: 10px 18px; text-decoration: none; border: 0; cursor: pointer; }
+  .download[hidden] { display: none; }
   ol { margin: 0; padding-left: 22px; } li { margin-bottom: 6px; }
   code { background: #000; border: 1px solid var(--line); padding: 0 5px; font-size: .9em; }
   footer { color: var(--muted); font-size: 15px; margin-top: 26px; border-top: 1px solid var(--line); padding-top: 14px; }
@@ -129,7 +136,7 @@
     <div class="title"><h1>Mazda MX-5 RF<small>Gran Turismo · PlayStation</small></h1></div>
   </div>
 
-  <p class="lead" data-en="The &lt;strong&gt;Europe multi-language&lt;/strong&gt; version of the game (PAL, &lt;strong&gt;SCES-00984&lt;/strong&gt;), played in &lt;a href=&quot;https://www.duckstation.org&quot;&gt;DuckStation&lt;/a&gt; or another PlayStation emulator. The MX-5 RF takes the place of the Eunos Roadsters, and you get a new disc image &lt;code&gt;.bin&lt;/code&gt; + &lt;code&gt;.cue&lt;/code&gt;, built from &lt;strong&gt;your&lt;/strong&gt; copy of the game (&lt;code&gt;.chd&lt;/code&gt;, &lt;code&gt;.cue&lt;/code&gt;/&lt;code&gt;.bin&lt;/code&gt; or &lt;code&gt;.bin&lt;/code&gt;) and of the model: no game file is provided here.">La version <strong>Europe multi-langues</strong> du jeu (PAL, <strong>SCES-00984</strong>), jouée dans <a href="https://www.duckstation.org">DuckStation</a> ou un autre émulateur PlayStation. La MX-5 RF prend la place des Eunos Roadster, et tu obtiens une nouvelle image disque <code>.bin</code> + <code>.cue</code>, fabriquée à partir de <strong>ta</strong> copie du jeu (<code>.chd</code>, <code>.cue</code>/<code>.bin</code> ou <code>.bin</code>) et du modèle : aucun fichier du jeu n'est fourni ici.</p>
+  <p class="lead" data-en="Gran Turismo on PlayStation, &lt;strong&gt;Europe multi-language&lt;/strong&gt; version (PAL, &lt;strong&gt;SCES-00984&lt;/strong&gt;) or &lt;strong&gt;USA&lt;/strong&gt; (&lt;strong&gt;SCUS-94194&lt;/strong&gt;). The MX-5 RF takes the place of the Eunos Roadsters, and you get either &lt;strong&gt;a new disc image&lt;/strong&gt; &lt;code&gt;.bin&lt;/code&gt; + &lt;code&gt;.cue&lt;/code&gt; for &lt;a href=&quot;https://www.duckstation.org&quot;&gt;DuckStation&lt;/a&gt; or another PlayStation emulator, or &lt;strong&gt;a &lt;code&gt;.psxmod&lt;/code&gt; file&lt;/strong&gt; for &lt;a href=&quot;https://github.com/alexbeavs-ps1-ports/gran-turismo-recomp&quot;&gt;gran-turismo-recomp&lt;/a&gt;, the PC recompilation of the game (USA disc). Everything is built from &lt;strong&gt;your&lt;/strong&gt; copy of the game (&lt;code&gt;.chd&lt;/code&gt;, &lt;code&gt;.cue&lt;/code&gt;/&lt;code&gt;.bin&lt;/code&gt; or &lt;code&gt;.bin&lt;/code&gt;) and of the model: no game file is provided here.">Gran Turismo sur PlayStation, version <strong>Europe multi-langues</strong> (PAL, <strong>SCES-00984</strong>) ou <strong>USA</strong> (<strong>SCUS-94194</strong>). La MX-5 RF prend la place des Eunos Roadster, et tu obtiens au choix <strong>une nouvelle image disque</strong> <code>.bin</code> + <code>.cue</code> pour <a href="https://www.duckstation.org">DuckStation</a> ou un autre émulateur PlayStation, ou <strong>un fichier <code>.psxmod</code></strong> pour <a href="https://github.com/alexbeavs-ps1-ports/gran-turismo-recomp">gran-turismo-recomp</a>, la recompilation PC du jeu (disque USA). Tout est fabriqué à partir de <strong>ta</strong> copie du jeu (<code>.chd</code>, <code>.cue</code>/<code>.bin</code> ou <code>.bin</code>) et du modèle : aucun fichier du jeu n'est fourni ici.</p>
 
   <section class="panel">
     <h2><b>&#9654;</b> <span data-en="Windows package (recommended)">Paquet Windows (conseillé)</span></h2>
@@ -144,7 +151,7 @@
     <h2><b>01</b> <span data-en="Your files">Tes fichiers</span></h2>
     <div class="body grid">
       <div>
-        <label for="chd" data-en="Game disc image &lt;span class=&quot;hint&quot;&gt;· Gran Turismo Europe multi (SCES-00984), &lt;code&gt;.chd&lt;/code&gt; or &lt;code&gt;.bin&lt;/code&gt;&lt;/span&gt;">Image disque du jeu <span class="hint">· Gran Turismo Europe multi (SCES-00984), <code>.chd</code> ou <code>.bin</code></span></label>
+        <label for="chd" data-en="Game disc image &lt;span class=&quot;hint&quot;&gt;· Gran Turismo Europe multi (SCES-00984) or USA (SCUS-94194), &lt;code&gt;.chd&lt;/code&gt; or &lt;code&gt;.bin&lt;/code&gt;&lt;/span&gt;">Image disque du jeu <span class="hint">· Gran Turismo Europe multi (SCES-00984) ou USA (SCUS-94194), <code>.chd</code> ou <code>.bin</code></span></label>
         <input id="chd" type="file" accept=".chd,.bin">
       </div>
       <div>
@@ -177,14 +184,19 @@
   <section class="panel">
     <h2><b>03</b> <span data-en="Build">Fabriquer</span></h2>
     <div class="body">
-      <button id="go" class="go" disabled data-en="Loading…">Chargement…</button>
-      <p class="hint" style="margin:10px 0 0" data-en="a few minutes: your browser does all the work. The disc image (~690 MB) is written as it is made: in Chrome and Edge you choose where to save it first; elsewhere it is kept in the site's storage until you download it. Leave the tab open in the meantime.">quelques minutes : c'est ton navigateur qui fait tout le travail. L'image disque (~690 Mo) est écrite au fur et à mesure :
-        dans Chrome et Edge tu choisis d'abord où l'enregistrer ; ailleurs elle est gardée dans le stockage du site jusqu'au téléchargement. Laisse l'onglet ouvert pendant ce temps.</p>
+      <div class="outputs">
+        <label class="out"><input type="radio" name="output" value="ps1" checked>
+          <span data-en="&lt;b&gt;A PlayStation disc image&lt;/b&gt; (&lt;code&gt;.bin&lt;/code&gt; + &lt;code&gt;.cue&lt;/code&gt;, ~690 MB) for DuckStation, Batocera, a real console… (Europe or USA disc)"><b>Une image disque PlayStation</b> (<code>.bin</code> + <code>.cue</code>, ~690 Mo) pour DuckStation, Batocera, une vraie console… (disque Europe ou USA)</span></label>
+        <label class="out"><input type="radio" name="output" value="pc">
+          <span data-en="&lt;b&gt;A file for the PC recompilation&lt;/b&gt; &lt;a href=&quot;https://github.com/alexbeavs-ps1-ports/gran-turismo-recomp&quot;&gt;gran-turismo-recomp&lt;/a&gt; (&lt;code&gt;.psxmod&lt;/code&gt;, under 1 MB, USA disc only): only the changed parts, read over your disc, which stays untouched."><b>Un fichier pour la recompilation PC</b> <a href="https://github.com/alexbeavs-ps1-ports/gran-turismo-recomp">gran-turismo-recomp</a> (<code>.psxmod</code>, moins de 1 Mo, disque USA seulement) : seules les parties changées, lues par-dessus ton disque, qui reste intact.</span></label>
+      </div>
+      <button id="go" class="go" disabled>Chargement…</button>
+      <p class="hint" id="howlong" style="margin:10px 0 0"></p>
       <div class="bar" id="bar" hidden><i></i></div>
       <div id="log"></div>
       <div id="status" class="status"></div>
       <div class="downloads">
-        <a id="dlbin" class="download" hidden data-en="Download the .bin">Télécharger le .bin</a>
+        <a id="dlbin" class="download" hidden></a>
         <button id="dlcue" class="download" type="button" hidden data-en="Save the .cue">Enregistrer le .cue</button>
       </div>
     </div>
@@ -196,6 +208,7 @@
       <li data-en="Put the &lt;code&gt;.bin&lt;/code&gt; and the &lt;code&gt;.cue&lt;/code&gt; &lt;strong&gt;in the same folder&lt;/strong&gt;, with the names they were given (the &lt;code&gt;.cue&lt;/code&gt; names the &lt;code&gt;.bin&lt;/code&gt;: if your browser renamed it, rename it back).">Mettre le <code>.bin</code> et le <code>.cue</code> <strong>dans le même dossier</strong>, avec les noms qu'ils ont reçus
         (le <code>.cue</code> donne le nom du <code>.bin</code> : si ton navigateur l'a renommé, remets le même nom).</li>
       <li data-en="In DuckStation (or another emulator), open the &lt;code&gt;.cue&lt;/code&gt;.">Dans DuckStation (ou un autre émulateur), ouvrir le <code>.cue</code>.</li>
+      <li data-en="&lt;b&gt;gran-turismo-recomp&lt;/b&gt; (&lt;code&gt;.psxmod&lt;/code&gt;): in its launcher, open &lt;b&gt;Mods&lt;/b&gt;, install the file, then start the game with your original USA disc. The MX-5 RF is enabled by default; untick it to get the original game back."><b>gran-turismo-recomp</b> (<code>.psxmod</code>) : dans son lanceur, ouvre <b>Mods</b>, installe le fichier, puis lance le jeu avec ton disque USA d'origine. La MX-5 RF y est activée d'office ; décoche-la pour retrouver le jeu d'origine.</li>
       <li data-en="The MX-5 RF is at the Mazda dealer (in place of the Eunos Roadsters) and in the used cars, with its name, its 184 hp, its eight paints (Deep Crystal Blue, Soul Red Crystal, Machine Grey…) and its INFO page.">La MX-5 RF est chez le concessionnaire Mazda (à la place des Eunos Roadster) et dans les voitures d'occasion, avec son nom,
         ses 184 ch, ses huit peintures (Deep Crystal Blue, Soul Red Crystal, Machine Grey…) et sa page INFO.</li>
       <li data-en="Your &lt;code&gt;.chd&lt;/code&gt; is not changed: to go back, play it again.">Ton <code>.chd</code> n'est pas modifié : pour revenir en arrière, il suffit de le relancer.</li>
@@ -259,14 +272,24 @@
   };
   let ready = false, busy = false, target = null, binName = '', binUrl = null, cueUrl = null, t0 = 0;
   const worker = new Worker('gt1-worker.js?lang=' + SB_LANG);
+  const output = () => document.querySelector('input[name=output]:checked').value;
   const update = () => {
     const price = +$('price').value;
+    const ps1 = output() === 'ps1';
     $('go').disabled = busy || !(ready && Object.keys(chosen()).length && price >= 1 && price <= 999999
                                   && (TEST || ($('chd').files.length && $('kn5').files.length)));
     $('go').textContent = !ready ? SBT('Chargement de Python…', 'Loading Python…')
-                        : busy ? SBT('Fabrication…', 'Building…') : SBT('Fabriquer la MX-5', 'Build the MX-5');
+                        : busy ? SBT('Fabrication…', 'Building…')
+                        : ps1 ? SBT("Fabriquer l'image disque", 'Build the disc image') : SBT('Fabriquer le .psxmod', 'Build the .psxmod');
+    $('howlong').innerHTML = ps1
+      ? SBT("quelques minutes : c'est ton navigateur qui fait tout le travail. L'image disque (~690 Mo) est écrite au fur et à mesure : dans Chrome et Edge tu choisis d'abord où l'enregistrer ; ailleurs elle est gardée dans le stockage du site jusqu'au téléchargement. Laisse l'onglet ouvert pendant ce temps.",
+            "a few minutes: your browser does all the work. The disc image (~690 MB) is written as it is made: in Chrome and Edge you choose where to save it first; elsewhere it is kept in the site's storage until you download it. Leave the tab open in the meantime.")
+      : SBT("quelques minutes, dans ton navigateur. Il faut le disque <b>USA</b> (Gran Turismo (USA) (Rev 1), celui de gran-turismo-recomp). Installe ensuite le <code>.psxmod</code> depuis le menu <b>Mods</b> du lanceur.",
+            "a few minutes, in your browser. It takes the <b>USA</b> disc (Gran Turismo (USA) (Rev 1), the one of gran-turismo-recomp). Then install the <code>.psxmod</code> from the launcher's <b>Mods</b> menu.");
   };
   $('chd').onchange = $('kn5').onchange = $('price').oninput = $('cars').onchange = update;
+  document.querySelectorAll('input[name=output]').forEach((r) => { r.onchange = update; });
+  update();
   const setAll = (v) => { boxes().forEach((b) => { b.value = v; }); update(); };
   $('all').onclick = () => setAll('closed');
   $('allopen').onclick = () => setAll('open');
@@ -288,7 +311,18 @@
     if (m.type === 'error') { busy = false; bar(null); status(SBT('Erreur : ', 'Error: ') + m.text, 'err'); update(); }
     if (m.type === 'done') {
       busy = false; bar(1);
-      const mb = Math.round(m.size / 1048576);
+      const mb = Math.max(1, Math.round(m.size / 1048576));
+      const mb1 = (m.size / 1048576).toFixed(1);   // the small .psxmod / .zip: 0.8 MB, not 1
+      if (m.kind === 'psxmod') {
+        if (binUrl) URL.revokeObjectURL(binUrl);
+        binUrl = URL.createObjectURL(m.blob);
+        const a = $('dlbin');
+        a.href = binUrl; a.download = binName; a.textContent = SBT('Télécharger le .psxmod', 'Download the .psxmod'); a.hidden = false;
+        status(SBT(`Terminé en ${m.seconds} s : ${binName} (${mb1.replace(".", ",")} Mo), à installer dans le menu Mods de gran-turismo-recomp.`,
+                   `Done in ${m.seconds} s: ${binName} (${mb1} MB), to install from gran-turismo-recomp's Mods menu.`), 'ok');
+        update();
+        return;
+      }
       if (m.kind === 'file') {
         binName = m.saved;
         status(SBT(`Terminé en ${m.seconds} s : ${binName} enregistré (${mb} Mo). Enregistre maintenant le .cue à côté.`,
@@ -298,7 +332,7 @@
           binUrl = URL.createObjectURL(m.kind === 'opfs' ? await opfsFile(m.opfs) : m.blob);
         } catch (e) { status(SBT('Erreur : ', 'Error: ') + e, 'err'); update(); return; }
         const a = $('dlbin');
-        a.href = binUrl; a.download = binName; a.hidden = false;
+        a.href = binUrl; a.download = binName; a.textContent = SBT('Télécharger le .bin', 'Download the .bin'); a.hidden = false;
         status(SBT(`Terminé en ${m.seconds} s. Télécharge les deux fichiers (${mb} Mo et 1 Ko).`,
                    `Done in ${m.seconds} s. Download both files (${mb} MB and 1 KB).`), 'ok');
       }
@@ -328,12 +362,13 @@
   const files = () => TEST ? { chd: location.origin + '/test/disc.chd', kn5: '/test/model.kn5' }
                            : { chd: $('chd').files[0], kn5: $('kn5').files[0] };
   $('go').onclick = async () => {
+    const ps1 = output() === 'ps1';
     const roofs = new Set(Object.values(chosen()));
     const top = roofs.size === 1 ? [...roofs][0] : 'mixed';
-    binName = `Gran Turismo MX-5 RF${top === 'open' ? ' open' : top === 'mixed' ? ' mix' : ''}.bin`;
+    binName = ps1 ? `Gran Turismo MX-5 RF${top === 'open' ? ' open' : top === 'mixed' ? ' mix' : ''}.bin` : 'mx5_rf.psxmod';
     target = null;
     // Chrome, Edge: the .bin goes straight to the file chosen now (the click allows the dialog)
-    if (window.showSaveFilePicker && !TEST) {
+    if (ps1 && window.showSaveFilePicker && !TEST) {
       try {
         target = await showSaveFilePicker({ suggestedName: binName,
                                             types: [{ description: SBT('Image disque PlayStation', 'PlayStation disc image'),
@@ -348,7 +383,7 @@
     $('dlbin').hidden = $('dlcue').hidden = true; $('log').textContent = ''; bar('busy');
     status(SBT('Fabrication en cours…', 'Building…'));
     worker.postMessage({ ...files(), target,
-                         options: { cars: chosen(), top: 'closed', price: +$('price').value, cheat: false } });
+                         options: { cars: chosen(), top: 'closed', price: +$('price').value, cheat: false, output: output() } });
   };
 </script>
 </body>

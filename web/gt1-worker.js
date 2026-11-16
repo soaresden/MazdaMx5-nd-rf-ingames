@@ -6,6 +6,8 @@
 //   - otherwise a file of the site's private storage (OPFS), which the page then offers as a
 //     download read from the disk;
 //   - otherwise (old browsers) a Blob made of the pieces.
+// Or, for the PC recompilation gran-turismo-recomp (Gran Turismo USA), a .psxmod package
+// (make_psxmod.package): only the changed sectors, read over the player's stock disc.
 // Nothing is sent anywhere.
 
 importScripts('https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js');
@@ -14,7 +16,7 @@ const GT = 'games/gran-turismo-ps1';
 const SOURCES = [
   'common/chd.py', 'common/binimage.py', 'common/kn5.py', 'common/acmodel.py',
   ...['build_car', 'carinf', 'dealer', 'decimate', 'disc', 'gt1car', 'gt1data', 'gtarc', 'infopage',
-      'make_car', 'menus', 'mx5scene', 'preview', 'shell', 'slt', 'tim', 'titles', 'views']
+      'make_car', 'make_psxmod', 'menus', 'mx5scene', 'preview', 'shell', 'slt', 'tim', 'titles', 'views']
     .map((m) => `${GT}/${m}.py`),
   `${GT}/fonts/LiberationSans-Bold.ttf`,
   'games/nfs-most-wanted-x360/assets/badge_mx5_miata_1024.png',   // the MX-5 emblem of the names
@@ -152,16 +154,34 @@ onmessage = async (ev) => {
     pyodide.globals.set('CHD_FILE', chd);
     pyodide.globals.set('OPTIONS', pyodide.toPy(options));
     pyodide.globals.set('jslog', (text) => say('log', { text: tr(text) }));
+    pyodide.globals.set('LANG_EN', EN);
     await pyodide.runPythonAsync(`
-import make_car
+import make_car, make_psxmod
 o = OPTIONS
-FILES, DISC = make_car.generate(open_chd(CHD_FILE), '/in/model.kn5', dict(o['cars']), o['top'],
-                                int(o['price']), log=jslog)
-TOTAL = DISC.c.frames * 2352
-GEN = DISC.bin_chunks(FILES)
-def next_chunk():
-    return next(GEN, None)
+DISC = make_car.disc.Disc(open_chd(CHD_FILE))
+if o.get('output') == 'pc' and make_psxmod.BOOT not in DISC.read('SYSTEM.CNF').decode('latin-1'):
+    raise ValueError('gran-turismo-recomp takes the Gran Turismo USA disc (SCUS-94194): choose that one' if LANG_EN
+                     else 'gran-turismo-recomp prend le disque Gran Turismo USA (SCUS-94194) : choisis celui-là')
+FILES, DISC = make_car.generate(DISC, '/in/model.kn5', dict(o['cars']), o['top'], int(o['price']), log=jslog,
+                                keep_layout=o.get('output') == 'pc')
+if o.get('output') == 'pc':
+    MOD, _n = make_psxmod.package(DISC, FILES, dict(o['cars']), int(o['price']))
+    jslog(('.psxmod: %d disc ranges' if LANG_EN else '.psxmod : %d zones du disque') % _n)
+else:
+    TOTAL = DISC.c.frames * 2352
+    GEN = DISC.bin_chunks(FILES)
+    def next_chunk():
+        return next(GEN, None)
 `);
+    if (options.output === 'pc') {
+      const z = pyodide.globals.get('MOD');
+      const bytes = z.toJs();
+      z.destroy();
+      pyodide.runPython("for _k in ('FILES', 'DISC', 'MOD'): globals().pop(_k, None)");
+      say('done', { kind: 'psxmod', blob: new Blob([bytes], { type: 'application/zip' }), size: bytes.byteLength,
+                    seconds: Math.round((Date.now() - t0) / 1000) });
+      return;
+    }
     const total = pyodide.globals.get('TOTAL');
     say('log', { text: T('L\'image disque (.bin), écrite au fur et à mesure', 'The disc image (.bin), written as it is made') });
     sink = await openSink(target, total);
@@ -182,7 +202,14 @@ def next_chunk():
     say('done', { ...result, kind: sink.kind, size: done, seconds: Math.round((Date.now() - t0) / 1000) });
   } catch (e) {
     if (sink) sink.abort();
-    try { pyodide.runPython("for _k in ('FILES', 'DISC', 'GEN'): globals().pop(_k, None)"); } catch (_) {}
-    say('error', { text: String(e) });
+    try { pyodide.runPython("for _k in ('FILES', 'DISC', 'GEN', 'MOD'): globals().pop(_k, None)"); } catch (_) {}
+    let text = String(e);
+    const m = text.match(/(ValueError|KeyError|SystemExit): (.*)/);
+    if (m) {
+      // the end of the Python traceback in the log, for a bug report
+      say('log', { text: String(e).trim().split('\n').slice(-8).join('\n') });
+      text = m[2];
+    }
+    say('error', { text });
   }
 };

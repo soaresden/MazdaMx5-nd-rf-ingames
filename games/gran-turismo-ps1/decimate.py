@@ -26,7 +26,10 @@ def _quadrics(p, t):
     return pl[:, :, None] * pl[:, None, :] * area[:, None, None]
 
 
-def simplify(verts, tris, target, on_plane=None, min_quality=0.12):
+def simplify(verts, tris, target, on_plane=None, min_quality=0.12, strict=False):
+    """strict: also refuse a collapse after which a directed edge is used twice, or an edge with
+    both ends on the mirror plane is no longer a border (it would be doubled by the mirror): a
+    safety net for make_shell, never needed so far once the nan positions are left out."""
     p = np.array(verts, np.float64)
     nv = len(p)
     plane = np.zeros(nv, bool) if on_plane is None else np.array(on_plane, bool)
@@ -82,6 +85,9 @@ def simplify(verts, tris, target, on_plane=None, min_quality=0.12):
             cands += [p[a], p[b], (p[a] + p[b]) / 2]
         best = None
         for x in cands:
+            # a nearly singular quadric: numpy in the browser (Pyodide) may answer nan, not raise
+            if not np.isfinite(x).all():
+                continue
             # keep the new point near the edge (the solution of a flat region can fly away)
             seg = p[b] - p[a]
             tpar = np.clip((x - p[a]) @ seg / max(seg @ seg, 1e-12), -0.25, 1.25)
@@ -126,6 +132,23 @@ def simplify(verts, tris, target, on_plane=None, min_quality=0.12):
                     return False
                 if quality(*q1) < min_quality and quality(*q1) < quality(*q0):
                     return False
+        if strict:
+            on = plane[a] or plane[b]
+            around = {fi for v in (a, b) for fi in vf[v] if alive[fi] and fi not in ef}
+            directed, undirected = set(), {}
+            for fi in around:
+                f = [a if u == b else u for u in faces[fi]]
+                for i in range(3):
+                    e = (f[i], f[(i + 1) % 3])
+                    if e in directed:
+                        return False
+                    directed.add(e)
+                    if a in e:
+                        n = e[0] + e[1] - a
+                        if on and plane[n]:
+                            undirected[n] = undirected.get(n, 0) + 1
+            if any(k > 1 for k in undirected.values()):   # 1 face: still a border
+                return False
         return True
 
     heap = []

@@ -1,4 +1,4 @@
-# Gran Turismo (PS1, PAL SCES-00984)
+# Gran Turismo (PS1, Europe SCES-00984 ou USA SCUS-94194)
 
 🇬🇧 [English version](README.en.md)
 
@@ -19,7 +19,25 @@ python make_car.py --chd "Gran Turismo [SCES_009.84].chd" --kn5 mazda_mx5_rf.kn5
 ```
 
 `--car aminn` (répétable) pour ne remplacer que certaines Roadster ; par défaut toutes.
-`--price 100` pour l'avoir dès le premier jour.
+`--price 100` pour l'avoir dès le premier jour. Le disque USA (SCUS-94194) marche aussi : ses
+Roadster sont les mêmes octets dans CAR.DAT.
+
+### Pour gran-turismo-recomp (la recompilation PC)
+
+[gran-turismo-recomp](https://github.com/alexbeavs-ps1-ports/gran-turismo-recomp) joue le disque
+**Gran Turismo (USA) (Rev 1)** sur PC. Ses mods sont des paquets `.psxmod` (format de
+[psxrecomp](https://github.com/RetroPortingToolKit/psxrecomp), `docs/MOD_PACKAGES.md`) :
+
+```bash
+python make_psxmod.py --chd "Gran Turismo (USA) (Rev 1).chd" --kn5 mazda_mx5_rf.kn5 --out mx5_rf.psxmod --car aminn=closed --car amivn=open
+```
+
+Le paquet contient `manifest.toml` et les secteurs que la conversion change, en surcouches
+`disc_user` lues par-dessus le disque d'origine, qui n'est pas modifié. Chaque surcouche est
+gardée par le SHA-256 de la zone d'origine, et le paquet par le SHA-256 de la piste de données
+(`e1ba7def…`, celle du dump Redump). Les entrées des archives qui ne changent pas restent à leur
+place, pour que le paquet ne contienne que ce qui change. On l'installe depuis le menu **Mods**
+du lanceur ; la MX-5 RF y est activée d'office et se décoche.
 
 ## Ce que fait la conversion
 

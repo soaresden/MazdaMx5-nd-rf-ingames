@@ -72,6 +72,30 @@ def station_list(z0, z1, wheel_z, n):
     return np.array(st)
 
 
+def _mirrored(pts, tris, half, on_plane, strict=False):
+    """The right half simplified to `half` vertices and mirrored: vertices, faces (the game's
+    winding), open edges, repeated faces, signed volume."""
+    # orientation of the half: the same as the stations' quads; checked on the whole shell below
+    hv, ht, hplane = decimate.simplify(pts, np.array(tris), half, on_plane, strict=strict)
+    # mirror: left half = right half with x negated, faces reversed; centre line points shared
+    nh = len(hv)
+    mirror = np.arange(nh) + nh
+    mirror[hplane] = np.nonzero(hplane)[0]
+    lv = hv * [-1, 1, 1]
+    verts = np.vstack([hv, lv])
+    faces = [tuple(t) for t in ht] + [tuple(mirror[t][::-1]) for t in ht]
+    used = np.unique(np.array(faces))
+    remap = -np.ones(len(verts), np.int64)
+    remap[used] = np.arange(len(used))
+    verts = verts[used]
+    faces = np.array([[remap[i] for i in f] for f in faces])
+    open_, dup, vol = decimate.check(verts, faces)
+    if vol > 0:                            # the game's winding: cross product inwards
+        faces = faces[:, ::-1]
+        open_, dup, vol = decimate.check(verts, faces)
+    return verts, faces, open_, dup, vol
+
+
 def make_shell(sp, st, target, wheel_z, smooth=False, stations=56, per_side=16, log=None):
     """Shell vertices (metres), faces (lists of 3 or 4 indices, going round; the game's winding:
     cross(p1 - p0, p2 - p0) points inwards), vertex normals (outwards).
@@ -116,25 +140,15 @@ def make_shell(sp, st, target, wheel_z, smooth=False, stations=56, per_side=16, 
     tris = [t for t in tris if len(set(t)) == 3]
     # drop zero-area triangles where a ring point sits on the centre line
     on_plane = np.abs(pts[:, 0]) < 1e-9
-    # orientation of the half: the same as the stations' quads; checked on the whole shell below
-    hv, ht, hplane = decimate.simplify(pts, np.array(tris), max(8, target // 2), on_plane)
-    # mirror: left half = right half with x negated, faces reversed; centre line points shared
-    nh = len(hv)
-    mirror = np.arange(nh) + nh
-    mirror[hplane] = np.nonzero(hplane)[0]
-    lv = hv * [-1, 1, 1]
-    verts = np.vstack([hv, lv])
-    faces = [tuple(t) for t in ht] + [tuple(mirror[t][::-1]) for t in ht]
-    used = np.unique(np.array(faces))
-    remap = -np.ones(len(verts), np.int64)
-    remap[used] = np.arange(len(used))
-    verts = verts[used]
-    faces = np.array([[remap[i] for i in f] for f in faces])
-    open_, dup, vol = decimate.check(verts, faces)
-    if vol > 0:                            # the game's winding: cross product inwards
-        faces = faces[:, ::-1]
-        open_, dup, vol = decimate.check(verts, faces)
-    if open_ or dup:
+    # safety net: if the simplification ever leaves the shell open (it depends on the last bits of
+    # the floats, and numpy in the browser, Pyodide, is not the PC's), the stricter checks of
+    # decimate.simplify, then neighbouring targets
+    tries = [(max(8, target // 2) + k, s) for s in (False, True) for k in ((0,) if not s else (0, -1, 1, -2, 2))]
+    for half, strict in tries:
+        verts, faces, open_, dup, vol = _mirrored(pts, tris, half, on_plane, strict)
+        if not (open_ or dup) and np.isfinite(verts).all():
+            break
+    else:
         raise ValueError('shell not closed: %d open edges, %d repeated' % (open_, dup))
     quads = decimate.pair_quads(verts, faces)
     # no quad across the centre line

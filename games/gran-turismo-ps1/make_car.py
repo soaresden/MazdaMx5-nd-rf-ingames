@@ -1,4 +1,4 @@
-"""Make the MX-5 RF for Gran Turismo (PS1, PAL SCES-00984) as a patched disc image.
+"""Make the MX-5 RF for Gran Turismo (PS1, Europe SCES-00984 or USA SCUS-94194) as a patched disc image.
 
 python make_car.py --chd "Gran Turismo [SCES_009.84].chd" --kn5 mazda_mx5_rf.kn5 --out gt_mx5.bin
                    [--car aminn ...] [--top closed|open]
@@ -25,6 +25,9 @@ import menus            # noqa: E402
 import mx5scene         # noqa: E402
 
 BOOT = 'SCES_009.84'
+# the discs the tools take: Europe (multi-language) and USA Rev 1, the one of gran-turismo-recomp
+# (its Roadsters are the same bytes in CAR.DAT)
+BOOTS = (BOOT, 'SCUS_941.94')
 BADGE = os.path.join(HERE, '..', 'nfs-most-wanted-x360', 'assets', 'badge_mx5_miata_1024.png')
 PRICE = 29900   # Cr: about the real price, on the game's scale
 # The Roadsters of CAR.DAT (PAL): code -> index of the day texture (model = +1; night = +688).
@@ -85,14 +88,16 @@ def tops_of(cars, top='closed'):
     return out
 
 
-def generate(chd, kn5, cars=('aminn',), top='closed', price=PRICE, log=print, cheat=False):
+def generate(chd, kn5, cars=('aminn',), top='closed', price=PRICE, log=print, cheat=False, keep_layout=False):
     """{file name on the disc: new bytes}, and the Disc. cars: the Roadsters to replace, each with
-    its own roof ({code: 'closed' | 'open'}), or a list of codes that all get `top`."""
+    its own roof ({code: 'closed' | 'open'}), or a list of codes that all get `top`.
+    keep_layout: the archives' entries that do not change stay where they are when the new ones
+    fit (make_psxmod: the package then only holds the sectors that change)."""
     cars = tops_of(cars, top)
-    d = disc.Disc(chd)
+    d = chd if isinstance(chd, disc.Disc) else disc.Disc(chd)
     cnf = d.read('SYSTEM.CNF').decode('latin-1')
-    if BOOT not in cnf:
-        raise ValueError("ce n'est pas Gran Turismo PAL (%s)" % BOOT)
+    if not any(b in cnf for b in BOOTS):
+        raise ValueError("ce n'est pas Gran Turismo Europe (SCES-00984) ou USA (SCUS-94194)")
     models = {}
     for t in sorted(set(cars.values())):
         log('1/4 la MX-5 %s (modèle et texture)' % ('décapotée' if t == 'open' else 'capotée'))
@@ -101,8 +106,14 @@ def generate(chd, kn5, cars=('aminn',), top='closed', price=PRICE, log=print, ch
         hv, hf, _ = lods[0]
         ht = np.array([q for f in hf for q in ([(f[0], f[1], f[2]), (f[0], f[2], f[3])] if len(f) == 4 else [tuple(f)])])
         models[t] = (sp, W, lods, B.Atlas(scene, sp, (hv, ht)))
+    stock = {}     # the files of the disc as read (make_psxmod compares with them: d.stock)
+
+    def read(name):
+        if name not in stock:
+            stock[name] = d.read(name)
+        return stock[name]
     log('2/4 CAR.DAT')
-    arc = gtarc.Arc(d.read('CAR.DAT'))
+    arc = gtarc.Arc(read('CAR.DAT'))
     new = {}
     made = {}
     for code, t in cars.items():
@@ -116,27 +127,31 @@ def generate(chd, kn5, cars=('aminn',), top='closed', price=PRICE, log=print, ch
         new[i + 1 + NIGHT] = car
         made[code] = (car, tex)
         log('  %s : %s, %s' % (code, ROADSTERS[code][1], 'décapotée' if t == 'open' else 'capotée'))
-    files = {'CAR.DAT': gtarc.replace(arc, new)}
+    car_dat = gtarc.replace_in_place(arc, new, room=d.room('CAR.DAT')) if keep_layout else None
+    files = {'CAR.DAT': gtarc.replace(arc, new) if car_dat is None else car_dat}
     log('3/4 noms, peintures, caractéristiques et prix (CARINF.DAT)')
-    files['CARINF.DAT'] = carinf.patch(d.read('CARINF.DAT'), cars, [p for p, _ in B.PAINTS], price, log=log)
+    files['CARINF.DAT'] = carinf.patch(read('CARINF.DAT'), cars, [p for p, _ in B.PAINTS], price, log=log)
     log('4/4 les menus (nom, vignettes, prix)')
-    files['MENU_IMG.ARC'] = menus.patch(d.read('MENU_IMG.ARC'), d.read('CARINF.DAT'), list(cars), BADGE,
-                                        made, None, price, log=log)
+    files['MENU_IMG.ARC'] = menus.patch(read('MENU_IMG.ARC'), read('CARINF.DAT'), list(cars), BADGE,
+                                        made, None, price, log=log, keep_layout=keep_layout,
+                                        room=d.room('MENU_IMG.ARC'))
     if cheat:
         log('+ le cheat GranTurismo1-OverlayCheat (SELECT : chrono des permis, crédits)')
         patcher = cheat_patcher()
         for name in ('GTOS.EXE', 'GTMENU.EXE', 'GTMAIN.EXE'):
-            files[name] = patcher.patch_exe(name, d.read(name))
+            files[name] = patcher.patch_exe(name, read(name))
     for name, data in files.items():
         if len(data) > d.room(name):
             raise ValueError('%s : %d octets de trop' % (name, len(data) - d.room(name)))
+    if keep_layout:
+        d.stock = stock
     return files, d
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument('--chd', '--disc', dest='chd', required=True,
-                    help='your disc image of Gran Turismo (PAL, Europe, multi-language, SCES-00984): .chd, .cue or .bin')
+                    help='your disc image of Gran Turismo (Europe multi-language SCES-00984, or USA SCUS-94194): .chd, .cue or .bin')
     ap.add_argument('--kn5', required=True, help='mazda_mx5_rf.kn5 from the Assetto Corsa mod')
     ap.add_argument('--out', required=True, help='.bin to write (the .cue goes next to it)')
     ap.add_argument('--car', action='append', metavar='CODE[=closed|open]',

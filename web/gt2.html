@@ -10,6 +10,7 @@
     var l = null; try { l = localStorage.getItem('sb.lang'); } catch (_) {}
     if (l !== 'fr' && l !== 'en') l = /^fr/i.test(navigator.language || '') ? 'fr' : 'en';
     window.SB_LANG = l; document.documentElement.lang = l;
+    window.SBT = function (fr, en) { return l === 'en' && en != null ? en : fr; };
     document.addEventListener('DOMContentLoaded', function () {
       if (l === 'en') document.querySelectorAll('[data-en]').forEach(function (e) { e.innerHTML = e.getAttribute('data-en'); });
       var b = document.getElementById('lang');
@@ -18,7 +19,7 @@
     });
   })();
 </script>
-<meta name="description" content="La Mazda MX-5 RF (ND) dans Gran Turismo 2 (PlayStation, Europe : disque Simulation, combiné ou GT2 Plus), capotée ou décapotée, fabriquée à partir de ta copie du jeu.">
+<meta name="description" content="La Mazda MX-5 RF (ND) dans Gran Turismo 2 (PlayStation : disque Simulation Europe ou USA, combiné ou GT2 Plus), capotée ou décapotée : une image disque PS1 ou un fichier pour le port PC gt-2-pc, fabriqués dans ton navigateur à partir de ta copie du jeu.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=Barlow+Condensed:wght@500;600;700&family=Saira+Extra+Condensed:wght@700;800&display=swap" rel="stylesheet">
@@ -115,7 +116,49 @@
   code { background: var(--code); border: 1px solid var(--line); padding: 0 5px; font-size: .9em; color: #ffd08a; }
   .opts code { color: inherit; }
   footer { color: var(--muted); font-size: 15px; margin-top: 26px; border-top: 1px solid var(--line); padding-top: 14px; }
-  @media (prefers-reduced-motion: reduce) { .buy { transition: none; } }
+
+  /* le formulaire de fabrication */
+  .form { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px 20px; }
+  label, .label { display: block; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin: 0 0 6px; }
+  .label { margin-top: 16px; }
+  .hint { color: var(--muted); text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 15px; }
+  select, input[type=file] { width: 100%; font: 600 16px "Barlow Condensed", sans-serif; color: var(--text); background: #000;
+         border: 1px solid var(--line); border-left: 3px solid var(--orange-dk); padding: 9px 10px; }
+  select:focus, input:focus { outline: none; border-left-color: var(--orange); }
+  input[type=file]::file-selector-button { font: 700 14px "Barlow Condensed"; text-transform: uppercase; letter-spacing: .06em;
+         background: var(--orange); color: #111; border: 0; border-radius: 3px; padding: 5px 10px; margin-right: 10px; cursor: pointer; }
+  .cars { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px 20px; margin-top: 16px; }
+  .carrow { display: grid; grid-template-columns: 1fr minmax(150px, 48%); gap: 10px; align-items: center; text-transform: none;
+            letter-spacing: 0; font-weight: 600; margin: 0; }
+  .carrow select { padding: 6px 8px; font-size: 15px; }
+  .outputs { display: grid; gap: 8px; }
+  .out, .check { display: flex; gap: 10px; align-items: flex-start; text-transform: none; letter-spacing: 0; font-weight: 500; margin: 0; }
+  .out { border: 1px solid var(--line); padding: 10px 12px; cursor: pointer; }
+  .out:has(input:checked) { border-color: var(--orange); background: rgba(243, 146, 0, .07); }
+  .out b { color: #fff; }
+  .out input, .check input { accent-color: var(--orange); margin-top: 5px; width: 17px; height: 17px; flex: none; }
+  .check { margin-top: 12px; font-weight: 600; }
+  .check.off { opacity: .45; }
+  .go { display: inline-block; margin-top: 16px; font: italic 800 24px/1 "Saira Extra Condensed"; text-transform: uppercase; letter-spacing: .06em;
+        color: #111; background: linear-gradient(180deg, #ffab3d, var(--orange)); border: 0; border-radius: 22px 4px 4px 22px;
+        box-shadow: inset 0 -3px 0 var(--orange-dk); padding: 13px 30px 13px 34px; cursor: pointer; }
+  .go:hover:not(:disabled) { filter: brightness(1.1); }
+  .go:disabled { opacity: .45; cursor: default; }
+  #log { max-height: 260px; overflow: auto; font-size: 13px; color: #d9d9d9; white-space: pre-wrap; }
+  .bar { margin-top: 12px; height: 12px; background: #000; border: 1px solid var(--line); position: relative; overflow: hidden; }
+  .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--orange); }
+  .bar.busy i { width: 30%; animation: busy 1.4s ease-in-out infinite; }
+  @keyframes busy { 0% { left: -30%; } 100% { left: 100%; } }
+  .status { margin-top: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .status.ok { color: var(--ok); } .status.err { color: #ff6b5b; }
+  .downloads { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .download { display: inline-block; font: 800 20px "Saira Extra Condensed"; text-transform: uppercase; letter-spacing: .08em;
+              color: #111; background: var(--orange); border-radius: 3px; padding: 10px 18px; text-decoration: none; border: 0; cursor: pointer; }
+  .download[hidden] { display: none; }
+  .cli { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .cli summary { cursor: pointer; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .cli summary:hover { color: var(--orange); }
+  @media (prefers-reduced-motion: reduce) { .buy { transition: none; } .bar.busy i { animation: none; width: 100%; opacity: .5; } }
 </style>
 </head>
 <body>
@@ -137,9 +180,10 @@
     </div>
   </header>
 
-  <p class="lead" data-en="&lt;strong&gt;Gran Turismo 2&lt;/strong&gt; on PlayStation, European version: the original &lt;strong&gt;Simulation&lt;/strong&gt; disc (SCES-12380), the &lt;a href=&quot;https://github.com/CookiePLMonster/GT2-Combined-Disc&quot;&gt;combined disc&lt;/a&gt; or pez2k's &lt;strong&gt;GT2 Plus&lt;/strong&gt;. The MX-5 RF takes the place of the MX-5s of your choice, hardtop closed or top down, and you get a new disc image built from &lt;strong&gt;your&lt;/strong&gt; copy of the game: no game file is provided here."><strong>Gran Turismo 2</strong> sur PlayStation, version européenne : le disque <strong>Simulation</strong> d'origine (SCES-12380),
+  <p class="lead" data-en="&lt;strong&gt;Gran Turismo 2&lt;/strong&gt; on PlayStation: the original &lt;strong&gt;Simulation&lt;/strong&gt; disc (Europe SCES-12380 or USA), the &lt;a href=&quot;https://github.com/CookiePLMonster/GT2-Combined-Disc&quot;&gt;combined disc&lt;/a&gt; or pez2k&#x27;s &lt;strong&gt;GT2 Plus&lt;/strong&gt;. The MX-5 RF takes the place of the MX-5s of your choice, hardtop closed or top down, and you get either &lt;strong&gt;a new disc image&lt;/strong&gt; for the PlayStation, or &lt;strong&gt;a file for &lt;a href=&quot;https://github.com/dubrovskiy-yevhen-stakelogic/gt-2-pc&quot;&gt;gt-2-pc&lt;/a&gt;&lt;/strong&gt;, the game&#x27;s PC port. Everything is built from &lt;strong&gt;your&lt;/strong&gt; copy of the game: no game file is provided here."><strong>Gran Turismo 2</strong> sur PlayStation : le disque <strong>Simulation</strong> d'origine (Europe SCES-12380 ou USA),
     le <a href="https://github.com/CookiePLMonster/GT2-Combined-Disc">disque combiné</a> ou <strong>GT2 Plus</strong> de pez2k. La MX-5 RF prend la place des MX-5 de ton choix,
-    capotée ou décapotée, et tu obtiens une nouvelle image disque fabriquée à partir de <strong>ta</strong> copie du jeu : aucun fichier du jeu n'est fourni ici.</p>
+    capotée ou décapotée, et tu obtiens au choix <strong>une nouvelle image disque</strong> pour la PlayStation, ou <strong>un fichier pour
+    <a href="https://github.com/dubrovskiy-yevhen-stakelogic/gt-2-pc">gt-2-pc</a></strong>, le portage PC du jeu. Tout est fabriqué à partir de <strong>ta</strong> copie du jeu : aucun fichier du jeu n'est fourni ici.</p>
 
   <section class="panel">
     <h2><span class="ico">01</span><span class="tabs"><span class="on" data-en="What you get">Ce que tu obtiens</span></span></h2>
@@ -154,11 +198,44 @@
   </section>
 
   <section class="panel" id="fabriquer">
-    <h2><span class="ico">02</span><span class="tabs"><span class="on" data-en="Build it on your PC">Fabriquer sur ton PC</span></span></h2>
+    <h2><span class="ico">02</span><span class="tabs"><span class="on" data-en="Build it in your browser">Fabriquer dans ton navigateur</span></span></h2>
     <div class="body">
-      <p style="margin:0 0 10px" data-en="You need:">Il te faut :</p>
+      <div class="form">
+        <div><label for="disc" data-en="Your Gran Turismo 2 disc &lt;span class=&quot;hint&quot;&gt;· Simulation (Europe or USA), combined or GT2 Plus: &lt;code&gt;.chd&lt;/code&gt; or &lt;code&gt;.bin&lt;/code&gt;&lt;/span&gt;">Ton disque Gran Turismo 2 <span class="hint">· Simulation (Europe ou USA), combiné ou GT2 Plus : <code>.chd</code> ou <code>.bin</code></span></label>
+          <input id="disc" type="file" accept=".chd,.bin"></div>
+        <div><label for="kn5" data-en="Assetto Corsa model &lt;span class=&quot;hint&quot;&gt;· &lt;code&gt;mazda_mx5_rf.kn5&lt;/code&gt; from the &lt;a href=&quot;https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html&quot;&gt;Mazda MX-5 RF Hardtop&lt;/a&gt; mod, extracted&lt;/span&gt;">Modèle Assetto Corsa <span class="hint">· <code>mazda_mx5_rf.kn5</code> du mod
+          <a href="https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html">Mazda MX-5 RF Hardtop</a>, à extraire</span></label>
+          <input id="kn5" type="file" accept=".kn5"></div>
+      </div>
+      <div class="cars">
+        <label class="carrow"><span data-en="MX-5 '93 &lt;span class=&quot;hint&quot;&gt;· used, Mazda&lt;/span&gt;">MX-5 '93 <span class="hint">· occasion, Mazda</span></span>
+          <select data-code="aminn"><option value="closed" data-en="MX-5 RF closed">MX-5 RF capotée</option><option value="open" data-en="MX-5 RF open">MX-5 RF décapotée</option><option value="" data-en="Original MX-5">MX-5 d'origine</option></select></label>
+        <label class="carrow"><span data-en="MX-5 V-Special '93 &lt;span class=&quot;hint&quot;&gt;· used, Mazda&lt;/span&gt;">MX-5 V-Special '93 <span class="hint">· occasion, Mazda</span></span>
+          <select data-code="amivn"><option value="closed" data-en="MX-5 RF closed">MX-5 RF capotée</option><option value="open" selected data-en="MX-5 RF open">MX-5 RF décapotée</option><option value="" data-en="Original MX-5">MX-5 d'origine</option></select></label>
+      </div>
+      <p class="label" data-en="What to make">Quoi fabriquer</p>
+      <div class="outputs">
+        <label class="out"><input type="radio" name="output" value="ps1" checked>
+          <span data-en="&lt;b&gt;A PlayStation disc image&lt;/b&gt; (&lt;code&gt;.bin&lt;/code&gt; + &lt;code&gt;.cue&lt;/code&gt;, ~690 MB) for DuckStation, Batocera, a real console…"><b>Une image disque PlayStation</b> (<code>.bin</code> + <code>.cue</code>, ~690 Mo) pour DuckStation, Batocera, une vraie console…</span></label>
+        <label class="out"><input type="radio" name="output" value="pc">
+          <span data-en="&lt;b&gt;A file for GT2 on PC&lt;/b&gt;, the &lt;a href=&quot;https://github.com/dubrovskiy-yevhen-stakelogic/gt-2-pc&quot;&gt;gt-2-pc&lt;/a&gt; port (&lt;code&gt;.zip&lt;/code&gt;, ~1.5 MB): a &lt;code&gt;mods/mx5&lt;/code&gt; folder read over the game, which stays untouched."><b>Un fichier pour GT2 sur PC</b>, le port <a href="https://github.com/dubrovskiy-yevhen-stakelogic/gt-2-pc">gt-2-pc</a> (<code>.zip</code>, ~1,5 Mo) : un dossier <code>mods/mx5</code> lu par-dessus le jeu, qui reste intact.</span></label>
+      </div>
+      <label class="check" id="cheatrow"><input type="checkbox" id="cheat">
+        <span data-en="add the &lt;a href=&quot;#triche&quot;&gt;cheat menu&lt;/a&gt; (European disc)">ajouter le <a href="#triche">menu de triche</a> (disque européen)</span></label>
+      <button id="go" class="go" disabled>Chargement…</button>
+      <p class="hint" id="howlong" style="margin:10px 0 0"></p>
+      <div class="bar" id="bar" hidden><i></i></div>
+      <pre id="log" hidden></pre>
+      <div id="status" class="status"></div>
+      <div class="downloads">
+        <a id="dl" class="download" hidden></a>
+        <button id="dlcue" class="download" type="button" hidden data-en="Save the .cue">Enregistrer le .cue</button>
+      </div>
+
+      <details class="cli"><summary data-en="Or on the command line">Ou en ligne de commande</summary>
+      <p style="margin:10px 0" data-en="You need:">Il te faut :</p>
       <ul class="need">
-        <li data-en="your Gran Turismo 2 disc image, &lt;b&gt;Europe&lt;/b&gt;: Simulation, combined or GT2 Plus (&lt;code&gt;.chd&lt;/code&gt;, &lt;code&gt;.cue&lt;/code&gt; or &lt;code&gt;.bin&lt;/code&gt;);">ton image du disque Gran Turismo 2 <b>Europe</b> : Simulation, combiné ou GT2 Plus (<code>.chd</code>, <code>.cue</code> ou <code>.bin</code>) ;</li>
+        <li data-en="your Gran Turismo 2 disc image: Simulation (Europe or USA), combined or GT2 Plus (&lt;code&gt;.chd&lt;/code&gt;, &lt;code&gt;.cue&lt;/code&gt; or &lt;code&gt;.bin&lt;/code&gt;);">ton image du disque Gran Turismo 2 : Simulation (Europe ou USA), combiné ou GT2 Plus (<code>.chd</code>, <code>.cue</code> ou <code>.bin</code>) ;</li>
         <li data-en="&lt;code&gt;mazda_mx5_rf.kn5&lt;/code&gt; from the Assetto Corsa mod &lt;a href=&quot;https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html&quot;&gt;Mazda MX-5 RF Hardtop&lt;/a&gt;, extracted;"><code>mazda_mx5_rf.kn5</code> du mod Assetto Corsa
           <a href="https://www.modland.net/assetto-corsa-mods/cars/mazda-mx-5-rf-hardtop.html">Mazda MX-5 RF Hardtop</a>, à extraire ;</li>
         <li data-en="Python 3 with &lt;code&gt;numpy&lt;/code&gt; and &lt;code&gt;Pillow&lt;/code&gt;, and &lt;a href=&quot;https://github.com/soaresden/MazdaMx5-nd-rf-ingames&quot;&gt;this repository&lt;/a&gt;.">Python 3 avec <code>numpy</code> et <code>Pillow</code>, et <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames">ce dépôt</a>.</li>
@@ -172,13 +249,16 @@ python make_gt2.py --disc "Gran Turismo 2 Plus Combined (Europe).chd" --kn5 mazd
         <tr><td>--out</td><td data-en="ending in &lt;code&gt;.chd&lt;/code&gt;: a CHD straight away; ending in &lt;code&gt;.bin&lt;/code&gt;: a &lt;code&gt;.bin&lt;/code&gt; and its &lt;code&gt;.cue&lt;/code&gt;.">en <code>.chd</code> : un CHD directement ; en <code>.bin</code> : un <code>.bin</code> et son <code>.cue</code>.</td></tr>
       </table>
       <p class="tip" data-en="&lt;b&gt;No chdman needed&lt;/b&gt;: the tool reads and writes CHD files itself, so the result goes straight into Batocera or DuckStation."><b>Pas besoin de chdman</b> : l'outil lit et écrit lui-même les CHD, le résultat va directement dans Batocera ou DuckStation.</p>
+      <p style="margin:10px 0 0" data-en="For gt-2-pc: &lt;code&gt;python make_gt2_mods.py --disc … --kn5 mazda_mx5_rf.kn5 --out gt2pc_mx5.zip&lt;/code&gt; (same &lt;code&gt;--car&lt;/code&gt;).">Pour gt-2-pc : <code>python make_gt2_mods.py --disc … --kn5 mazda_mx5_rf.kn5 --out gt2pc_mx5.zip</code> (mêmes <code>--car</code>).</p>
+      </details>
     </div>
   </section>
 
   <section class="panel">
     <h2><span class="ico">03</span><span class="tabs"><span class="on" data-en="Play">Jouer</span></span></h2>
     <div class="body"><ol>
-      <li data-en="Open the new image in DuckStation, Batocera or another PlayStation emulator (for a &lt;code&gt;.bin&lt;/code&gt;, open its &lt;code&gt;.cue&lt;/code&gt;).">Ouvre la nouvelle image dans DuckStation, Batocera ou un autre émulateur PlayStation (pour un <code>.bin</code>, ouvre son <code>.cue</code>).</li>
+      <li data-en="&lt;b&gt;Disc image&lt;/b&gt;: open it in DuckStation, Batocera or another PlayStation emulator (open the &lt;code&gt;.cue&lt;/code&gt;), or burn it."><b>Image disque</b> : ouvre-la dans DuckStation, Batocera ou un autre émulateur PlayStation (ouvre le <code>.cue</code>), ou grave-la.</li>
+      <li data-en="&lt;b&gt;gt-2-pc&lt;/b&gt;: unpack the zip into the port&#x27;s folder (the one with &lt;code&gt;gt2game.exe&lt;/code&gt; and &lt;code&gt;PLAY.bat&lt;/code&gt;) and start &lt;code&gt;JOUER_MX5.bat&lt;/code&gt;. The &lt;code&gt;mods/mx5&lt;/code&gt; folder is read over the game, which is not changed: &lt;code&gt;PLAY.bat&lt;/code&gt; still starts the original game. The port does not read the title pictures nor the dealer description yet, they stay the original ones."><b>gt-2-pc</b> : décompresse le zip dans le dossier du port (celui de <code>gt2game.exe</code> et <code>PLAY.bat</code>) et lance <code>JOUER_MX5.bat</code>. Le dossier <code>mods/mx5</code> est lu par-dessus le jeu, qui n'est pas modifié : <code>PLAY.bat</code> lance toujours le jeu d'origine. Le port ne lit pas encore les images de titre ni la description du concessionnaire, qui restent celles d'origine.</li>
       <li data-en="In GT mode, the RFs are at the &lt;b&gt;Mazda used car dealer&lt;/b&gt;, in place of the MX-5s you chose.">En mode GT, les RF sont chez le <b>concessionnaire d'occasion Mazda</b>, à la place des MX-5 choisies.</li>
       <li data-en="Your original image is not changed: to go back, play it again.">Ton image d'origine n'est pas modifiée : pour revenir en arrière, il suffit de la relancer.</li>
     </ol></div>
@@ -193,14 +273,14 @@ python make_gt2.py --disc "Gran Turismo 2 Plus Combined (Europe).chd" --kn5 mazd
     </div>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="triche">
     <h2><span class="ico">05</span><span class="tabs"><span class="on" data-en="Cheat menu">Menu de triche</span></span></h2>
     <div class="body cheat">
       <img src="https://raw.githubusercontent.com/soaresden/GranTurismo2-OverlayCheat/main/docs/menu_permis.png" alt="Le menu GT2 CHEAT pendant un permis" loading="lazy">
-      <div><p style="margin:0" data-en="With &lt;code&gt;--cheat&lt;/code&gt;, the disc also gets &lt;a href=&quot;https://github.com/soaresden/GranTurismo2-OverlayCheat&quot;&gt;GranTurismo2-OverlayCheat&lt;/a&gt;: hold &lt;b&gt;SELECT&lt;/b&gt; (or L1 + R1 + L2 + R2 in Batocera) and a small menu appears over the game, to &lt;b&gt;freeze the licence timer&lt;/b&gt; and &lt;b&gt;change the credits&lt;/b&gt; live. The project must sit next to this repository, or its folder be given by &lt;code&gt;GT2CHEAT_DIR&lt;/code&gt;. It also exists on its own as a &lt;code&gt;.ppf&lt;/code&gt; / &lt;code&gt;.xdelta&lt;/code&gt; patch.">Avec <code>--cheat</code>, le disque reçoit aussi
+      <div><p style="margin:0" data-en="Tick &lt;b&gt;cheat menu&lt;/b&gt; (disc image, European disc) and the disc also gets &lt;a href=&quot;https://github.com/soaresden/GranTurismo2-OverlayCheat&quot;&gt;GranTurismo2-OverlayCheat&lt;/a&gt;: hold &lt;b&gt;SELECT&lt;/b&gt; (or L1 + R1 + L2 + R2 in Batocera) and a small menu appears over the game, to &lt;b&gt;freeze the licence timer&lt;/b&gt; and &lt;b&gt;change the credits&lt;/b&gt; live. On the command line, it is &lt;code&gt;--cheat&lt;/code&gt;. It also exists on its own as a &lt;code&gt;.ppf&lt;/code&gt; / &lt;code&gt;.xdelta&lt;/code&gt; patch.">Coche <b>menu de triche</b> (image disque, disque européen) et le disque reçoit aussi
         <a href="https://github.com/soaresden/GranTurismo2-OverlayCheat">GranTurismo2-OverlayCheat</a> : maintiens <b>SELECT</b> (ou L1 + R1 + L2 + R2 dans Batocera)
         et un petit menu apparaît par-dessus le jeu, pour <b>figer le chrono des permis</b> et <b>changer les crédits</b> en direct.
-        Le projet doit être à côté de ce dépôt, ou son dossier donné par <code>GT2CHEAT_DIR</code>. Il existe aussi seul, en patch <code>.ppf</code> / <code>.xdelta</code>.</p></div>
+        En ligne de commande, c'est <code>--cheat</code>. Il existe aussi seul, en patch <code>.ppf</code> / <code>.xdelta</code>.</p></div>
     </div>
   </section>
 
@@ -219,5 +299,125 @@ python make_gt2.py --disc "Gran Turismo 2 Plus Combined (Europe).chd" --kn5 mazd
     Gran Turismo est une marque de Sony Interactive Entertainment ; Mazda et MX-5 sont des marques de Mazda. Projet de fan · aucun fichier du jeu ni du modèle n'est fourni ·
     <a href="https://github.com/soaresden/MazdaMx5-nd-rf-ingames">code (GPL-3.0)</a></footer>
 </div>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const boxes = () => Array.from(document.querySelectorAll('.cars select'));
+  const chosen = () => { const o = {}; for (const b of boxes()) if (b.value) o[b.dataset.code] = b.value; return o; };
+  const output = () => document.querySelector('input[name=output]:checked').value;
+
+  // development only: ?test reads the disc image and the model from the local test server
+  const TEST = new URLSearchParams(location.search).has('test');
+  const log = (t) => { const l = $('log'); l.hidden = false; l.textContent += t + '\n'; l.scrollTop = 1e9; };
+  const status = (t, cls) => { $('status').textContent = t; $('status').className = 'status ' + (cls || ''); };
+  const bar = (frac) => {
+    const b = $('bar'); b.hidden = frac == null;
+    b.classList.toggle('busy', frac === 'busy');
+    b.firstChild.style.width = typeof frac === 'number' ? (100 * frac).toFixed(1) + '%' : '';
+  };
+  let ready = false, busy = false, target = null, outName = '', url = null, cueUrl = null, t0 = 0;
+  const worker = new Worker('gt2-worker.js?lang=' + SB_LANG);
+  const update = () => {
+    const ps1 = output() === 'ps1';
+    $('cheat').disabled = !ps1;
+    $('cheatrow').classList.toggle('off', !ps1);
+    $('howlong').innerHTML = ps1
+      ? SBT("15 à 30 minutes : c'est ton navigateur qui fait tout le travail, rien n'est envoyé nulle part. L'image disque est écrite au fur et à mesure : dans Chrome et Edge tu choisis d'abord où l'enregistrer. Laisse l'onglet ouvert pendant ce temps.",
+            '15 to 30 minutes: your browser does all the work, nothing is sent anywhere. The disc image is written as it is made: in Chrome and Edge you choose where to save it first. Leave the tab open in the meantime.')
+      : SBT("5 à 10 minutes, dans ton navigateur. Décompresse le zip dans le dossier de gt-2-pc (celui de <code>gt2game.exe</code> et <code>PLAY.bat</code>), puis lance <code>JOUER_MX5.bat</code>. Disque accepté : Simulation USA v1.2 (celui de référence de gt-2-pc) ou Europe.",
+            '5 to 10 minutes, in your browser. Unpack the zip into the gt-2-pc folder (the one with <code>gt2game.exe</code> and <code>PLAY.bat</code>), then start <code>JOUER_MX5.bat</code>. Disc accepted: Simulation USA v1.2 (gt-2-pc\'s reference) or Europe.');
+    $('go').disabled = busy || !(ready && Object.keys(chosen()).length && (TEST || ($('disc').files.length && $('kn5').files.length)));
+    $('go').textContent = !ready ? SBT('Chargement de Python…', 'Loading Python…')
+                        : busy ? SBT('Fabrication…', 'Building…')
+                        : ps1 ? SBT("Fabriquer l'image disque", 'Build the disc image') : SBT('Fabriquer le fichier gt-2-pc', 'Build the gt-2-pc file');
+  };
+  document.querySelectorAll('#fabriquer input, #fabriquer select').forEach((e) => { e.addEventListener('change', update); });
+  update();
+  const cueText = (name) => `FILE "${name}" BINARY\r\n  TRACK 01 MODE2/2352\r\n    INDEX 01 00:00:00\r\n`;
+  const opfsFile = async (name) => (await (await navigator.storage.getDirectory()).getFileHandle(name)).getFile();
+  const elapsed = () => Math.round((Date.now() - t0) / 1000);
+  const offer = (blob, name, label) => {
+    if (url) URL.revokeObjectURL(url);
+    url = URL.createObjectURL(blob);
+    const a = $('dl');
+    a.href = url; a.download = name; a.textContent = label; a.hidden = false;
+  };
+
+  worker.onmessage = async (ev) => {
+    const m = ev.data;
+    if (m.type === 'log') log(m.text);
+    if (m.type === 'ready') { ready = true; update(); log(SBT('Prêt.', 'Ready.')); }
+    if (m.type === 'progress') {
+      bar(m.done / m.total);
+      status(SBT(`Image disque : ${Math.floor(100 * m.done / m.total)} % · ${elapsed()} s`,
+                 `Disc image: ${Math.floor(100 * m.done / m.total)}% · ${elapsed()} s`));
+    }
+    if (m.type === 'error') { busy = false; bar(null); status(SBT('Erreur : ', 'Error: ') + m.text, 'err'); update(); }
+    if (m.type !== 'done') return;
+    busy = false; bar(1);
+    const mb = Math.max(1, Math.round(m.size / 1048576));
+    const mb1 = (m.size / 1048576).toFixed(1);   // the small .psxmod / .zip: 0.8 MB, not 1
+    if (m.kind === 'zip') {
+      offer(m.blob, outName, SBT('Télécharger le .zip', 'Download the .zip'));
+      status(SBT(`Terminé en ${m.seconds} s : ${outName} (${mb1.replace(".", ",")} Mo), à décompresser dans le dossier de gt-2-pc.`,
+                 `Done in ${m.seconds} s: ${outName} (${mb1} MB), to unpack into the gt-2-pc folder.`), 'ok');
+    } else if (m.kind === 'file') {
+      status(SBT(`Terminé en ${m.seconds} s : ${m.saved} enregistré (${mb} Mo). Enregistre maintenant le .cue à côté.`,
+                 `Done in ${m.seconds} s: ${m.saved} saved (${mb} MB). Now save the .cue next to it.`), 'ok');
+      outName = m.saved;
+      $('dlcue').hidden = false;
+    } else {
+      try {
+        offer(m.kind === 'opfs' ? await opfsFile(m.opfs) : m.blob, outName, SBT('Télécharger le .bin', 'Download the .bin'));
+      } catch (e) { status(SBT('Erreur : ', 'Error: ') + e, 'err'); update(); return; }
+      status(SBT(`Terminé en ${m.seconds} s. Télécharge les deux fichiers (${mb} Mo et 1 Ko).`,
+                 `Done in ${m.seconds} s. Download both files (${mb} MB and 1 KB).`), 'ok');
+      $('dlcue').hidden = false;
+    }
+    update();
+  };
+  $('dlcue').onclick = async () => {
+    const name = outName.replace(/\.bin$/i, '') + '.cue';
+    if (target && window.showSaveFilePicker) {
+      try {
+        const h = await showSaveFilePicker({ suggestedName: name, startIn: target,
+                                             types: [{ description: 'CUE', accept: { 'application/octet-stream': ['.cue'] } }] });
+        const w = await h.createWritable();
+        await w.write(cueText(outName));
+        await w.close();
+        status(SBT(`${h.name} enregistré : ouvre-le dans DuckStation.`, `${h.name} saved: open it in DuckStation.`), 'ok');
+        return;
+      } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    if (cueUrl) URL.revokeObjectURL(cueUrl);
+    cueUrl = URL.createObjectURL(new Blob([cueText(outName)], { type: 'application/octet-stream' }));
+    const a = document.createElement('a');
+    a.href = cueUrl; a.download = name; document.body.append(a); a.click(); a.remove();
+  };
+
+  const files = () => TEST ? { disc: location.origin + '/test/disc.chd', kn5: '/test/model.kn5' }
+                           : { disc: $('disc').files[0], kn5: $('kn5').files[0] };
+  $('go').onclick = async () => {
+    const ps1 = output() === 'ps1';
+    const roofs = new Set(Object.values(chosen()));
+    const top = roofs.size === 1 ? (roofs.has('open') ? ' open' : '') : ' mix';
+    outName = ps1 ? `Gran Turismo 2 MX-5 RF${top}.bin` : 'gt2pc_mx5.zip';
+    target = null;
+    // Chrome, Edge: the .bin goes straight to the file chosen now (the click allows the dialog)
+    if (ps1 && window.showSaveFilePicker && !TEST) {
+      try {
+        target = await showSaveFilePicker({ suggestedName: outName,
+                                            types: [{ description: SBT('Image disque PlayStation', 'PlayStation disc image'),
+                                                      accept: { 'application/octet-stream': ['.bin'] } }] });
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+        target = null;
+      }
+    }
+    busy = true; t0 = Date.now(); update();
+    $('dl').hidden = $('dlcue').hidden = true; $('log').textContent = ''; bar('busy');
+    status(SBT('Fabrication en cours…', 'Building…'));
+    worker.postMessage({ ...files(), target, options: { cars: chosen(), output: output(), cheat: ps1 && $('cheat').checked } });
+  };
+</script>
 </body>
 </html>

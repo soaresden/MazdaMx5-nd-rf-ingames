@@ -32,7 +32,9 @@ MX5 = ('aminn', 'amisn', 'amivn', 'an16n', 'as16n', 'av16n', 'arodn',
        'a26sn', 'a2vsn', 'a2abn', 'a2ran', 'a2rcn', 'a2rdn')
 # the '93 sold used at 7735 Cr, hardtop closed; the V-Special '93 at 8084 Cr, top down
 DEFAULT = {'aminn': 'closed', 'amivn': 'open'}
-USED_OPEN = 8084   # the used '93 sold as the V-Special: the RF top down
+# the used '93 sold as the V-Special, the RF top down: the 2nd ad of the '93 in each list (8084 Cr
+# on the European discs, 7971 Cr in the American list)
+USED_OPEN = 1
 VERSION = 'HD PLUS'   # written on the start screens
 PLUS_VERSION = 'beta 7'   # the GT2 Plus the tool was made with (its volume is GRANTURISMO2PLUS)
 
@@ -69,8 +71,10 @@ def regz(original, data):
     return bytes(head) + body + struct.pack('<II', zlib.crc32(data) & 0xFFFFFFFF, len(data) & 0xFFFFFFFF)
 
 
-def generate(image, kn5, cars, log=print, version=None, sub=None):
-    """(Gt2Disc, {VOL path: new bytes}). cars: {code: 'closed' | 'open'}."""
+def generate(image, kn5, cars, log=print, version=None, sub=None, menus_too=True):
+    """(Gt2Disc, {VOL path: new bytes}). cars: {code: 'closed' | 'open'}. menus_too=False: the
+    cars, their figures, names and paints only (what gt-2-pc's car layer takes), without the
+    menu pictures and texts, the slow part."""
     d = gt2disc.Gt2Disc(image)
     vol = d.vol
     new = {}
@@ -107,6 +111,8 @@ def generate(image, kn5, cars, log=print, version=None, sub=None):
     log('  peintures : %s' % ', '.join(n for n, _ in gt2data.PAINTS))
     new['.carcolor'], new['.cclatain'], new['.ccjapanese'] = gt2data.name_colours(
         vol.read('.carcolor'), vol.read('.cclatain'), vol.read('.ccjapanese'), vol.read('.carinfoj'), variants)
+    if not menus_too:
+        return d, new
     log('3/4 menus : titres, description, occasions')
     menus(vol, todo, cars, new, log)
     plus = b'PLUS' in d.c.user_data(16)[40:72]
@@ -205,10 +211,14 @@ def menus(vol, todo, cars, new, log=print):
             u0 = vol.read(p)
             gz = u0[:2] == bytes([0x1F, 0x8B])
             raw = gzip.decompress(u0) if gz else u0
-            out, n = gt2menu.move_used_car(raw, gt2data.car_id('aminn'), USED_OPEN, gt2data.car_id('amivn'), '1')
+            prices = gt2menu.used_prices(raw, gt2data.car_id('aminn'))
+            if len(prices) <= USED_OPEN:
+                continue
+            price = prices[USED_OPEN]
+            out, n = gt2menu.move_used_car(raw, gt2data.car_id('aminn'), price, gt2data.car_id('amivn'), '1')
             if n:
                 new[p] = regz(u0, out) if gz else out
-                log('  %s : %d annonce(s) à %d Cr -> la RF décapotée' % (p, n, USED_OPEN))
+                log('  %s : %d annonce(s) à %d Cr -> la RF décapotée' % (p, n, price))
 
 
 def cheat_patcher():

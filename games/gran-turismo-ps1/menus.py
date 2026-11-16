@@ -44,10 +44,17 @@ def spec_prices(carinf):
     return {bytes(r[:6]).rstrip(b'\0').decode(): struct.unpack_from('<I', r, 0x184)[0] // 100 for r in s.records}
 
 
-def patch(menu_img, carinf, codes, badge_path, car, tex, price, log=print):
+def patch(menu_img, carinf, codes, badge_path, car, tex, price, log=print, keep_layout=False, room=None):
     """MENU_IMG.ARC with the MX-5's names, pictures and price (Cr). carinf: the disc's CARINF.DAT
-    (the prices the page's digits are learnt from); car, tex: the MX-5's model and texture."""
+    (the prices the page's digits are learnt from); car, tex: the MX-5's model and texture.
+    keep_layout: the entries that do not change stay where they are when the new ones fit
+    (gtarc.replace_in_place), the archive at most `room` bytes."""
     outer = gtarc.Arc(menu_img)
+    starts = sorted({e[0] for e in outer.entries} | {len(outer.data)})
+
+    def put(arc, new, align, room):
+        out = gtarc.replace_in_place(arc, new, align, room) if keep_layout else None
+        return gtarc.replace(arc, new, align=align) if out is None else out
     emb = emblem_alpha(badge_path)
     old_prices = spec_prices(carinf)
     page_prices = ['%d' % old_prices[c] for c in dealer.PAGE_CARS]
@@ -91,9 +98,10 @@ def patch(menu_img, carinf, codes, badge_path, car, tex, price, log=print):
             new[dealer.MAZDA_NEW] = page.write()
         if any(c in INFO_CARS for c in codes):
             new.update(infopage.patch(inner, lang))
-        new_outer[lang] = gtarc.replace(inner, new, align=4)
+        off = outer.entries[lang][0]
+        new_outer[lang] = put(inner, new, 4, starts[starts.index(off) + 1] - off)
     log('  MENU_IMG.ARC : noms (%s) et vignettes du concessionnaire, 6 langues'
         % ', '.join(c for c in codes if c in TITLES))
     if any(c in INFO_CARS for c in codes):
         log("  MENU_IMG.ARC : page INFO (historique de la MX-5 RF), 6 langues")
-    return gtarc.replace(outer, new_outer)
+    return put(outer, new_outer, 0x800, room)
