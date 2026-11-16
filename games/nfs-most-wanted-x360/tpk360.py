@@ -29,7 +29,12 @@ def dxt_linear(img, fmt):
         import dxt
         return dxt.encode(img, fmt)
     data = b.getvalue()
-    assert data[:4] == b'DDS '
+    # Pillow before 11 (the browser's Pyodide has 10.2) ignores pixel_format and writes an uncompressed DDS without
+    # an error: those bytes taken as DXT blocks gave the harlequin seats and the garbled name badge. Check the FourCC.
+    want = {'DXT1': (b'DXT1', 71, 72), 'DXT3': (b'DXT3', 74, 75), 'DXT5': (b'DXT5', 77, 78)}[fmt]
+    if data[:4] != b'DDS ' or not (data[84:88] == want[0] or (data[84:88] == b'DX10' and data[128] in want[1:])):
+        import dxt
+        return dxt.encode(img, fmt)
     off = 128
     if data[84:88] == b'DX10':
         off += 20
